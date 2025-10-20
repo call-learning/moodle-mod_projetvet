@@ -43,12 +43,27 @@ if ($id) {
 
 require_login($course, true, $cm);
 
+$context = context_module::instance($cm->id);
+
 \mod_projetvet\event\course_module_viewed::create_from_record($moduleinstance, $cm, $course)->trigger();
 
 $PAGE->set_url('/mod/projetvet/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
+$PAGE->set_context($context);
+
+// Add the JavaScript module for the modal form.
+$PAGE->requires->js_call_amd('mod_projetvet/activity_entry_form', 'init');
 
 echo $OUTPUT->header();
+
+// Display the module introduction.
+echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
+
+// Get the renderer.
+$renderer = $PAGE->get_renderer('mod_projetvet');
+
+// Display the activity list.
+echo $renderer->render_activity_list($moduleinstance, $cm, $context);
 
 echo $OUTPUT->footer();

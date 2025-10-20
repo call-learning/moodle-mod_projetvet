@@ -32,3 +32,24 @@ $string['pluginname'] = 'Projetvet';
 $string['privacy:metadata'] = 'The Projetvet plugin doesn\'t store any personal data.';
 $string['projetvet:addinstance'] = 'Add a new Projetvet';
 $string['projetvet:view'] = 'View Projetvet';
+$string['projetvet:edit'] = 'Edit Projetvet activities';
+
+// Activity strings.
+$string['newactivity'] = 'New Activity';
+$string['editactivity'] = 'Edit Activity';
+$string['noactivities'] = 'No activities yet. Click the button above to create your first activity.';
+$string['activitytitle'] = 'Title';
+$string['year'] = 'Year';
+$string['category'] = 'Category';
+$string['completed'] = 'Completed';
+$string['actions'] = 'Actions';
+$string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
+
+// Error strings.
+$string['invaliddata'] = 'Invalid data for {$a}';
+$string['entry_not_found'] = 'Activity entry not found: {$a}';
+$string['cannoteditactivity'] = 'You cannot edit this activity';
+$string['cannotdeleteactivity'] = 'You cannot delete this activity';
+
+// Cache strings.
+$string['cachedef_activitystructures'] = 'Activity form structures';
