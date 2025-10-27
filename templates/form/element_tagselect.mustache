@@ -1,0 +1,172 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_projetvet/form/element_tagselect
+
+    Tag select form element with popup UI.
+
+    Context variables required for this template:
+    * label - The label for the form element
+    * required - Whether the element is required
+    * advanced - Whether this is an advanced element
+    * helpbutton - Help button HTML
+    * error - Error message if any
+    * element - Element context from export_for_template
+        * id - Element ID
+        * name - Element name
+        * groupedoptions - Array of grouped options
+        * selectedtags - Array of currently selected tags
+        * maxtags - Maximum number of tags (0 = unlimited)
+        * hasmaxtags - Whether max tags limit is reached
+        * rowname - Display name for the row
+
+    Example context (json):
+    {
+        "label": "Select competencies",
+        "required": false,
+        "advanced": false,
+        "error": null,
+        "element": {
+            "id": "id_competencies",
+            "name": "competencies",
+            "rowname": "Competencies",
+            "maxtags": 5,
+            "hasmaxtags": false,
+            "selectedtags": [],
+            "groupedoptions": [
+                {
+                    "name": "Group 1",
+                    "items": [
+                        {"uniqueid": "1", "name": "Item 1"},
+                        {"uniqueid": "2", "name": "Item 2"}
+                    ]
+                }
+            ]
+        }
+    }
+}}
+{{< core_form/element-template }}
+    {{$element}}
+        <div class="tagselect-wrapper" data-element-id="{{element.id}}">
+            {{! Hidden select element for form submission }}
+            <select
+                name="{{element.name}}"
+                id="{{element.id}}"
+                multiple
+                class="d-none"
+                {{#element.frozen}}disabled{{/element.frozen}}>
+                {{#element.options}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{text}}</option>
+                {{/element.options}}
+            </select>
+
+            {{! Button to open the popup }}
+            <button type="button"
+                    class="btn btn-secondary"
+                    data-action="open-tagselect"
+                    data-element-id="{{element.id}}"
+                    {{#element.frozen}}disabled{{/element.frozen}}>
+                {{#pix}}i/edit, core{{/pix}}
+                {{#str}}selecttags, mod_projetvet{{/str}}
+                <span class="badge badge-primary ml-2" data-region="tag-count">{{element.selectedtags.length}}</span>
+            </button>
+
+            {{! Display selected tags }}
+            <div class="selected-tags-display mt-2" data-region="selected-tags-display">
+                {{#element.selectedtags}}
+                    {{> mod_projetvet/tagselect_badge}}
+                {{/element.selectedtags}}
+            </div>
+
+            {{! Popup container - initially hidden }}
+            <div class="tagselect-popup d-none" data-region="tagselect-popup" data-element-id="{{element.id}}">
+                <div class="tagselect-popup-backdrop" data-action="close-tagselect"></div>
+                <div class="tagselect-popup-content">
+                    <div class="tag-form" data-region="tagform">
+                        <div class="d-flex icon-no-margin">
+                            <h5 data-region="rownumber">{{element.rowname}}</h5>
+                            <button type="button" class="btn btn-success ml-auto mb-2 btn-sm" data-action="save-tags">
+                                {{#pix}}e/save, core{{/pix}}
+                                <span class="sr-only">{{#str}}save, admin{{/str}}</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary ml-1 mb-2 btn-sm" data-action="close-tagselect">
+                                {{#pix}}e/cancel, core{{/pix}}
+                                <span class="sr-only">{{#str}}close, admin{{/str}}</span>
+                            </button>
+                        </div>
+                        <div class="form-group d-flex mb-0">
+                            <label for="tag-search-{{element.id}}" class="sr-only">{{#str}}search{{/str}}</label>
+                            <div class="col-10 p-0">
+                                <input type="search"
+                                       class="form-control"
+                                       id="tag-search-{{element.id}}"
+                                       {{#element.hasmaxtags}}disabled{{/element.hasmaxtags}}
+                                       placeholder="{{#str}}search{{/str}}"
+                                       data-region="tag-search">
+                            </div>
+                            <div class="col-2 p-0">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        data-action="toggle-all"
+                                        {{#element.hasmaxtags}}disabled{{/element.hasmaxtags}}>
+                                    {{#str}}selectall, core{{/str}}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-12 p-0">
+                                <div data-region="warnings" class="text-danger">
+                                    {{#element.hasmaxtags}}
+                                        {{#str}}maxselections, mod_projetvet, {{element.maxtags}}{{/str}}
+                                    {{/element.hasmaxtags}}
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="mb-1">
+                        <div data-region="selected-tags-popup" class="d-flex flex-wrap mb-2">
+                            {{#element.selectedtags}}
+                                {{> mod_projetvet/tagselect_badge}}
+                            {{/element.selectedtags}}
+                        </div>
+                        <hr class="mt-1">
+                        <div class="list-group tag-list" data-region="tag-list">
+                            {{#element.groupedoptions}}
+                                <div class="list-group-item py-1 px-2 bg-light">
+                                    <div class="strong">{{name}}</div>
+                                </div>
+                                {{#items}}
+                                    <a href="#"
+                                       class="list-group-item list-group-item-action p-2"
+                                       data-action="select-tag"
+                                       data-tag-id="{{uniqueid}}"
+                                       data-tag-name="{{name}}">
+                                        {{name}}
+                                    </a>
+                                {{/items}}
+                            {{/element.groupedoptions}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{/element}}
+{{/ core_form/element-template }}
+{{#js}}
+require(['mod_projetvet/tagselect'], function(tagselect) {
+    tagselect.init('{{element.id}}', {{element.maxtags}});
+});
+{{/js}}

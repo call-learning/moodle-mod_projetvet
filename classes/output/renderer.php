@@ -1,0 +1,79 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace mod_projetvet\output;
+
+/**
+ * Renderer for mod_projetvet
+ *
+ * @package    mod_projetvet
+ * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class renderer extends \plugin_renderer_base {
+    /**
+     * Render the student list for teachers
+     *
+     * @param \stdClass $moduleinstance The projetvet instance
+     * @param \stdClass $cm The course module
+     * @param \context_module $context The context
+     * @return string HTML to output
+     */
+    public function render_teacher_student_list($moduleinstance, $cm, $context) {
+        global $USER;
+
+        $teacherstudentlist = new teacher_student_list($moduleinstance, $cm, $context, $USER->id);
+        return $this->render_from_template('mod_projetvet/teacher_student_list', $teacherstudentlist->export_for_template($this));
+    }
+
+    /**
+     * Render the info section above the activity list
+     *
+     * @param \stdClass $moduleinstance The projetvet instance
+     * @param \stdClass $cm The course module
+     * @param \context_module $context The context
+     * @param int $studentid The student ID
+     * @return string HTML to output
+     */
+    public function render_student_info($moduleinstance, $cm, $context, $studentid) {
+        $studentinfo = new student_info($moduleinstance, $cm, $studentid);
+        return $this->render_from_template('mod_projetvet/student_info', $studentinfo->export_for_template($this));
+    }
+
+    /**
+     * Render the activity list for a specific student (student view or teacher viewing student)
+     *
+     * @param \stdClass $moduleinstance The projetvet instance
+     * @param \stdClass $cm The course module
+     * @param \context_module $context The context
+     * @param int $studentid The student ID
+     * @param bool $isteacher Whether the viewer is a teacher
+     * @return string HTML to output
+     */
+    public function render_activity_list($moduleinstance, $cm, $context, $studentid, $isteacher = false) {
+        $output = '';
+
+        // Render info section for students.
+        if (!$isteacher) {
+            $output .= $this->render_student_info($moduleinstance, $cm, $context, $studentid);
+        }
+
+        $activitylist = new activity_list($moduleinstance, $cm, $studentid, $isteacher);
+        $output .= $this->render_from_template('mod_projetvet/activity_list', $activitylist->export_for_template($this));
+
+        return $output;
+    }
+}

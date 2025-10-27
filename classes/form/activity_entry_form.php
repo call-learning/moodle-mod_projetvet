@@ -21,8 +21,11 @@ use context_module;
 use core_form\dynamic_form;
 use mod_projetvet\local\api\activities;
 use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\field_data;
 use moodle_exception;
 use moodle_url;
+
+require_once($CFG->libdir . '/formslib.php');
 
 /**
  * Class activity_entry_form
@@ -122,7 +125,16 @@ class activity_entry_form extends dynamic_form {
      * @return void
      */
     protected function definition() {
+        global $CFG;
         $mform = $this->_form;
+
+        // Register the custom form element.
+        \MoodleQuickForm::registerElementType(
+            'tagselect',
+            "$CFG->dirroot/mod/projetvet/classes/form/tagselect_element.php",
+            'mod_projetvet\form\tagselect_element'
+        );
+
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
         $projetvetid = $this->optional_param('projetvetid', null, PARAM_INT);
         $studentid = $this->optional_param('studentid', null, PARAM_INT);
@@ -180,6 +192,25 @@ class activity_entry_form extends dynamic_form {
                         $mform->addElement('select', $fieldname, $field->name, $selectoptions);
                         break;
 
+                    case 'autocomplete':
+                        $options = $configdata['options'] ?? [];
+                        $mform->addElement('autocomplete', $fieldname, $field->name, $options, [
+                            'multiple' => true,
+                            'noselectionstring' => get_string('choose'),
+                        ]);
+                        break;
+
+                    case 'tagselect':
+                        // Load grouped options from field_data table.
+                        $groupedoptions = field_data::get_grouped_options($field->id);
+
+                        $mform->addElement('tagselect', $fieldname, $field->name, [], [
+                            'groupedoptions' => $groupedoptions,
+                            'rowname' => $field->name,
+                            'maxtags' => 0,
+                        ]);
+                        break;
+
                     case 'checkbox':
                         $mform->addElement('advcheckbox', $fieldname, $field->name, '', null, [0, 1]);
                         break;
@@ -210,14 +241,88 @@ class activity_entry_form extends dynamic_form {
         // If editing an existing entry, load its data.
         if (!empty($data['entryid'])) {
             $entry = activities::get_entry($data['entryid']);
+            $structure = activities::get_activity_structure();
             foreach ($entry->categories as $category) {
                 foreach ($category->fields as $field) {
                     $fieldname = 'field_' . $field->id;
-                    $data[$fieldname] = $field->value;
+                    // For autocomplete and tagselect fields, decode JSON to array.
+                    $fieldobj = $this->get_field_by_id($structure, $field->id);
+                    if ($fieldobj && in_array($fieldobj->type, ['autocomplete', 'tagselect'])) {
+                        $decoded = json_decode($field->value, true);
+                        $data[$fieldname] = is_array($decoded) ? $decoded : [];
+                    } else {
+                        $data[$fieldname] = $field->value;
+                    }
                 }
             }
         }
 
         parent::set_data((object) $data);
+    }
+
+    /**
+     * Get field object by id from structure
+     *
+     * @param array $structure
+     * @param int $fieldid
+     * @return object|null
+     */
+    private function get_field_by_id($structure, $fieldid) {
+        foreach ($structure as $category) {
+            foreach ($category->fields as $field) {
+                if ($field->id == $fieldid) {
+                    return $field;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Load grouped options from a JSON file with parent-child structure
+     *
+     * @param string $filename The JSON filename (relative to mod/projetvet/data/)
+     * @return array Grouped options array suitable for tagselect element
+     */
+    private function load_grouped_options_from_json($filename) {
+        global $CFG;
+
+        $jsonfile = $CFG->dirroot . '/mod/projetvet/data/' . $filename;
+        if (!file_exists($jsonfile)) {
+            return [];
+        }
+
+        $json = file_get_contents($jsonfile);
+        $data = json_decode($json, true);
+
+        if (empty($data)) {
+            return [];
+        }
+
+        // Parse the flat array structure with parent relationships.
+        $grouped = [];
+        foreach ($data as $item) {
+            if ($item['type'] === 'heading') {
+                // Create a group for this heading.
+                $groupitems = [];
+                // Find all items that belong to this heading.
+                foreach ($data as $subitem) {
+                    if ($subitem['type'] === 'item' && $subitem['parent'] == $item['uniqueid']) {
+                        $groupitems[] = [
+                            'uniqueid' => $subitem['uniqueid'],
+                            'name' => $subitem['name'],
+                        ];
+                    }
+                }
+                if (!empty($groupitems)) {
+                    $grouped[] = [
+                        'name' => $item['name'],
+                        'items' => $groupitems,
+                    ];
+                }
+            }
+        }
+
+        return $grouped;
     }
 }

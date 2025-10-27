@@ -40,6 +40,8 @@ class act_data extends persistent {
         'textarea' => 'textvalue',
         'select' => 'intvalue',
         'checkbox' => 'intvalue',
+        'autocomplete' => 'textvalue',
+        'tagselect' => 'textvalue',
     ];
     /**
      * @var act_field $field The field object

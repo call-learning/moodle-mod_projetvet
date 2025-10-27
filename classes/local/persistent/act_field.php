@@ -42,6 +42,8 @@ class act_field extends persistent {
         'textarea',
         'select',
         'checkbox',
+        'autocomplete',
+        'tagselect',
     ];
 
     /**
@@ -133,6 +135,35 @@ class act_field extends persistent {
                     }
                 }
                 return '';
+            case 'autocomplete':
+                $configdata = json_decode(stripslashes($this->get('configdata')), true);
+                $selectedvalues = json_decode($value, true);
+                if (!is_array($selectedvalues)) {
+                    return '';
+                }
+                $displayvalues = [];
+                if (!empty($configdata['options'])) {
+                    foreach ($selectedvalues as $selectedkey) {
+                        if (isset($configdata['options'][$selectedkey])) {
+                            $displayvalues[] = $configdata['options'][$selectedkey];
+                        }
+                    }
+                }
+                return implode(', ', $displayvalues);
+            case 'tagselect':
+                $selectedvalues = json_decode($value, true);
+                if (!is_array($selectedvalues)) {
+                    return '';
+                }
+                // Get lookup map from field_data table.
+                $lookupmap = field_data::get_lookup_map($this->get('id'), 'item');
+                $displayvalues = [];
+                foreach ($selectedvalues as $uniqueid) {
+                    if (isset($lookupmap[$uniqueid])) {
+                        $displayvalues[] = $lookupmap[$uniqueid];
+                    }
+                }
+                return implode(', ', $displayvalues);
         }
         return '';
     }
@@ -163,6 +194,12 @@ class act_field extends persistent {
                     }
                 }
                 return 0;
+            case 'autocomplete':
+            case 'tagselect':
+                if (is_array($value)) {
+                    return json_encode(array_values($value));
+                }
+                return json_encode([]);
         }
     }
 }

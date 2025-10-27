@@ -15,18 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for Projetvet
+ * Reset activity fields script
  *
  * @package    mod_projetvet
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+define('CLI_SCRIPT', true);
 
-$plugin->component    = 'mod_projetvet';
-$plugin->release      = '1.4';
-$plugin->version      = 2025102302;
-$plugin->requires     = 2024100700;
-$plugin->supported    = [405, 501];
-$plugin->maturity     = MATURITY_STABLE;
+require(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/clilib.php');
+
+// Delete existing activity fields and categories.
+$DB->delete_records('projetvet_act_data');
+$DB->delete_records('projetvet_act_entry');
+$DB->delete_records('projetvet_act_field');
+$DB->delete_records('projetvet_act_cat');
+
+// Recreate default fields.
+\mod_projetvet\setup::create_default_activities();
+
+echo "Activity fields recreated successfully\n";

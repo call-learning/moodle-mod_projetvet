@@ -31,7 +31,7 @@ $capabilities = [
 
     'mod/projetvet:view' => [
         'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
+        'contextlevel' => CONTEXT_MODULE,
         'archetypes' => [
             'guest' => CAP_ALLOW,
             'student' => CAP_ALLOW,
@@ -50,6 +50,24 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
         'clonepermissionsfrom' => 'moodle/course:manageactivities',
+    ],
+
+    'mod/projetvet:submit' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'student' => CAP_ALLOW,
+        ],
+    ],
+
+    'mod/projetvet:viewallactivities' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'mod/projetvet:edit' => [

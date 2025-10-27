@@ -1,0 +1,109 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_projetvet/activity_list
+
+    Activity list table.
+
+    Example context (json):
+    {
+        "isteacher": false,
+        "cmid": 1,
+        "projetvetid": 1,
+        "studentid": 123,
+        "hasactivities": true,
+        "activities": [
+            {
+                "title": "Activity 1",
+                "year": "2023",
+                "category": "Research",
+                "completed": true,
+                "completedicon": "✓",
+                "canedit": true,
+                "candelete": true,
+                "entryid": 1
+            }
+        ]
+    }
+}}
+{{#showbacklink}}
+<a href="{{backurl}}" class="btn btn-link mb-2">← {{#str}}backtolist, mod_projetvet{{/str}}</a>
+<h3>{{#str}}studentactivities, mod_projetvet{{/str}} {{studentname}}</h3>
+{{/showbacklink}}
+
+{{^isteacher}}
+<div class="mb-3">
+    <button class="btn btn-primary"
+            data-action="activity-entry-form"
+            data-cmid="{{cmid}}"
+            data-projetvetid="{{projetvetid}}"
+            data-studentid="{{studentid}}">
+        {{#str}}newactivity, mod_projetvet{{/str}}
+    </button>
+</div>
+{{/isteacher}}
+
+{{#hasactivities}}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>{{#str}}activitytitle, mod_projetvet{{/str}}</th>
+            <th>{{#str}}year, mod_projetvet{{/str}}</th>
+            <th>{{#str}}category, mod_projetvet{{/str}}</th>
+            <th>{{#str}}completed, mod_projetvet{{/str}}</th>
+            {{^isteacher}}
+            <th>{{#str}}actions, mod_projetvet{{/str}}</th>
+            {{/isteacher}}
+        </tr>
+    </thead>
+    <tbody>
+    {{#activities}}
+        <tr>
+            <td>{{title}}</td>
+            <td>{{year}}</td>
+            <td>{{category}}</td>
+            <td>{{completedicon}}</td>
+            {{^isteacher}}
+            <td>
+                {{#canedit}}
+                <button class="btn btn-sm btn-secondary"
+                        data-action="activity-entry-form"
+                        data-cmid="{{cmid}}"
+                        data-projetvetid="{{projetvetid}}"
+                        data-studentid="{{studentid}}"
+                        data-entryid="{{entryid}}">
+                    {{#str}}edit{{/str}}
+                </button>
+                {{/canedit}}
+                {{#candelete}}
+                <button class="btn btn-sm btn-danger"
+                        data-action="delete-activity"
+                        data-entryid="{{entryid}}">
+                    {{#str}}delete{{/str}}
+                </button>
+                {{/candelete}}
+            </td>
+            {{/isteacher}}
+        </tr>
+    {{/activities}}
+    </tbody>
+</table>
+{{/hasactivities}}
+
+{{^hasactivities}}
+<p class="alert alert-info">{{#str}}noactivities, mod_projetvet{{/str}}</p>
+{{/hasactivities}}

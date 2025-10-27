@@ -1,0 +1,191 @@
+[
+  {
+    "uniqueid": 100,
+    "type": "heading",
+    "parent": 0,
+    "name": "Stages en clientèle",
+    "sortorder": 1
+  },
+  {
+    "uniqueid": 101,
+    "type": "item",
+    "parent": 100,
+    "name": "Stage en clinique vétérinaire canine",
+    "sortorder": 1
+  },
+  {
+    "uniqueid": 102,
+    "type": "item",
+    "parent": 100,
+    "name": "Stage en clinique vétérinaire équine",
+    "sortorder": 2
+  },
+  {
+    "uniqueid": 103,
+    "type": "item",
+    "parent": 100,
+    "name": "Stage en clinique vétérinaire mixte",
+    "sortorder": 3
+  },
+  {
+    "uniqueid": 104,
+    "type": "item",
+    "parent": 100,
+    "name": "Stage en clinique vétérinaire NAC",
+    "sortorder": 4
+  },
+  {
+    "uniqueid": 105,
+    "type": "item",
+    "parent": 100,
+    "name": "Stage en clinique vétérinaire rurale",
+    "sortorder": 5
+  },
+  {
+    "uniqueid": 200,
+    "type": "heading",
+    "parent": 0,
+    "name": "Activités au sein des Chuv de l'EnvA",
+    "sortorder": 2
+  },
+  {
+    "uniqueid": 201,
+    "type": "item",
+    "parent": 200,
+    "name": "Chuv-FS",
+    "sortorder": 1
+  },
+  {
+    "uniqueid": 202,
+    "type": "item",
+    "parent": 200,
+    "name": "Chuv-AC",
+    "sortorder": 2
+  },
+  {
+    "uniqueid": 203,
+    "type": "item",
+    "parent": 200,
+    "name": "Chuv-EQ",
+    "sortorder": 3
+  },
+  {
+    "uniqueid": 204,
+    "type": "item",
+    "parent": 200,
+    "name": "Chuv-AP",
+    "sortorder": 4
+  },
+  {
+    "uniqueid": 300,
+    "type": "heading",
+    "parent": 0,
+    "name": "Engagement citoyen, sportif, associatif",
+    "sortorder": 3
+  },
+  {
+    "uniqueid": 301,
+    "type": "item",
+    "parent": 300,
+    "name": "Actions d'engagement citoyen",
+    "sortorder": 1
+  },
+  {
+    "uniqueid": 302,
+    "type": "item",
+    "parent": 300,
+    "name": "Actions d'engagement culturel",
+    "sortorder": 2
+  },
+  {
+    "uniqueid": 303,
+    "type": "item",
+    "parent": 300,
+    "name": "Actions d'entreprenariat",
+    "sortorder": 3
+  },
+  {
+    "uniqueid": 304,
+    "type": "item",
+    "parent": 300,
+    "name": "Activité associative",
+    "sortorder": 4
+  },
+  {
+    "uniqueid": 305,
+    "type": "item",
+    "parent": 300,
+    "name": "Actions d'engagement sportif",
+    "sortorder": 5
+  },
+  {
+    "uniqueid": 306,
+    "type": "item",
+    "parent": 300,
+    "name": "Engagement bénévole",
+    "sortorder": 6
+  },
+  {
+    "uniqueid": 307,
+    "type": "item",
+    "parent": 300,
+    "name": "Engagement pédagogique bénévole au service de l'EnvA",
+    "sortorder": 7
+  },
+  {
+    "uniqueid": 308,
+    "type": "item",
+    "parent": 300,
+    "name": "Responsabilité bénévole au service de l'EnvA (conseils, commissions, etc.)",
+    "sortorder": 8
+  },
+  {
+    "uniqueid": 400,
+    "type": "heading",
+    "parent": 0,
+    "name": "Enseignements complémentaires",
+    "sortorder": 4
+  },
+  {
+    "uniqueid": 401,
+    "type": "item",
+    "parent": 400,
+    "name": "UC libres",
+    "sortorder": 1
+  },
+  {
+    "uniqueid": 402,
+    "type": "item",
+    "parent": 400,
+    "name": "Congrès",
+    "sortorder": 2
+  },
+  {
+    "uniqueid": 403,
+    "type": "item",
+    "parent": 400,
+    "name": "Formation continue",
+    "sortorder": 3
+  },
+  {
+    "uniqueid": 500,
+    "type": "heading",
+    "parent": 0,
+    "name": "Emploi valorisable",
+    "sortorder": 5
+  },
+  {
+    "uniqueid": 501,
+    "type": "item",
+    "parent": 500,
+    "name": "ASV",
+    "sortorder": 1
+  },
+  {
+    "uniqueid": 502,
+    "type": "item",
+    "parent": 500,
+    "name": "Standardiste / régulateur",
+    "sortorder": 2
+  }
+]

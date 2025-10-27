@@ -32,7 +32,15 @@ $string['pluginname'] = 'Projetvet';
 $string['privacy:metadata'] = 'The Projetvet plugin doesn\'t store any personal data.';
 $string['projetvet:addinstance'] = 'Add a new Projetvet';
 $string['projetvet:view'] = 'View Projetvet';
+$string['projetvet:submit'] = 'Submit activities';
+$string['projetvet:viewallactivities'] = 'View all student activities';
 $string['projetvet:edit'] = 'Edit Projetvet activities';
+
+// Settings.
+$string['promo'] = 'Promo';
+$string['promo_help'] = 'The promotion year (e.g., 2023)';
+$string['currentyear'] = 'Current year';
+$string['currentyear_help'] = 'The current year description (e.g., 3ème année)';
 
 // Activity strings.
 $string['newactivity'] = 'New Activity';
@@ -45,6 +53,15 @@ $string['completed'] = 'Completed';
 $string['actions'] = 'Actions';
 $string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
 
+// Teacher view strings.
+$string['mystudents'] = 'My Students';
+$string['studentname'] = 'Student Name';
+$string['activitiescount'] = 'Activities';
+$string['viewactivities'] = 'View Activities';
+$string['nostudents'] = 'No students in your groups yet.';
+$string['backtolist'] = 'Back to student list';
+$string['studentactivities'] = '{$a}\'s Activities';
+
 // Error strings.
 $string['invaliddata'] = 'Invalid data for {$a}';
 $string['entry_not_found'] = 'Activity entry not found: {$a}';
@@ -53,3 +70,31 @@ $string['cannotdeleteactivity'] = 'You cannot delete this activity';
 
 // Cache strings.
 $string['cachedef_activitystructures'] = 'Activity form structures';
+
+// Info section.
+$string['totalcredits'] = 'Total credits';
+$string['creditsbytype'] = 'Credits by type';
+$string['tutorinterview'] = 'Tutor interviews';
+$string['promoyear'] = 'Promotion';
+$string['yearincourse'] = 'Current year';
+$string['tutor'] = 'Tutor';
+$string['thesissubject'] = 'Thesis subject';
+$string['internationalmobility'] = 'International mobility';
+$string['setsubject'] = 'Set subject';
+$string['settitle'] = 'Set title';
+$string['moreinfo'] = 'More info';
+
+// Thesis form.
+$string['thesisformtitle'] = 'Thesis Subject';
+$string['thesissubject_field'] = 'Subject';
+$string['thesisdepositdate'] = 'Date of submission of the subject on TheseVet';
+$string['thesisdirector'] = 'Name of the thesis director';
+
+// Mobility form.
+$string['mobilityformtitle'] = 'International Mobility';
+$string['mobilityerasmus'] = 'I completed my mobility through a long-term mobility program (ERASMUS type)';
+$string['mobilityfmp'] = 'I completed my international mobility during the FMP of A% (UC0526)';
+
+// Tag select form element.
+$string['selecttags'] = 'Select tags';
+$string['maxselections'] = 'Maximum of {$a} selections allowed';

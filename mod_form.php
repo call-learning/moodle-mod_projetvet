@@ -48,6 +48,14 @@ class mod_projetvet_mod_form extends moodleform_mod {
             $this->standard_intro_elements();
         }
 
+        $mform->addElement('text', 'promo', get_string('promo', 'mod_projetvet'), ['size' => '20']);
+        $mform->setType('promo', PARAM_TEXT);
+        $mform->addHelpButton('promo', 'promo', 'mod_projetvet');
+
+        $mform->addElement('text', 'currentyear', get_string('currentyear', 'mod_projetvet'), ['size' => '20']);
+        $mform->setType('currentyear', PARAM_TEXT);
+        $mform->addHelpButton('currentyear', 'currentyear', 'mod_projetvet');
+
         // Other standard elements that are displayed in their own fieldsets.
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();

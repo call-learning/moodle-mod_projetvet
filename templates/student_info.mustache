@@ -1,0 +1,95 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_projetvet/student_info
+
+    Student information section with info table and progress charts.
+
+    Example context (json):
+    {
+        "infotable": {
+            "rows": [
+                {
+                    "label": "Promo",
+                    "value": "2023"
+                },
+                {
+                    "label": "Thesis",
+                    "hasbutton": true,
+                    "buttontext": "Set subject",
+                    "buttonaction": "thesis-form",
+                    "cmid": 1,
+                    "projetvetid": 1,
+                    "userid": 123
+                }
+            ]
+        },
+        "charts": [
+            {
+                "percentage": 25,
+                "label": "Total credits",
+                "radius": 45,
+                "circumference": 282.74,
+                "offset": 212.05
+            }
+        ]
+    }
+}}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <table class="table table-borderless">
+            <tbody>
+            {{#infotable.rows}}
+                <tr>
+                    <td>{{label}}</td>
+                    <td>
+                        {{#value}}{{value}}{{/value}}
+                        {{#haslink}}
+                            <a href="#" class="btn btn-sm btn-link">{{linktext}}</a>
+                        {{/haslink}}
+                        {{#hasbutton}}
+                            <button class="btn btn-link btn-sm"
+                                    data-action="{{buttonaction}}"
+                                    data-cmid="{{cmid}}"
+                                    data-projetvetid="{{projetvetid}}"
+                                    data-userid="{{userid}}">
+                                {{buttontext}}
+                            </button>
+                        {{/hasbutton}}
+                    </td>
+                </tr>
+            {{/infotable.rows}}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <div class="d-flex justify-content-around">
+            {{#charts}}
+                <div class="text-center">
+                    <svg width="110" height="110" style="transform: rotate(-90deg);">
+                        <circle cx="55" cy="55" r="{{radius}}" stroke="lightgray" stroke-width="10" fill="none"/>
+                        <circle cx="55" cy="55" r="{{radius}}" stroke="#6f42c1" stroke-width="10" fill="none"
+                                stroke-dasharray="{{circumference}}" stroke-dashoffset="{{offset}}" stroke-linecap="round"/>
+                        <text x="55" y="60" text-anchor="middle" font-size="20" fill="#333"
+                              style="transform: rotate(90deg); transform-origin: 55px 55px;">{{percentage}}%</text>
+                    </svg>
+                    <div class="mt-2 small">{{label}}</div>
+                </div>
+            {{/charts}}
+        </div>
+    </div>
+</div>

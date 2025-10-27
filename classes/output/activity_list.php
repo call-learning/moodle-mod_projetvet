@@ -1,0 +1,122 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace mod_projetvet\output;
+
+use mod_projetvet\local\api\activities;
+use renderer_base;
+use renderable;
+use templatable;
+use moodle_url;
+
+/**
+ * Activity list renderable class.
+ *
+ * @package    mod_projetvet
+ * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class activity_list implements renderable, templatable {
+
+    /**
+     * @var object $moduleinstance The module instance.
+     */
+    protected $moduleinstance;
+
+    /**
+     * @var object $cm The course module.
+     */
+    protected $cm;
+
+    /**
+     * @var int $studentid The student ID.
+     */
+    protected $studentid;
+
+    /**
+     * @var bool $isteacher Whether the viewer is a teacher.
+     */
+    protected $isteacher;
+
+    /**
+     * Constructor.
+     *
+     * @param object $moduleinstance The module instance
+     * @param object $cm The course module
+     * @param int $studentid The student ID
+     * @param bool $isteacher Whether the viewer is a teacher
+     */
+    public function __construct($moduleinstance, $cm, $studentid, $isteacher = false) {
+        $this->moduleinstance = $moduleinstance;
+        $this->cm = $cm;
+        $this->studentid = $studentid;
+        $this->isteacher = $isteacher;
+    }
+
+    /**
+     * Export data for template.
+     *
+     * @param renderer_base $output
+     * @return array
+     */
+    public function export_for_template(renderer_base $output) {
+        global $USER;
+
+        $data = [
+            'isteacher' => $this->isteacher,
+            'cmid' => $this->cm->id,
+            'projetvetid' => $this->moduleinstance->id,
+            'studentid' => $this->studentid,
+        ];
+
+        // Back link and student name for teachers viewing a student.
+        if ($this->isteacher && $this->studentid != $USER->id) {
+            $data['showbacklink'] = true;
+            $data['backurl'] = (new moodle_url('/mod/projetvet/view.php', ['id' => $this->cm->id]))->out(false);
+            $student = \core_user::get_user($this->studentid);
+            $data['studentname'] = fullname($student);
+        }
+
+        // Get activities.
+        try {
+            $activitylist = activities::get_activity_list($this->moduleinstance->id, $this->studentid);
+        } catch (\Exception $e) {
+            $activitylist = [];
+        }
+
+        $data['hasactivities'] = !empty($activitylist);
+        $data['activities'] = [];
+
+        foreach ($activitylist as $activity) {
+            $activitydata = [
+                'title' => $activity['title'],
+                'year' => $activity['year'],
+                'category' => $activity['category'],
+                'completed' => $activity['completed'],
+                'completedicon' => $activity['completed'] ? '✓' : '',
+            ];
+            if (!$this->isteacher) {
+                $activitydata['canedit'] = $activity['canedit'];
+                $activitydata['candelete'] = $activity['candelete'];
+                $activitydata['entryid'] = $activity['id'];
+            }
+
+            $data['activities'][] = $activitydata;
+        }
+
+        return $data;
+    }
+}
