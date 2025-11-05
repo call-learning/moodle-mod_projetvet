@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for Projetvet
+ * Web service external functions and service definitions.
  *
  * @package    mod_projetvet
+ * @category   external
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component    = 'mod_projetvet';
-$plugin->release      = '1.6';
-$plugin->version      = 2025110306;
-$plugin->requires     = 2024100700;
-$plugin->supported    = [405, 501];
-$plugin->maturity     = MATURITY_STABLE;
+$functions = [
+    'mod_projetvet_delete_entry' => [
+        'classname'     => 'mod_projetvet\external\delete_entry',
+        'methodname'    => 'execute',
+        'description'   => 'Delete an activity entry',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:view',
+    ],
+];

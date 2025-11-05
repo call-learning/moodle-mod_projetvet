@@ -42,6 +42,7 @@ class act_data extends persistent {
         'checkbox' => 'intvalue',
         'autocomplete' => 'textvalue',
         'tagselect' => 'textvalue',
+        'date' => 'intvalue'
     ];
     /**
      * @var act_field $field The field object

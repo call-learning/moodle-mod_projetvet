@@ -56,6 +56,18 @@ class act_cat extends persistent {
                 'type' => PARAM_TEXT,
                 'message' => new lang_string('invaliddata', 'projetvet', 'description'),
             ],
+            'capability' => [
+                'null' => NULL_ALLOWED,
+                'default' => null,
+                'type' => PARAM_TEXT,
+                'message' => new lang_string('invaliddata', 'projetvet', 'capability'),
+            ],
+            'entrystatus' => [
+                'null' => NULL_NOT_ALLOWED,
+                'default' => 0,
+                'type' => PARAM_INT,
+                'message' => new lang_string('invaliddata', 'projetvet', 'entrystatus'),
+            ],
             'sortorder' => [
                 'null' => NULL_ALLOWED,
                 'type' => PARAM_INT,

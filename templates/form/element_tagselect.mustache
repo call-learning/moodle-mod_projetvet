@@ -33,6 +33,7 @@
         * maxtags - Maximum number of tags (0 = unlimited)
         * hasmaxtags - Whether max tags limit is reached
         * rowname - Display name for the row
+        * showtoggleall - Whether to show the toggle-all button (default: false)
 
     Example context (json):
     {
@@ -110,7 +111,7 @@
                         </div>
                         <div class="form-group d-flex mb-0">
                             <label for="tag-search-{{element.id}}" class="sr-only">{{#str}}search{{/str}}</label>
-                            <div class="col-10 p-0">
+                            <div class="{{#element.showtoggleall}}col-10{{/element.showtoggleall}}{{^element.showtoggleall}}col-12{{/element.showtoggleall}} p-0">
                                 <input type="search"
                                        class="form-control"
                                        id="tag-search-{{element.id}}"
@@ -118,6 +119,7 @@
                                        placeholder="{{#str}}search{{/str}}"
                                        data-region="tag-search">
                             </div>
+                            {{#element.showtoggleall}}
                             <div class="col-2 p-0">
                                 <button type="button"
                                         class="btn btn-secondary"
@@ -126,6 +128,7 @@
                                     {{#str}}selectall, core{{/str}}
                                 </button>
                             </div>
+                            {{/element.showtoggleall}}
                         </div>
                         <div class="row no-gutters">
                             <div class="col-12 p-0">

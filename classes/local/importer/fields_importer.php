@@ -90,6 +90,8 @@ class fields_importer {
                 'sortorder' => intval($data['sortorder']),
                 'categoryid' => $categories[$categoryname]->get('id'),
                 'configdata' => $data['configdata'] ?? '{}',
+                'capability' => $data['capability'] ?? null,
+                'entrystatus' => isset($data['entrystatus']) ? intval($data['entrystatus']) : 0,
             ];
 
             if ($field) {

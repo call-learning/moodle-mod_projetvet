@@ -1,0 +1,310 @@
+{
+  "categories": [
+    {
+      "name": "Informations générales",
+      "idnumber": "activity_details",
+      "description": "Informations générales",
+      "sortorder": 1,
+      "capability": "mod/projetvet:submit",
+      "entrystatus": 0,
+      "fields": [
+        {
+          "idnumber": "activity_title",
+          "name": "Intitulé de l'activité",
+          "sortorder": 1,
+          "type": "text",
+          "description": "",
+          "configdata": {
+            "required": true
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "summary",
+          "name": "Description sommaire",
+          "sortorder": 2,
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4,
+            "required": true
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "year",
+          "name": "Année d'étude à laquelle le projet se terminera",
+          "sortorder": 4,
+          "type": "select",
+          "description": "",
+          "configdata": {
+            "options": {
+              "1": "Année 1",
+              "2": "Année 2",
+              "3": "Année 3",
+              "4": "Année 4",
+              "5": "Année 5"
+            }
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "category",
+          "name": "Catégorie",
+          "sortorder": 5,
+          "type": "tagselect",
+          "description": "",
+          "configdata": {
+            "required": true
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "rang",
+          "name": "Rang",
+          "sortorder": 6,
+          "type": "select",
+          "description": "",
+          "configdata": {
+            "options": {
+              "1": "A",
+              "2": "B",
+              "3": "C"
+            }
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "completed",
+          "name": "Complété",
+          "sortorder": 7,
+          "type": "checkbox",
+          "description": "",
+          "configdata": {},
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "competency",
+          "name": "Compétence visée",
+          "sortorder": 3,
+          "type": "tagselect",
+          "description": "",
+          "configdata": {
+            "options": {
+              "2": "COPREV1 - Évaluer l'état général, le bien-être et l'état nutritionnel d'un animal ou d'un groupe d'animaux",
+              "3": "COPREV2 - Conseiller sur les principes d'hébergement, d'entretien, de reproduction, d'éducation et d'alimentation",
+              "4": "COPREV3 - Proposer et mettre en œuvre des programmes de prévention dans le respect des bonnes pratiques en matière de santé animale, de bien-être animal et de santé publique",
+              "5": "COPREV 4 - Appliquer les principes de biosécurité et conseiller sur la biosécurité",
+              "6": "D1 - Diriger et assurer la contention d'un animal afin de pouvoir l'observer, le manipuler et le soigner dans le respect des règles du bien-être",
+              "7": "D2 - Conduire une démarche diagnostique pour un animal ou un groupe d'animaux",
+              "8": "D3 - Effectuer, conditionner et transporter des prélèvements biologiques, choisir et réaliser ou prescrire les tests diagnostiques appropriés et les interpréter",
+              "9": "D4 - Prescrire, réaliser et interpréter un examen d'imagerie",
+              "10": "D5- Pratiquer un examen post-mortem",
+              "11": "ST1 - Elaborer et adapter une stratégie thérapeutique et administrer un traitement",
+              "12": "ST2 - Prescrire, délivrer des médicaments conformément à la réglementation et aux bonnes pratiques – limiter l'usage des antibiotiques",
+              "13": "ST3 - Pratiquer en toute sécurité une sédation, une anesthésie générale et une anesthésie loco-régionale",
+              "14": "ST4 - Elaborer un protocole chirurgical et réaliser une intervention chirurgicale adaptée à l'animal, à l'affection et au contexte d'intervention",
+              "15": "ST5 - Prévenir, évaluer et prendre en charge la douleur",
+              "16": "ST6 - Prendre en charge un animal en situation d'urgence et pratiquer les premiers soins",
+              "17": "ST7 - Reconnaître quand une euthanasie est appropriée et la pratiquer en utilisant une méthode adaptée au contexte ; conseiller sur le devenir du cadavre",
+              "18": "SP1 - Exercer les missions du vétérinaire sanitaire ou officiel en santé animale",
+              "19": "SP2 - Prévenir, détecter et gérer les maladies réglementées et zoonotiques",
+              "20": "SP3 - Garantir le respect des principes et des règles de protection animale",
+              "21": "SP4 - Effectuer une inspection ante mortem des animaux destinés à la chaîne alimentaire",
+              "22": "SP5 - Promouvoir, surveiller et contrôler la sécurité des aliments",
+              "23": "SP6 - Promouvoir, surveiller et maintenir l'hygiène, la santé et la sécurité ; mettre en œuvre les principes d'assurance qualité ; appliquer les principes de l'évaluation et de la gestion des risques et de gestion de crise",
+              "24": "E1- Travailler efficacement en tant que membre d'une équipe multidisciplinaire",
+              "25": "E2 - Organiser et gérer une activité vétérinaire professionnelle",
+              "26": "E3 - Conduire un projet et utiliser les principes et outils d'amélioration continue de la qualité",
+              "27": "COMM1 - Communiquer à l'oral de manière adaptée à la situation et à son interlocuteur",
+              "28": "COMM2 -Communiquer à l'écrit de manière adaptée à la situation et à son interlocuteur",
+              "29": "COMM3 - Communiquer en contexte international ou interculturel",
+              "30": "COMM4 - Communiquer en utilisant les outils numériques",
+              "31": "SC1 - Porter une analyse critique et évaluer la bibliographie et des communications",
+              "32": "SC2 - Appliquer l'analyse critique de l'organisation des soins et la médecine fondée sur les preuves (Evidence-based veterinary medicine, EBVM)",
+              "33": "SC3 - Contribuer à l'accroissement des connaissances en médecine vétérinaire et plus largement dans le domaine des sciences du vivant",
+              "34": "R1 - Comprendre les responsabilités éthiques et juridiques du vétérinaire vis-à-vis de lui- même, des animaux, des clients, des confrères, de l'administration, de la société et de l'environnement",
+              "35": "R2 - Comprendre et appliquer les réglementations relatives à l'activité vétérinaire professionnelle",
+              "36": "R3 - S'adapter à des informations incomplètes, à des imprévus et au changement",
+              "37": "R4 - Apprécier ses limites personnelles et professionnelles, et savoir comment solliciter un avis d'expert, un conseil, de l'assistance et du soutien en cas de besoin",
+              "38": "R5 - Se former dans un contexte professionnel et construire son projet professionnel"
+            }
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "hours",
+          "name": "Volume horaire prévu (approximativement)",
+          "sortorder": 8,
+          "type": "number",
+          "description": "",
+          "configdata": {
+            "required": true
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        },
+        {
+          "idnumber": "credits",
+          "name": "Nombre de crédits suggéré après discussion avec le tuteur",
+          "sortorder": 9,
+          "type": "number",
+          "description": "",
+          "configdata": {
+            "max": 5,
+            "required": true
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0
+        }
+      ]
+    },
+    {
+      "name": "Acceptation",
+      "idnumber": "acceptance_form",
+      "description": "Formulaire d'acceptation",
+      "sortorder": 2,
+      "capability": "mod/projetvet:approve",
+      "entrystatus": 1,
+      "fields": [
+        {
+          "idnumber": "acceptance_comments",
+          "name": "Commentaires",
+          "sortorder": 19,
+          "type": "textarea",
+          "description": "Commentaires sur l'activité",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "mod/projetvet:approve",
+          "entrystatus": 1
+        },
+        {
+          "idnumber": "acceptance_check",
+          "name": "Accepter l'activité",
+          "sortorder": 20,
+          "type": "checkbox",
+          "description": "Cochez cette case pour accepter l'activité",
+          "configdata": {},
+          "capability": "mod/projetvet:approve",
+          "entrystatus": 1
+        }
+      ]
+    },
+    {
+      "name": "Compte rendu & validation",
+      "idnumber": "compte_rendu_validation",
+      "description": "Section rapport et validation",
+      "sortorder": 3,
+      "capability": "mod/projetvet:submit",
+      "entrystatus": 2,
+      "fields": [
+        {
+          "idnumber": "date_debut_realisation",
+          "name": "Date de début de réalisation",
+          "sortorder": 10,
+          "type": "date",
+          "description": "Indiquez ici la période pendant laquelle s'est déroulée l'activité de CPP",
+          "configdata": {},
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "date_fin_realisation",
+          "name": "Date de fin de réalisation",
+          "sortorder": 11,
+          "type": "date",
+          "description": "",
+          "configdata": {},
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "resume_actions",
+          "name": "Décrire ici de façon concrète ce que vous avez fait",
+          "sortorder": 12,
+          "type": "textarea",
+          "description": "Résumé des principales réalisations et actions menées pendant ce projet",
+          "configdata": {
+            "rows": 6
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "productions",
+          "name": "Le cas échéant, lister ici toute production écrite ou orale liée à l'activité",
+          "sortorder": 13,
+          "type": "textarea",
+          "description": "Le cas échéant, lister ici toute production écrite ou orale liée à l'activité. Par exemple : rapport de stage, présentation orale, etc.",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "progresses_sur",
+          "name": "Grâce à cette activité, j'ai progressé sur…",
+          "sortorder": 14,
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "doit_encore_progresser_sur",
+          "name": "Au cours de cette activité, j'ai réalisé que je devais encore progresser sur…",
+          "sortorder": 15,
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "competences_pratiquees",
+          "name": "Compétences réellement mises en pratique",
+          "sortorder": 16,
+          "type": "tagselect",
+          "description": "Parmi les compétences définies lors de la soumission du projet, indiquez celles que vous avez réellement mises en pratique. Vous pouvez également en ajouter.",
+          "configdata": {},
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "nb_heures_realisees",
+          "name": "Nombre d'heures réalisées (modifier si nécessaire)",
+          "sortorder": 17,
+          "type": "number",
+          "description": "",
+          "configdata": {},
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        },
+        {
+          "idnumber": "nb_ects_final",
+          "name": "Nombre d'ECTS final",
+          "sortorder": 18,
+          "type": "number",
+          "description": "",
+          "configdata": {},
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2
+        }
+      ]
+    }
+  ]
+}

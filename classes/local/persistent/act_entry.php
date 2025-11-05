@@ -33,6 +33,14 @@ class act_entry extends persistent {
     const TABLE = 'projetvet_act_entry';
 
     /**
+     * Entry status constants
+     */
+    const STATUS_DRAFT = 0;
+    const STATUS_SUBMITTED = 1;
+    const STATUS_VALIDATED = 2;
+    const STATUS_COMPLETED = 3;
+
+    /**
      * Return the custom definition of the properties of this model.
      *
      * Each property MUST be listed here.
@@ -51,6 +59,12 @@ class act_entry extends persistent {
                 'type' => PARAM_INT,
                 'message' => new lang_string('invaliddata', 'projetvet', 'studentid'),
             ],
+            'entrystatus' => [
+                'null' => NULL_NOT_ALLOWED,
+                'type' => PARAM_INT,
+                'default' => 0,
+                'message' => new lang_string('invaliddata', 'projetvet', 'entrystatus'),
+            ],
         ];
     }
 
@@ -61,15 +75,31 @@ class act_entry extends persistent {
      */
     public function can_edit(): bool {
         global $USER;
-        // Students can edit their own entries
-        if ($this->get('studentid') == $USER->id) {
-            return true;
+
+        $context = $this->get_context();
+        $entrystatus = $this->get('entrystatus');
+        $isstudent = $this->get('studentid') == $USER->id;
+
+        // STATUS_DRAFT (0): Only the student can edit their own entry.
+        if ($entrystatus == self::STATUS_DRAFT) {
+            return $isstudent && has_capability('mod/projetvet:submit', $context, $USER->id);
         }
-        // Teachers can edit any entry
-        $context = \context_module::instance($this->get_context()->instanceid);
-        if (has_capability('mod/projetvet:edit', $context)) {
-            return true;
+
+        // STATUS_SUBMITTED (1): Only teachers with edit capability can edit.
+        if ($entrystatus == self::STATUS_SUBMITTED) {
+            return has_capability('mod/projetvet:edit', $context, $USER->id);
         }
+
+        // STATUS_VALIDATED (2): Student can edit again.
+        if ($entrystatus == self::STATUS_VALIDATED) {
+            return $isstudent && has_capability('mod/projetvet:submit', $context, $USER->id);
+        }
+
+        // STATUS_COMPLETED (3): Only users with viewallstudents capability (managers) can edit.
+        if ($entrystatus == self::STATUS_COMPLETED) {
+            return has_capability('mod/projetvet:viewallstudents', $context, $USER->id);
+        }
+
         return false;
     }
 
@@ -101,5 +131,21 @@ class act_entry extends persistent {
         global $DB;
         $cm = get_coursemodule_from_instance('projetvet', $this->get('projetvetid'));
         return \context_module::instance($cm->id);
+    }
+
+    /**
+     * Hook to execute after delete.
+     *
+     * @param bool $result
+     * @return void
+     */
+    protected function after_delete($result) {
+        if ($result) {
+            // Delete all associated act_data records using the persistent class.
+            $datarecords = act_data::get_records(['entryid' => $this->get('id')]);
+            foreach ($datarecords as $datarecord) {
+                $datarecord->delete();
+            }
+        }
     }
 }

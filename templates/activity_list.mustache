@@ -65,9 +65,8 @@
             <th>{{#str}}year, mod_projetvet{{/str}}</th>
             <th>{{#str}}category, mod_projetvet{{/str}}</th>
             <th>{{#str}}completed, mod_projetvet{{/str}}</th>
-            {{^isteacher}}
+            <th>{{#str}}status, mod_projetvet{{/str}}</th>
             <th>{{#str}}actions, mod_projetvet{{/str}}</th>
-            {{/isteacher}}
         </tr>
     </thead>
     <tbody>
@@ -77,8 +76,19 @@
             <td>{{year}}</td>
             <td>{{category}}</td>
             <td>{{completedicon}}</td>
-            {{^isteacher}}
+            <td><span class="badge {{statusclass}}">{{statustext}}</span></td>
             <td>
+                {{#canview}}
+                <button class="btn btn-sm btn-info"
+                        data-action="activity-entry-form"
+                        data-readonly="1"
+                        data-cmid="{{cmid}}"
+                        data-projetvetid="{{projetvetid}}"
+                        data-studentid="{{studentid}}"
+                        data-entryid="{{entryid}}">
+                    {{#str}}view{{/str}}
+                </button>
+                {{/canview}}
                 {{#canedit}}
                 <button class="btn btn-sm btn-secondary"
                         data-action="activity-entry-form"
@@ -97,7 +107,6 @@
                 </button>
                 {{/candelete}}
             </td>
-            {{/isteacher}}
         </tr>
     {{/activities}}
     </tbody>

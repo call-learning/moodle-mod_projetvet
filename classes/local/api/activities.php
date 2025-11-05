@@ -50,6 +50,8 @@ class activities {
                 'id' => $category->get('id'),
                 'name' => $category->get('name'),
                 'description' => $category->get('description'),
+                'capability' => $category->get('capability'),
+                'entrystatus' => $category->get('entrystatus'),
                 'fields' => [],
             ];
         }
@@ -61,6 +63,8 @@ class activities {
                 'type' => $field->get('type'),
                 'description' => $field->get('description'),
                 'configdata' => $field->get('configdata'),
+                'capability' => $field->get('capability'),
+                'entrystatus' => $field->get('entrystatus'),
             ];
         }
         $actstructure->set('activitystructure', array_values($data));
@@ -125,6 +129,7 @@ class activities {
             'studentid' => $actentry->get('studentid'),
             'timecreated' => $actentry->get('timecreated'),
             'usermodified' => $actentry->get('usermodified'),
+            'entrystatus' => $actentry->get('entrystatus'),
             'categories' => $activity,
             'canedit' => $actentry->can_edit(),
             'candelete' => $actentry->can_delete(),
@@ -135,17 +140,19 @@ class activities {
     /**
      * Create an activity entry
      *
-     * @param int $projetvetid The projetvet instance id
+     * @param int $projetvetid The projetvet id
      * @param int $studentid The student id
      * @param array $fields The fields
+     * @param int $entrystatus The entry status (default STATUS_DRAFT)
      *
      * @return int
      */
-    public static function create_activity(int $projetvetid, int $studentid, array $fields): int {
+    public static function create_activity(int $projetvetid, int $studentid, array $fields, int $entrystatus = act_entry::STATUS_DRAFT): int {
         // Create the activity entry.
         $entry = new act_entry();
         $entry->set('projetvetid', $projetvetid);
         $entry->set('studentid', $studentid);
+        $entry->set('entrystatus', $entrystatus);
         $entry->create();
         $entry->save();
 
@@ -166,9 +173,10 @@ class activities {
      *
      * @param int $entryid The entry id
      * @param array $fields The fields
+     * @param int|null $entrystatus The entry status (null = no change)
      * @return void
      */
-    public static function update_activity(int $entryid, array $fields): void {
+    public static function update_activity(int $entryid, array $fields, ?int $entrystatus = null): void {
         // Update the activity.
         $entry = act_entry::get_record(['id' => $entryid]);
         if (empty($entry)) {
@@ -177,6 +185,13 @@ class activities {
         if (!$entry->can_edit()) {
             throw new \moodle_exception('cannoteditactivity', 'projetvet');
         }
+
+        // Update entry status if provided.
+        if ($entrystatus !== null) {
+            $entry->set('entrystatus', $entrystatus);
+            $entry->update();
+        }
+
         foreach ($fields as $fieldid => $value) {
             $data = act_data::get_record(['entryid' => $entryid, 'fieldid' => $fieldid]);
             if ($data) {
@@ -238,6 +253,7 @@ class activities {
                 'year' => self::get_activity_field_value($activity, 'year', true),
                 'category' => self::get_activity_field_value($activity, 'category', true),
                 'completed' => self::get_activity_field_value($activity, 'completed'),
+                'entrystatus' => $activity->entrystatus,
                 'canedit' => $activity->canedit,
                 'candelete' => $activity->candelete,
             ];

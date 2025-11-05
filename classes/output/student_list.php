@@ -17,19 +17,20 @@
 namespace mod_projetvet\output;
 
 use mod_projetvet\local\api\activities;
+use mod_projetvet\local\persistent\act_entry;
 use renderer_base;
 use renderable;
 use templatable;
 use moodle_url;
 
 /**
- * Teacher student list renderable class.
+ * Student list renderable class.
  *
  * @package    mod_projetvet
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class teacher_student_list implements renderable, templatable {
+class student_list implements renderable, templatable {
 
     /**
      * @var object $moduleinstance The module instance.
@@ -47,9 +48,14 @@ class teacher_student_list implements renderable, templatable {
     protected $context;
 
     /**
-     * @var int $teacherid The teacher ID.
+     * @var int $userid The user ID viewing the list.
      */
-    protected $teacherid;
+    protected $userid;
+
+    /**
+     * @var bool $ismanager Whether the user is a manager (can view all students).
+     */
+    protected $ismanager;
 
     /**
      * Constructor.
@@ -57,13 +63,14 @@ class teacher_student_list implements renderable, templatable {
      * @param object $moduleinstance The module instance
      * @param object $cm The course module
      * @param object $context The context
-     * @param int $teacherid The teacher ID
+     * @param int $userid The user ID viewing the list
      */
-    public function __construct($moduleinstance, $cm, $context, $teacherid) {
+    public function __construct($moduleinstance, $cm, $context, $userid) {
         $this->moduleinstance = $moduleinstance;
         $this->cm = $cm;
         $this->context = $context;
-        $this->teacherid = $teacherid;
+        $this->userid = $userid;
+        $this->ismanager = has_capability('mod/projetvet:viewallstudents', $context, $userid);
     }
 
     /**
@@ -73,7 +80,12 @@ class teacher_student_list implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
-        $students = $this->get_students_in_teacher_groups();
+        // Get students based on role - managers see all, teachers see their groups.
+        if ($this->ismanager) {
+            $students = $this->get_all_students();
+        } else {
+            $students = $this->get_students_in_teacher_groups();
+        }
 
         $data = [
             'hasstudents' => !empty($students),
@@ -81,6 +93,12 @@ class teacher_student_list implements renderable, templatable {
         ];
 
         foreach ($students as $student) {
+            // Only show students with submitted entries.
+            $hassubmitted = $this->student_has_submitted_entries($student->id);
+            if (!$hassubmitted) {
+                continue;
+            }
+
             try {
                 $activitylist = activities::get_activity_list($this->moduleinstance->id, $student->id);
                 $count = count($activitylist);
@@ -100,7 +118,20 @@ class teacher_student_list implements renderable, templatable {
             ];
         }
 
+        // Update hasstudents after filtering.
+        $data['hasstudents'] = !empty($data['students']);
+
         return $data;
+    }
+
+    /**
+     * Get all students enrolled in the course with submit capability.
+     *
+     * @return array Array of student user objects
+     */
+    protected function get_all_students() {
+        $enrolled = get_enrolled_users($this->context, 'mod/projetvet:submit', 0, 'u.*', 'u.lastname ASC, u.firstname ASC');
+        return array_values($enrolled);
     }
 
     /**
@@ -109,7 +140,7 @@ class teacher_student_list implements renderable, templatable {
      * @return array Array of student user objects
      */
     protected function get_students_in_teacher_groups() {
-        $teachergroups = groups_get_user_groups($this->cm->course, $this->teacherid);
+        $teachergroups = groups_get_user_groups($this->cm->course, $this->userid);
 
         if (empty($teachergroups) || empty($teachergroups[0])) {
             return [];
@@ -130,5 +161,30 @@ class teacher_student_list implements renderable, templatable {
         }
 
         return $students;
+    }
+
+    /**
+     * Check if a student has any submitted entries.
+     *
+     * @param int $studentid The student ID
+     * @return bool True if student has submitted entries
+     */
+    protected function student_has_submitted_entries(int $studentid): bool {
+        global $DB;
+
+        // Check for entries with status submitted or higher.
+        $sql = "SELECT COUNT(*)
+                  FROM {projetvet_act_entry}
+                 WHERE projetvetid = :projetvetid
+                   AND studentid = :studentid
+                   AND entrystatus >= :submitted";
+
+        $count = $DB->count_records_sql($sql, [
+            'projetvetid' => $this->moduleinstance->id,
+            'studentid' => $studentid,
+            'submitted' => act_entry::STATUS_SUBMITTED,
+        ]);
+
+        return $count > 0;
     }
 }

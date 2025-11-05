@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,18 +14,39 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for Projetvet
+ * Gateway to the webservices.
  *
- * @package    mod_projetvet
+ * @module     mod_projetvet/repository
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+import Ajax from 'core/ajax';
+import Notification from 'core/notification';
 
-$plugin->component    = 'mod_projetvet';
-$plugin->release      = '1.6';
-$plugin->version      = 2025110306;
-$plugin->requires     = 2024100700;
-$plugin->supported    = [405, 501];
-$plugin->maturity     = MATURITY_STABLE;
+/**
+ * Projetvet repository class.
+ */
+class Repository {
+
+    /**
+     * Delete an activity entry.
+     * @param {Object} args The arguments.
+     * @return {Promise} The promise.
+     */
+    deleteEntry(args) {
+        const request = {
+            methodname: 'mod_projetvet_delete_entry',
+            args: args
+        };
+
+        let promise = Ajax.call([request])[0]
+            .fail(Notification.exception);
+
+        return promise;
+    }
+}
+
+const RepositoryInstance = new Repository();
+
+export default RepositoryInstance;

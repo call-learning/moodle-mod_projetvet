@@ -179,5 +179,70 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025102302, 'projetvet');
     }
 
+    if ($oldversion < 2025102303) {
+
+        // Define field submitted to be added to projetvet_act_entry.
+        $table = new xmldb_table('projetvet_act_entry');
+        $field = new xmldb_field('submitted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'studentid');
+
+        // Conditionally launch add field submitted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025102303, 'projetvet');
+    }
+
+    if ($oldversion < 2025110302) {
+
+        // Define fields capability and entrystatus to be added to projetvet_act_field.
+        $table = new xmldb_table('projetvet_act_field');
+
+        $field = new xmldb_field('capability', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'configdata');
+        // Conditionally launch add field capability.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('entrystatus', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'capability');
+        // Conditionally launch add field entrystatus.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Rename field submitted to entrystatus in projetvet_act_entry.
+        $table = new xmldb_table('projetvet_act_entry');
+        $field = new xmldb_field('submitted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'studentid');
+
+        // Launch rename field entrystatus.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'entrystatus');
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025110302, 'projetvet');
+    }
+
+    if ($oldversion < 2025110306) {
+
+        // Define fields capability and entrystatus to be added to projetvet_act_field.
+        $table = new xmldb_table('projetvet_act_cat');
+        $field = new xmldb_field('capability', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'description');
+        // Conditionally launch add field capability.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('entrystatus', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'capability');
+        // Conditionally launch add field entrystatus.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025110306, 'projetvet');
+    }
+
     return true;
 }

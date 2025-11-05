@@ -24,6 +24,7 @@
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import Notification from 'core/notification';
+import Repository from 'mod_projetvet/repository';
 
 export const init = () => {
 
@@ -49,8 +50,11 @@ export const init = () => {
             args: {
                 ...button.dataset,
             },
-            saveButtonText: getString('save'),
+            saveButtonText: getString('savechanges'),
         });
+
+        // Intercept form submission to show dialog only if switch is not checked.
+
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
     });
@@ -62,6 +66,13 @@ export const init = () => {
         }
         event.preventDefault();
 
+        const button = event.target.closest('[data-action="delete-activity"]');
+        const entryid = button.dataset.entryid;
+
+        if (!entryid) {
+            return;
+        }
+
         const confirmString = await getString('confirmdeleteactivity', 'mod_projetvet');
 
         Notification.confirm(
@@ -69,10 +80,13 @@ export const init = () => {
             confirmString,
             getString('delete'),
             getString('cancel'),
-            () => {
-                // TODO: Implement delete via web service.
-                // For now, just reload the page.
-                window.location.reload();
+            async() => {
+                try {
+                    await Repository.deleteEntry({entryid: parseInt(entryid)});
+                    window.location.reload();
+                } catch (error) {
+                    Notification.exception(error);
+                }
             }
         );
     });

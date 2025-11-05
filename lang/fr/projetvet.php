@@ -35,6 +35,8 @@ $string['projetvet:view'] = 'Voir Projetvet';
 $string['projetvet:submit'] = 'Soumettre des activités';
 $string['projetvet:viewallactivities'] = 'Voir toutes les activités des étudiants';
 $string['projetvet:edit'] = 'Modifier les activités Projetvet';
+$string['projetvet:viewallstudents'] = 'Voir tous les étudiants (gestionnaires)';
+$string['projetvet:approve'] = 'Approuver les activités des étudiants';
 
 // Settings.
 $string['promo'] = 'Promo';
@@ -45,6 +47,7 @@ $string['currentyear_help'] = 'La description de l\'année en cours (par exemple
 // Activity strings.
 $string['newactivity'] = 'Nouvelle activité';
 $string['editactivity'] = 'Modifier l\'activité';
+$string['viewactivity'] = 'Voir l\'activité';
 $string['noactivities'] = 'Aucune activité pour le moment. Cliquez sur le bouton ci-dessus pour créer votre première activité.';
 $string['activitytitle'] = 'Titre';
 $string['year'] = 'Année';
@@ -52,6 +55,19 @@ $string['category'] = 'Catégorie';
 $string['completed'] = 'Complété';
 $string['actions'] = 'Actions';
 $string['confirmdeleteactivity'] = 'Êtes-vous sûr de vouloir supprimer cette activité ?';
+$string['submittotutor'] = 'Soumettre au tuteur';
+$string['submitandnotify'] = 'Soumettre au tuteur';
+$string['saveasdraft'] = 'Enregistrer comme brouillon';
+$string['choosesubmissiontype'] = 'Choisir le type de soumission';
+$string['sendtoteacher'] = 'Envoyer au tuteur';
+$string['sendtoteacher_help'] = 'Lorsque ce commutateur est activé, votre entrée sera envoyée à votre tuteur pour évaluation';
+$string['submitted'] = 'Soumis';
+$string['draft'] = 'Brouillon';
+$string['status'] = 'Statut';
+$string['status_draft'] = 'Brouillon';
+$string['status_submitted'] = 'Soumis';
+$string['status_validated'] = 'Validé';
+$string['status_completed'] = 'Complété';
 
 // Teacher view strings.
 $string['mystudents'] = 'Mes étudiants';

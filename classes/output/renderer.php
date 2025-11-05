@@ -25,18 +25,18 @@ namespace mod_projetvet\output;
  */
 class renderer extends \plugin_renderer_base {
     /**
-     * Render the student list for teachers
+     * Render the student list for teachers/managers
      *
      * @param \stdClass $moduleinstance The projetvet instance
      * @param \stdClass $cm The course module
      * @param \context_module $context The context
      * @return string HTML to output
      */
-    public function render_teacher_student_list($moduleinstance, $cm, $context) {
+    public function render_student_list($moduleinstance, $cm, $context) {
         global $USER;
 
-        $teacherstudentlist = new teacher_student_list($moduleinstance, $cm, $context, $USER->id);
-        return $this->render_from_template('mod_projetvet/teacher_student_list', $teacherstudentlist->export_for_template($this));
+        $studentlist = new student_list($moduleinstance, $cm, $context, $USER->id);
+        return $this->render_from_template('mod_projetvet/student_list', $studentlist->export_for_template($this));
     }
 
     /**
@@ -54,19 +54,24 @@ class renderer extends \plugin_renderer_base {
     }
 
     /**
-     * Render the activity list for a specific student (student view or teacher viewing student)
+     * Render the activity list for a specific student (student view or teacher/manager viewing student)
      *
      * @param \stdClass $moduleinstance The projetvet instance
      * @param \stdClass $cm The course module
      * @param \context_module $context The context
      * @param int $studentid The student ID
-     * @param bool $isteacher Whether the viewer is a teacher
      * @return string HTML to output
      */
-    public function render_activity_list($moduleinstance, $cm, $context, $studentid, $isteacher = false) {
+    public function render_activity_list($moduleinstance, $cm, $context, $studentid) {
+        global $USER;
+
         $output = '';
 
-        // Render info section for students.
+        // Determine if viewer has elevated permissions.
+        $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
+        $isteacher = $canviewall && $studentid != $USER->id;
+
+        // Render info section for students viewing their own work.
         if (!$isteacher) {
             $output .= $this->render_student_info($moduleinstance, $cm, $context, $studentid);
         }

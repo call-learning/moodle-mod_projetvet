@@ -1,0 +1,150 @@
+{
+  "compte_rendu_validation": {
+    "section_title": "Compte rendu & validation",
+    "groups": [
+      {
+        "group_id": "dates_realisation",
+        "group_title": "Dates de réalisation de l'activité",
+        "instruction": "Indiquez ici la période pendant laquelle s'est déroulée l'activité de CPP",
+        "fields": [
+          {
+            "field_id": "date_debut_realisation",
+            "label": "Date de début de réalisation",
+            "type": "date",
+            "placeholder": null,
+            "helper_text": null
+          },
+          {
+            "field_id": "date_fin_realisation",
+            "label": "Date de fin de réalisation",
+            "type": "date",
+            "placeholder": null,
+            "helper_text": null
+          }
+        ]
+      },
+      {
+        "group_id": "compte_rendu",
+        "group_title": "Compte-rendu",
+        "instruction": "Résumé des principales réalisations et actions menées pendant ce projet",
+        "fields": [
+          {
+            "field_id": "resume_actions",
+            "label": "Décrire ici de façon concrète ce que vous avez fait",
+            "type": "textarea",
+            "placeholder": null,
+            "helper_text": null
+          }
+        ]
+      },
+      {
+        "group_id": "liste_productions",
+        "group_title": "Liste des productions",
+        "instruction": "Le cas échéant, lister ici toute production écrite ou orale liée à l’activité.",
+        "examples": [
+          "rapport de stage",
+          "présentation orale"
+        ],
+        "fields": [
+          {
+            "field_id": "productions",
+            "label": "Le cas échéant, lister ici toute production écrite ou orale liée à l’activité. Par exemple : rapport de stage, présentation orale, etc.",
+            "type": "textarea",
+            "placeholder": null,
+            "helper_text": null
+          }
+        ]
+      },
+      {
+        "group_id": "documents_complementaires",
+        "group_title": "Documents complémentaires",
+        "fields": [
+          {
+            "field_id": "fichiers",
+            "label": "Pièces jointes",
+            "type": "file",
+            "example_files": [
+              "Fichier 1.docx"
+            ],
+            "actions": [
+              "Télécharger",
+              "Supprimer"
+            ],
+            "add_button_label": "Ajouter un document"
+          }
+        ]
+      },
+      {
+        "group_id": "progressions",
+        "group_title": "Progression",
+        "fields": [
+          {
+            "field_id": "progresses_sur",
+            "label": "Grâce à cette activité, j’ai progressé sur…",
+            "type": "textarea",
+            "placeholder": null,
+            "helper_text": null
+          },
+          {
+            "field_id": "doit_encore_progresser_sur",
+            "label": "Au cours de cette activité, j’ai réalisé que je devais encore progresser sur…",
+            "type": "textarea",
+            "placeholder": null,
+            "helper_text": null
+          }
+        ]
+      }
+    ]
+  },
+  "competences": {
+    "section_title": "Compétences",
+    "instruction": "Parmi les compétences définies lors de la soumission du projet, indiquez celles que vous avez réellement mises en pratique. Vous pouvez également en ajouter.",
+    "competence_list": [
+      {
+        "competence_id": "conseiller_prevenir",
+        "title": "Conseiller et Prévenir",
+        "description": "CoPrev1. Évaluer l’état général, le bien-être et l’état nutritionnel d’un animal ou d’un groupe d’animaux",
+        "status_label": "Mise en pratique",
+        "checked": true
+      },
+      {
+        "competence_id": "etablir_diagnostic",
+        "title": "Établir un diagnostic",
+        "description": null,
+        "status_label": "Mise en pratique",
+        "checked": false
+      }
+    ],
+    "add_button_label": "Ajouter une compétence"
+  },
+  "heures_et_ects": {
+    "section_title": "Nombres d’heures consacrées et ECTS",
+    "estimation_banner": {
+      "title": "Estimation initiale : XXX h = YY ECTS",
+      "details": [
+        "Votre tutoré·e a déclaré avoir consacré XXX h à cette activité que le système a converti en YY ECTS (conversion automatique selon la catégorie et la règle 1 ECTS = 25 à 30 h)."
+      ],
+      "you_can_now": [
+        "ajuster le volume d’heures estimé si nécessaire",
+        "modifier le nombre de crédits ECTS potentiels attribuables"
+      ],
+      "note": "En cas d’écart important avec la déclaration de votre tutoré·e, discutez-en avec lui·elle en présentiel ou en visioconférence pour expliquer votre décision."
+    },
+    "fields": [
+      {
+        "field_id": "nb_heures_realisees",
+        "label": "Nombre d’heures réalisées (modifier si nécessaire)",
+        "type": "number",
+        "placeholder": "XXXX",
+        "helper_text": null
+      },
+      {
+        "field_id": "nb_ects_final",
+        "label": "Nombre d’ECTS final",
+        "type": "number",
+        "placeholder": "ZZ",
+        "helper_text": null
+      }
+    ]
+  }
+}

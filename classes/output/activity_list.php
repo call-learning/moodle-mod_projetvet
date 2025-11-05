@@ -17,6 +17,7 @@
 namespace mod_projetvet\output;
 
 use mod_projetvet\local\api\activities;
+use mod_projetvet\local\persistent\act_entry;
 use renderer_base;
 use renderable;
 use templatable;
@@ -101,17 +102,41 @@ class activity_list implements renderable, templatable {
         $data['activities'] = [];
 
         foreach ($activitylist as $activity) {
+            // Determine status text and badge class based on entrystatus.
+            $statuskey = match($activity['entrystatus']) {
+                act_entry::STATUS_DRAFT => 'status_draft',
+                act_entry::STATUS_SUBMITTED => 'status_submitted',
+                act_entry::STATUS_VALIDATED => 'status_validated',
+                act_entry::STATUS_COMPLETED => 'status_completed',
+                default => 'status_draft',
+            };
+            $statusclass = match($activity['entrystatus']) {
+                act_entry::STATUS_DRAFT => 'badge-secondary',
+                act_entry::STATUS_SUBMITTED => 'badge-primary',
+                act_entry::STATUS_VALIDATED => 'badge-info',
+                act_entry::STATUS_COMPLETED => 'badge-success',
+                default => 'badge-secondary',
+            };
+
             $activitydata = [
                 'title' => $activity['title'],
                 'year' => $activity['year'],
                 'category' => $activity['category'],
                 'completed' => $activity['completed'],
                 'completedicon' => $activity['completed'] ? '✓' : '',
+                'entryid' => $activity['id'],
+                'entrystatus' => $activity['entrystatus'],
+                'statustext' => get_string($statuskey, 'mod_projetvet'),
+                'statusclass' => $statusclass,
             ];
+
             if (!$this->isteacher) {
+                // Students can edit and delete their own activities.
                 $activitydata['canedit'] = $activity['canedit'];
                 $activitydata['candelete'] = $activity['candelete'];
-                $activitydata['entryid'] = $activity['id'];
+            } else {
+                // Teachers can only view activities (read-only mode).
+                $activitydata['canview'] = true;
             }
 
             $data['activities'][] = $activitydata;

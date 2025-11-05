@@ -20,6 +20,7 @@ use context;
 use context_module;
 use core_form\dynamic_form;
 use mod_projetvet\local\api\activities;
+use mod_projetvet\local\persistent\act_entry;
 use mod_projetvet\local\persistent\act_field;
 use mod_projetvet\local\persistent\field_data;
 use moodle_exception;
@@ -45,6 +46,14 @@ class activity_entry_form extends dynamic_form {
         global $USER;
         $data = $this->get_data();
 
+        // Progress to next status on submission.
+        // Current status is stored in hidden field, we increment it on form submission.
+        $currententrystatus = $data->entrystatus ?? act_entry::STATUS_DRAFT;
+
+        // Progress to next status (0->1, 1->2, 2->3, 3 stays at 3).
+        $nextstatus = min($currententrystatus + 1, act_entry::STATUS_COMPLETED);
+        $entrystatus = $nextstatus;
+
         // Extract field values from form data.
         $fields = [];
         $structure = activities::get_activity_structure();
@@ -59,12 +68,12 @@ class activity_entry_form extends dynamic_form {
 
         if (!empty($data->entryid)) {
             // Update existing entry.
-            activities::update_activity($data->entryid, $fields);
+            activities::update_activity($data->entryid, $fields, $entrystatus);
             $entryid = $data->entryid;
         } else {
             // Create new entry.
             $studentid = $data->studentid ?? $USER->id;
-            $entryid = activities::create_activity($data->projetvetid, $studentid, $fields);
+            $entryid = activities::create_activity($data->projetvetid, $studentid, $fields, $entrystatus);
         }
 
         return [
@@ -128,11 +137,19 @@ class activity_entry_form extends dynamic_form {
         global $CFG;
         $mform = $this->_form;
 
-        // Register the custom form element.
+        // Set vertical display mode.
+        $this->set_display_vertical();
+
+        // Register custom form elements.
         \MoodleQuickForm::registerElementType(
             'tagselect',
             "$CFG->dirroot/mod/projetvet/classes/form/tagselect_element.php",
             'mod_projetvet\form\tagselect_element'
+        );
+        \MoodleQuickForm::registerElementType(
+            'switch',
+            "$CFG->dirroot/mod/projetvet/classes/form/switch_element.php",
+            'mod_projetvet\form\switch_element'
         );
 
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
@@ -144,16 +161,45 @@ class activity_entry_form extends dynamic_form {
         $mform->addElement('hidden', 'projetvetid', $projetvetid);
         $mform->addElement('hidden', 'studentid', $studentid);
         $mform->addElement('hidden', 'entryid', $entryid);
+        $mform->addElement('hidden', 'entrystatus');
+        $mform->setType('entrystatus', PARAM_INT);
+
+        // Get the context for capability checking.
+        $context = context_module::instance($cmid);
+
+        // Get current entry status if editing.
+        $currententrystatus = act_entry::STATUS_DRAFT;
+        if ($entryid) {
+            $entry = activities::get_entry($entryid);
+            $currententrystatus = $entry->entrystatus;
+        }
 
         // Get the activity structure and add fields.
         $structure = activities::get_activity_structure();
 
         foreach ($structure as $category) {
+
+            if ($category->entrystatus > $currententrystatus) {
+                // Skip this category as its entrystatus is higher than current entry status.
+                continue;
+            }
+
             // Add category header.
             $mform->addElement('header', 'category_' . $category->id, $category->name);
 
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
+
+                // Check if user can edit this field based on capability and entry status.
+                $canediffield = true;
+                if (!empty($field->capability)) {
+                    $canediffield = has_capability($field->capability, $context);
+                }
+                // Also check if entry status allows editing this field.
+                if ($canediffield && $field->entrystatus != $currententrystatus) {
+                    $canediffield = false;
+                }
+
                 // Decode configdata - it may be a string or already decoded.
                 if (is_string($field->configdata)) {
                     // Remove slashes that may have been added during storage.
@@ -169,6 +215,11 @@ class activity_entry_form extends dynamic_form {
                     case 'text':
                         $mform->addElement('text', $fieldname, $field->name);
                         $mform->setType($fieldname, PARAM_TEXT);
+                        break;
+
+                    case 'date':
+                        $mform->addElement('date_selector', $fieldname, $field->name);
+                        $mform->setDefault($fieldname, time());
                         break;
 
                     case 'textarea':
@@ -215,12 +266,32 @@ class activity_entry_form extends dynamic_form {
                         $mform->addElement('advcheckbox', $fieldname, $field->name, '', null, [0, 1]);
                         break;
                 }
+                if (!empty($configdata['required']) && $configdata['required'] == true && $canediffield) {
+                    $mform->addRule($fieldname, null, 'required', null, 'client');
+                }
 
                 if (!empty($field->description)) {
                     $mform->addHelpButton($fieldname, $field->idnumber, 'mod_projetvet');
                 }
+
+                // If user cannot edit this field, freeze it.
+                if (!$canediffield) {
+                    $mform->freeze($fieldname);
+                }
             }
         }
+
+        // Store current entry status in hidden field - it will be incremented on submission.
+        // Switch element commented out as it only supports 0/1 values, but we have 4 statuses (0-3).
+        // $mform->addElement('switch', 'entrystatus', get_string('sendtoteacher', 'mod_projetvet'), '', ['value' => 1]);
+        // $mform->addHelpButton('entrystatus', 'sendtoteacher', 'mod_projetvet');
+
+        // $buttonarray = [
+        //     $mform->createElement('submit', 'submittotutor', get_string('submittotutor', 'mod_projetvet')),
+        //     $mform->createElement('submit', 'saveasdraft', get_string('saveasdraft', 'mod_projetvet')),
+        //     $mform->createElement('cancel'),
+        // ];
+        // $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
     }
 
     /**
@@ -236,11 +307,14 @@ class activity_entry_form extends dynamic_form {
             'projetvetid' => $this->optional_param('projetvetid', 0, PARAM_INT),
             'studentid' => $this->optional_param('studentid', $USER->id, PARAM_INT),
             'entryid' => $this->optional_param('entryid', 0, PARAM_INT),
+            'entrystatus' => act_entry::STATUS_DRAFT, // Default to draft for new entries.
         ];
 
         // If editing an existing entry, load its data.
         if (!empty($data['entryid'])) {
             $entry = activities::get_entry($data['entryid']);
+            // Set the entry status switch from the entry.
+            $data['entrystatus'] = $entry->entrystatus;
             $structure = activities::get_activity_structure();
             foreach ($entry->categories as $category) {
                 foreach ($category->fields as $field) {
@@ -251,7 +325,11 @@ class activity_entry_form extends dynamic_form {
                         $decoded = json_decode($field->value, true);
                         $data[$fieldname] = is_array($decoded) ? $decoded : [];
                     } else {
-                        $data[$fieldname] = $field->value;
+                        if ($fieldobj->type == 'date' && $field->value == '') {
+                            $data[$fieldname] = time();
+                        } else {
+                            $data[$fieldname] = $field->value;
+                        }
                     }
                 }
             }
@@ -276,53 +354,5 @@ class activity_entry_form extends dynamic_form {
             }
         }
         return null;
-    }
-
-    /**
-     * Load grouped options from a JSON file with parent-child structure
-     *
-     * @param string $filename The JSON filename (relative to mod/projetvet/data/)
-     * @return array Grouped options array suitable for tagselect element
-     */
-    private function load_grouped_options_from_json($filename) {
-        global $CFG;
-
-        $jsonfile = $CFG->dirroot . '/mod/projetvet/data/' . $filename;
-        if (!file_exists($jsonfile)) {
-            return [];
-        }
-
-        $json = file_get_contents($jsonfile);
-        $data = json_decode($json, true);
-
-        if (empty($data)) {
-            return [];
-        }
-
-        // Parse the flat array structure with parent relationships.
-        $grouped = [];
-        foreach ($data as $item) {
-            if ($item['type'] === 'heading') {
-                // Create a group for this heading.
-                $groupitems = [];
-                // Find all items that belong to this heading.
-                foreach ($data as $subitem) {
-                    if ($subitem['type'] === 'item' && $subitem['parent'] == $item['uniqueid']) {
-                        $groupitems[] = [
-                            'uniqueid' => $subitem['uniqueid'],
-                            'name' => $subitem['name'],
-                        ];
-                    }
-                }
-                if (!empty($groupitems)) {
-                    $grouped[] = [
-                        'name' => $item['name'],
-                        'items' => $groupitems,
-                    ];
-                }
-            }
-        }
-
-        return $grouped;
     }
 }

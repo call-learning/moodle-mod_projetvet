@@ -44,6 +44,7 @@ class act_field extends persistent {
         'checkbox',
         'autocomplete',
         'tagselect',
+        'date'
     ];
 
     /**
@@ -90,6 +91,18 @@ class act_field extends persistent {
                 'default' => null,
                 'type' => PARAM_TEXT,
                 'message' => new lang_string('invaliddata', 'projetvet', 'configdata'),
+            ],
+            'capability' => [
+                'null' => NULL_ALLOWED,
+                'default' => null,
+                'type' => PARAM_TEXT,
+                'message' => new lang_string('invaliddata', 'projetvet', 'capability'),
+            ],
+            'entrystatus' => [
+                'null' => NULL_NOT_ALLOWED,
+                'default' => 0,
+                'type' => PARAM_INT,
+                'message' => new lang_string('invaliddata', 'projetvet', 'entrystatus'),
             ],
         ];
     }
@@ -180,6 +193,7 @@ class act_field extends persistent {
                 return $value;
             case 'number':
             case 'checkbox':
+            case 'date':
                 return intval($value);
             case 'select':
                 if (is_numeric($value)) {

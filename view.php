@@ -45,7 +45,7 @@ require_login($course, true, $cm);
 
 $context = context_module::instance($cm->id);
 
-// Check if viewing a specific student (for teachers).
+// Check if viewing a specific student (for teachers/managers).
 $studentid = optional_param('studentid', 0, PARAM_INT);
 
 \mod_projetvet\event\course_module_viewed::create_from_record($moduleinstance, $cm, $course)->trigger();
@@ -55,39 +55,29 @@ $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-// Determine if user is a teacher (has viewallactivities capability).
-$isteacher = has_capability('mod/projetvet:viewallactivities', $context);
-
-// Only load JavaScript for students or when teacher is viewing a specific student.
-if (!$isteacher || $studentid) {
-    $PAGE->requires->js_call_amd('mod_projetvet/activity_entry_form', 'init');
-    $PAGE->requires->js_call_amd('mod_projetvet/student_info_forms', 'init');
-}
-
-echo $OUTPUT->header();
-
-// Display the module introduction.
-echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
+// Determine if user can view all activities (teacher or manager).
+$canviewall = has_capability('mod/projetvet:viewallactivities', $context);
 
 // Get the renderer.
 $renderer = $PAGE->get_renderer('mod_projetvet');
 
-// Display appropriate view based on user role.
-if ($isteacher && !$studentid) {
-    // Teacher view: show list of students.
-    echo $renderer->render_teacher_student_list($moduleinstance, $cm, $context);
+// Display appropriate view based on capability and context.
+if ($canviewall && !$studentid) {
+    // Teacher/Manager view: show list of students with submitted entries.
+    echo $OUTPUT->header();
+    echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
+    echo $renderer->render_student_list($moduleinstance, $cm, $context);
 } else {
-    // Student view or teacher viewing a specific student.
+    // Student view or teacher/manager viewing a specific student.
     $viewingstudentid = $studentid ? $studentid : $USER->id;
 
-    // If teacher is viewing a student, verify they have access (same group).
-    if ($isteacher && $studentid) {
-        // Teachers can view any student in their groups.
-        echo $renderer->render_activity_list($moduleinstance, $cm, $context, $viewingstudentid, true);
-    } else {
-        // Student viewing their own activities.
-        echo $renderer->render_activity_list($moduleinstance, $cm, $context, $viewingstudentid, false);
-    }
+    // Load JavaScript for activity forms.
+    $PAGE->requires->js_call_amd('mod_projetvet/activity_entry_form', 'init');
+    $PAGE->requires->js_call_amd('mod_projetvet/student_info_forms', 'init');
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
+    echo $renderer->render_activity_list($moduleinstance, $cm, $context, $viewingstudentid);
 }
 
 echo $OUTPUT->footer();

@@ -35,6 +35,8 @@ $string['projetvet:view'] = 'View Projetvet';
 $string['projetvet:submit'] = 'Submit activities';
 $string['projetvet:viewallactivities'] = 'View all student activities';
 $string['projetvet:edit'] = 'Edit Projetvet activities';
+$string['projetvet:viewallstudents'] = 'View all students (managers)';
+$string['projetvet:approve'] = 'Approve student activities';
 
 // Settings.
 $string['promo'] = 'Promo';
@@ -45,6 +47,7 @@ $string['currentyear_help'] = 'The current year description (e.g., 3ème année)
 // Activity strings.
 $string['newactivity'] = 'New Activity';
 $string['editactivity'] = 'Edit Activity';
+$string['viewactivity'] = 'View Activity';
 $string['noactivities'] = 'No activities yet. Click the button above to create your first activity.';
 $string['activitytitle'] = 'Title';
 $string['year'] = 'Year';
@@ -52,6 +55,19 @@ $string['category'] = 'Category';
 $string['completed'] = 'Completed';
 $string['actions'] = 'Actions';
 $string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
+$string['submittotutor'] = 'Submit to teacher';
+$string['submitandnotify'] = 'Submit to teacher';
+$string['saveasdraft'] = 'Save as draft';
+$string['choosesubmissiontype'] = 'Choose submission type';
+$string['sendtoteacher'] = 'Send to teacher';
+$string['sendtoteacher_help'] = 'When checked, your entry will be sent to your teacher for evaluation';
+$string['submitted'] = 'Submitted';
+$string['draft'] = 'Draft';
+$string['status'] = 'Status';
+$string['status_draft'] = 'Draft';
+$string['status_submitted'] = 'Submitted';
+$string['status_validated'] = 'Validated';
+$string['status_completed'] = 'Completed';
 
 // Teacher view strings.
 $string['mystudents'] = 'My Students';
