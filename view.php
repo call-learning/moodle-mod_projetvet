@@ -72,12 +72,28 @@ if ($canviewall && !$studentid) {
     $viewingstudentid = $studentid ? $studentid : $USER->id;
 
     // Load JavaScript for activity forms.
-    $PAGE->requires->js_call_amd('mod_projetvet/activity_entry_form', 'init');
+    $PAGE->requires->js_call_amd('mod_projetvet/projetvet_form', 'init');
     $PAGE->requires->js_call_amd('mod_projetvet/student_info_forms', 'init');
 
     echo $OUTPUT->header();
     echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
-    echo $renderer->render_activity_list($moduleinstance, $cm, $context, $viewingstudentid);
+
+    // Determine if viewer is a teacher viewing a student.
+    $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
+    $isteacher = $canviewall && $viewingstudentid != $USER->id;
+
+    // Render student info section (only for students viewing their own work).
+    if (!$isteacher) {
+        echo $renderer->render_student_info($moduleinstance, $cm, $context, $viewingstudentid);
+    }
+
+    // Render activities list.
+    echo $OUTPUT->heading(get_string('activities', 'mod_projetvet'), 3);
+    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'activities');
+
+    // Render face-to-face sessions list.
+    echo $OUTPUT->heading(get_string('facetofacesessions', 'mod_projetvet'), 3);
+    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'facetoface');
 }
 
 echo $OUTPUT->footer();

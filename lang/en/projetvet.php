@@ -45,6 +45,8 @@ $string['currentyear'] = 'Current year';
 $string['currentyear_help'] = 'The current year description (e.g., 3ème année)';
 
 // Activity strings.
+$string['activities'] = 'Activities';
+$string['facetofacesessions'] = 'Face-to-face sessions';
 $string['newactivity'] = 'New Activity';
 $string['editactivity'] = 'Edit Activity';
 $string['viewactivity'] = 'View Activity';

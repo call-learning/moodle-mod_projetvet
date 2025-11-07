@@ -18,6 +18,7 @@ namespace mod_projetvet\local\importer;
 
 use mod_projetvet\local\persistent\form_cat;
 use mod_projetvet\local\persistent\form_field;
+use mod_projetvet\local\persistent\form_set;
 
 /**
  * Fields JSON importer
@@ -63,11 +64,24 @@ class fields_json_importer {
             throw new \moodle_exception('invalidjsonstructure', 'error', '', 'Missing categories array');
         }
 
+        // Get or create the 'activities' form set.
+        $formset = form_set::get_record(['idnumber' => 'activities']);
+        if (!$formset) {
+            $formset = new form_set(0, (object)[
+                'idnumber' => 'activities',
+                'name' => 'Activities',
+                'description' => 'Activity form fields',
+                'sortorder' => 0,
+            ]);
+            $formset->create();
+        }
+
         foreach ($data['categories'] as $categorydata) {
             // Create or get category.
             $category = form_cat::get_record(['idnumber' => $categorydata['idnumber']]);
             if (!$category) {
                 $category = new form_cat(0, (object)[
+                    'formsetid' => $formset->get('id'),
                     'idnumber' => $categorydata['idnumber'],
                     'name' => $categorydata['name'],
                     'description' => $categorydata['description'] ?? '',
@@ -78,6 +92,7 @@ class fields_json_importer {
                 $category->create();
             } else {
                 // Update existing category.
+                $category->set('formsetid', $formset->get('id'));
                 $category->set('name', $categorydata['name']);
                 $category->set('description', $categorydata['description'] ?? '');
                 $category->set('sortorder', $categorydata['sortorder'] ?? 0);

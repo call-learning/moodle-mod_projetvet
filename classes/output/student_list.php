@@ -16,7 +16,7 @@
 
 namespace mod_projetvet\output;
 
-use mod_projetvet\local\api\activities;
+use mod_projetvet\local\api\entries;
 use mod_projetvet\local\persistent\form_entry;
 use renderer_base;
 use renderable;
@@ -100,7 +100,7 @@ class student_list implements renderable, templatable {
             }
 
             try {
-                $activitylist = activities::get_activity_list($this->moduleinstance->id, $student->id);
+                $activitylist = entries::get_entry_list($this->moduleinstance->id, $student->id);
                 $count = count($activitylist);
             } catch (\Exception $e) {
                 $count = 0;

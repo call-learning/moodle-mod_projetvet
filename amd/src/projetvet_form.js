@@ -16,7 +16,7 @@
 /**
  * Activity entry form modal
  *
- * @module     mod_projetvet/activity_entry_form
+ * @module     mod_projetvet/projetvet_form
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -46,7 +46,7 @@ export const init = () => {
             modalConfig: {
                 title: getString(titleString, 'mod_projetvet'),
             },
-            formClass: '\\mod_projetvet\\form\\activity_entry_form',
+            formClass: '\\mod_projetvet\\form\\projetvet_form',
             args: {
                 ...button.dataset,
             },

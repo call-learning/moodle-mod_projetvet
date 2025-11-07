@@ -1,0 +1,175 @@
+{
+  "categories": [
+    {
+      "name": "Informations générales",
+      "idnumber": "informations_generales",
+      "description": "Informations générales sur l'entretien",
+      "sortorder": 1,
+      "capability": "mod/projetvet:entretiensubmit",
+      "entrystatus": 0,
+      "fields": [
+        {
+          "idnumber": "date_entretien",
+          "name": "Date de l'entretien",
+          "sortorder": 1,
+          "type": "date",
+          "description": "",
+          "configdata": { "required": true },
+          "capability": "mod/projetvet:entretiensubmit",
+          "entrystatus": 0,
+          "listorder": 1
+        },
+        {
+          "idnumber": "annee_etude",
+          "name": "Année d'étude à laquelle l'entretien a été réalisé",
+          "sortorder": 2,
+          "type": "select",
+          "description": "",
+          "configdata": {
+            "required": true,
+            "options": {
+              "1": "Année 1",
+              "2": "Année 2",
+              "3": "Année 3",
+              "4": "Année 4",
+              "5": "Année 5"
+            }
+          },
+          "capability": "mod/projetvet:entretiensubmit",
+          "entrystatus": 0,
+          "listorder": 3
+        },
+        {
+          "idnumber": "tuteur",
+          "name": "Tuteur",
+          "sortorder": 3,
+          "type": "text",
+          "description": "Nom du tuteur",
+          "configdata": { "readonly": true },
+          "capability": "mod/projetvet:entretiensubmit",
+          "entrystatus": 0,
+          "listorder": 2
+        },
+        {
+          "idnumber": "type_entretien",
+          "name": "Type d'entretien",
+          "sortorder": 4,
+          "type": "select",
+          "description": "",
+          "configdata": {
+            "options": {
+              "face": "Face-à-face",
+              "visio": "Visio",
+              "telephone": "Téléphone"
+            }
+          },
+          "capability": "mod/projetvet:entretiensubmit",
+          "entrystatus": 0,
+          "listorder": 4
+        }
+      ]
+    },
+    {
+      "name": "Acceptation du rendez-vous",
+      "idnumber": "acceptation_rendez_vous",
+      "description": "Validation de la date proposée par le tuteur",
+      "sortorder": 2,
+      "capability": "mod/projetvet:entretienapprove",
+      "entrystatus": 1,
+      "fields": [
+        {
+          "idnumber": "date_acceptee",
+          "name": "Date acceptée",
+          "sortorder": 1,
+          "type": "checkbox",
+          "description": "Confirmer l'acceptation de la date proposée",
+          "configdata": {},
+          "capability": "mod/projetvet:entretienapprove",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
+          "idnumber": "commentaires_tuteur",
+          "name": "Commentaires du tuteur",
+          "sortorder": 2,
+          "type": "textarea",
+          "description": "Observations ou remarques du tuteur concernant le rendez-vous",
+          "configdata": { "rows": 3 },
+          "capability": "mod/projetvet:entretienapprove",
+          "entrystatus": 1,
+          "listorder": 0
+        }
+      ]
+    },
+    {
+      "name": "Compte-rendu de l'entretien",
+      "idnumber": "compte_rendu_entretien",
+      "description": "Compte-rendu partagé entre l'étudiant et le tuteur",
+      "sortorder": 3,
+      "capability": "mod/projetvet:entretiensubmit",
+      "entrystatus": 2,
+      "fields": [
+        {
+          "idnumber": "compte_rendu",
+          "name": "Compte-rendu",
+          "sortorder": 1,
+          "type": "textarea",
+          "description": "Saisissez le compte-rendu de l'entretien avec votre tuteur. Ce texte est visible par le tuteur et le DEVE.",
+          "configdata": { "rows": 6 },
+          "capability": "mod/projetvet:entretiensubmit",
+          "entrystatus": 2,
+          "listorder": 5
+        },
+        {
+          "idnumber": "notes_personnelles",
+          "name": "Notes personnelles",
+          "sortorder": 2,
+          "type": "textarea",
+          "description": "Notes visibles uniquement par l'étudiant.",
+          "configdata": { "rows": 6 },
+          "capability": "mod/projetvet:entretiensubmit",
+          "entrystatus": 2,
+          "listorder": 0
+        }
+      ]
+    },
+    {
+      "name": "Validation tuteur",
+      "idnumber": "validation_tuteur",
+      "description": "Validation de l'entretien par le tuteur",
+      "sortorder": 4,
+      "capability": "mod/projetvet:entretienapprove",
+      "entrystatus": 3,
+      "fields": [
+        {
+          "idnumber": "validation_commentaires",
+          "name": "Commentaires du tuteur",
+          "sortorder": 1,
+          "type": "textarea",
+          "description": "Observations ou remarques du tuteur sur l'entretien",
+          "configdata": { "rows": 4 },
+          "capability": "mod/projetvet:entretienapprove",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
+          "idnumber": "validation_statut",
+          "name": "Statut de validation",
+          "sortorder": 2,
+          "type": "select",
+          "description": "État de validation de l'entretien",
+          "configdata": {
+            "options": {
+              "1": "Non confirmé",
+              "2": "En attente de confirmation",
+              "3": "Réalisation confirmée par le tuteur"
+            }
+          },
+          "capability": "mod/projetvet:entretienapprove",
+          "entrystatus": 3,
+          "listorder": 6
+        }
+      ]
+    }
+  ]
+}

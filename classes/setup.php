@@ -16,7 +16,7 @@
 
 namespace mod_projetvet;
 
-use mod_projetvet\local\importer\fields_importer;
+use mod_projetvet\local\importer\fields_json_importer;
 use mod_projetvet\local\persistent\form_field;
 
 /**
@@ -34,7 +34,14 @@ class setup {
      */
     public static function create_default_activities() {
         global $CFG;
-        $fieldsimporter = new fields_importer(form_field::class);
-        $fieldsimporter->import($CFG->dirroot . "/mod/projetvet/data/default_activity_form.csv");
+        $jsonfile = $CFG->dirroot . '/mod/projetvet/data/default_activity_form.json';
+
+        if (!file_exists($jsonfile)) {
+            echo "Error: JSON file not found at $jsonfile\n";
+            exit(1);
+        }
+
+        $importer = new fields_json_importer(form_field::class);
+        $importer->import($jsonfile);
     }
 }

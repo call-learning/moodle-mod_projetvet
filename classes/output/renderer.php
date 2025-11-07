@@ -54,31 +54,23 @@ class renderer extends \plugin_renderer_base {
     }
 
     /**
-     * Render the activity list for a specific student (student view or teacher/manager viewing student)
+     * Render the entry list for a specific student (student view or teacher/manager viewing student)
      *
      * @param \stdClass $moduleinstance The projetvet instance
      * @param \stdClass $cm The course module
      * @param \context_module $context The context
      * @param int $studentid The student ID
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
      * @return string HTML to output
      */
-    public function render_activity_list($moduleinstance, $cm, $context, $studentid) {
+    public function render_entry_list($moduleinstance, $cm, $context, $studentid, $formsetidnumber = 'activities') {
         global $USER;
-
-        $output = '';
 
         // Determine if viewer has elevated permissions.
         $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
         $isteacher = $canviewall && $studentid != $USER->id;
 
-        // Render info section for students viewing their own work.
-        if (!$isteacher) {
-            $output .= $this->render_student_info($moduleinstance, $cm, $context, $studentid);
-        }
-
-        $activitylist = new activity_list($moduleinstance, $cm, $studentid, $isteacher);
-        $output .= $this->render_from_template('mod_projetvet/activity_list', $activitylist->export_for_template($this));
-
-        return $output;
+        $entrylist = new entry_list($moduleinstance, $cm, $studentid, $isteacher, $formsetidnumber);
+        return $this->render_from_template('mod_projetvet/entry_list', $entrylist->export_for_template($this));
     }
 }

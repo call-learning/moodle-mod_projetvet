@@ -19,7 +19,7 @@ namespace mod_projetvet\form;
 use context;
 use context_module;
 use core_form\dynamic_form;
-use mod_projetvet\local\api\activities;
+use mod_projetvet\local\api\entries;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\field_data;
@@ -35,7 +35,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class activity_entry_form extends dynamic_form {
+class projetvet_form extends dynamic_form {
     /**
      * Process the form submission
      *
@@ -56,7 +56,8 @@ class activity_entry_form extends dynamic_form {
 
         // Extract field values from form data.
         $fields = [];
-        $structure = activities::get_activity_structure();
+        $formsetidnumber = $data->formsetidnumber ?? 'activities';
+        $structure = entries::get_form_structure($formsetidnumber);
         foreach ($structure as $category) {
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
@@ -68,12 +69,12 @@ class activity_entry_form extends dynamic_form {
 
         if (!empty($data->entryid)) {
             // Update existing entry.
-            activities::update_activity($data->entryid, $fields, $entrystatus);
+            entries::update_entry($data->entryid, $fields, $entrystatus);
             $entryid = $data->entryid;
         } else {
             // Create new entry.
             $studentid = $data->studentid ?? $USER->id;
-            $entryid = activities::create_activity($data->projetvetid, $studentid, $fields, $entrystatus);
+            $entryid = entries::create_entry($data->projetvetid, $studentid, $fields, $entrystatus, $formsetidnumber);
         }
 
         return [
@@ -106,7 +107,7 @@ class activity_entry_form extends dynamic_form {
 
         if ($entryid) {
             // Check if user can edit this entry.
-            $entry = activities::get_entry($entryid);
+            $entry = entries::get_entry($entryid);
             if ($entry->studentid != $USER->id && !has_capability('mod/projetvet:edit', $context)) {
                 throw new moodle_exception('invalidaccess');
             }
@@ -156,11 +157,14 @@ class activity_entry_form extends dynamic_form {
         $projetvetid = $this->optional_param('projetvetid', null, PARAM_INT);
         $studentid = $this->optional_param('studentid', null, PARAM_INT);
         $entryid = $this->optional_param('entryid', 0, PARAM_INT);
+        $formsetidnumber = $this->optional_param('formsetidnumber', 'activities', PARAM_ALPHANUMEXT);
 
         $mform->addElement('hidden', 'cmid', $cmid);
         $mform->addElement('hidden', 'projetvetid', $projetvetid);
         $mform->addElement('hidden', 'studentid', $studentid);
         $mform->addElement('hidden', 'entryid', $entryid);
+        $mform->addElement('hidden', 'formsetidnumber', $formsetidnumber);
+        $mform->setType('formsetidnumber', PARAM_ALPHANUMEXT);
         $mform->addElement('hidden', 'entrystatus');
         $mform->setType('entrystatus', PARAM_INT);
 
@@ -170,12 +174,12 @@ class activity_entry_form extends dynamic_form {
         // Get current entry status if editing.
         $currententrystatus = form_entry::STATUS_DRAFT;
         if ($entryid) {
-            $entry = activities::get_entry($entryid);
+            $entry = entries::get_entry($entryid);
             $currententrystatus = $entry->entrystatus;
         }
 
         // Get the activity structure and add fields.
-        $structure = activities::get_activity_structure();
+        $structure = entries::get_form_structure($formsetidnumber);
 
         foreach ($structure as $category) {
 
@@ -312,20 +316,23 @@ class activity_entry_form extends dynamic_form {
     public function set_data_for_dynamic_submission(): void {
         global $USER;
 
+        $formsetidnumber = $this->optional_param('formsetidnumber', 'activities', PARAM_ALPHANUMEXT);
+
         $data = [
             'cmid' => $this->optional_param('cmid', 0, PARAM_INT),
             'projetvetid' => $this->optional_param('projetvetid', 0, PARAM_INT),
             'studentid' => $this->optional_param('studentid', $USER->id, PARAM_INT),
             'entryid' => $this->optional_param('entryid', 0, PARAM_INT),
+            'formsetidnumber' => $formsetidnumber,
             'entrystatus' => form_entry::STATUS_DRAFT, // Default to draft for new entries.
         ];
 
         // If editing an existing entry, load its data.
         if (!empty($data['entryid'])) {
-            $entry = activities::get_entry($data['entryid']);
+            $entry = entries::get_entry($data['entryid']);
             // Set the entry status switch from the entry.
             $data['entrystatus'] = $entry->entrystatus;
-            $structure = activities::get_activity_structure();
+            $structure = entries::get_form_structure($formsetidnumber);
 
             foreach ($entry->categories as $category) {
                 foreach ($category->fields as $field) {

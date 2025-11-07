@@ -17,7 +17,6 @@
 namespace mod_projetvet\local\persistent;
 
 use core\persistent;
-use lang_string;
 
 /**
  * Activity entry entity
@@ -52,18 +51,19 @@ class form_entry extends persistent {
             'projetvetid' => [
                 'null' => NULL_NOT_ALLOWED,
                 'type' => PARAM_INT,
-                'message' => new lang_string('invaliddata', 'projetvet', 'projetvetid'),
+            ],
+            'formsetid' => [
+                'null' => NULL_NOT_ALLOWED,
+                'type' => PARAM_INT,
             ],
             'studentid' => [
                 'null' => NULL_NOT_ALLOWED,
                 'type' => PARAM_INT,
-                'message' => new lang_string('invaliddata', 'projetvet', 'studentid'),
             ],
             'entrystatus' => [
                 'null' => NULL_NOT_ALLOWED,
                 'type' => PARAM_INT,
                 'default' => 0,
-                'message' => new lang_string('invaliddata', 'projetvet', 'entrystatus'),
             ],
         ];
     }

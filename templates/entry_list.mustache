@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_projetvet/activity_list
+    @template mod_projetvet/entry_list
 
     Activity list table.
 
@@ -51,7 +51,8 @@
             data-action="activity-entry-form"
             data-cmid="{{cmid}}"
             data-projetvetid="{{projetvetid}}"
-            data-studentid="{{studentid}}">
+            data-studentid="{{studentid}}"
+            data-formsetidnumber="{{formsetidnumber}}">
         {{#str}}newactivity, mod_projetvet{{/str}}
     </button>
 </div>
@@ -83,7 +84,8 @@
                         data-cmid="{{cmid}}"
                         data-projetvetid="{{projetvetid}}"
                         data-studentid="{{studentid}}"
-                        data-entryid="{{entryid}}">
+                        data-entryid="{{entryid}}"
+                        data-formsetidnumber="{{formsetidnumber}}">
                     {{#str}}view{{/str}}
                 </button>
                 {{/canview}}
@@ -93,7 +95,8 @@
                         data-cmid="{{cmid}}"
                         data-projetvetid="{{projetvetid}}"
                         data-studentid="{{studentid}}"
-                        data-entryid="{{entryid}}">
+                        data-entryid="{{entryid}}"
+                        data-formsetidnumber="{{formsetidnumber}}">
                     {{#str}}edit{{/str}}
                 </button>
                 {{/canedit}}

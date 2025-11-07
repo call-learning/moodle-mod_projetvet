@@ -19,17 +19,17 @@ namespace mod_projetvet\local\persistent;
 use core\persistent;
 
 /**
- * Activity field category template entity
+ * Form set entity
  *
  * @package   mod_projetvet
  * @copyright 2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class form_cat extends persistent {
+class form_set extends persistent {
     /**
      * Current table
      */
-    const TABLE = 'projetvet_form_cat';
+    const TABLE = 'projetvet_form_set';
 
     /**
      * Return the custom definition of the properties of this model.
@@ -40,10 +40,6 @@ class form_cat extends persistent {
      */
     protected static function define_properties() {
         return [
-            'formsetid' => [
-                'null' => NULL_NOT_ALLOWED,
-                'type' => PARAM_INT,
-            ],
             'idnumber' => [
                 'null' => NULL_NOT_ALLOWED,
                 'type' => PARAM_ALPHANUMEXT,
@@ -53,22 +49,14 @@ class form_cat extends persistent {
                 'type' => PARAM_TEXT,
             ],
             'description' => [
-                'null' => NULL_NOT_ALLOWED,
-                'type' => PARAM_TEXT,
-            ],
-            'capability' => [
                 'null' => NULL_ALLOWED,
-                'default' => null,
                 'type' => PARAM_TEXT,
-            ],
-            'entrystatus' => [
-                'null' => NULL_NOT_ALLOWED,
-                'default' => 0,
-                'type' => PARAM_INT,
+                'default' => '',
             ],
             'sortorder' => [
                 'null' => NULL_ALLOWED,
                 'type' => PARAM_INT,
+                'default' => 0,
             ],
         ];
     }

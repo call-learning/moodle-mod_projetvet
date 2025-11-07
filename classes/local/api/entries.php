@@ -22,27 +22,37 @@ use mod_projetvet\local\persistent\form_cat;
 use mod_projetvet\local\persistent\form_data;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\persistent\form_field;
+use mod_projetvet\local\persistent\form_set;
 use stdClass;
 
 /**
- * Class activities
+ * Class entries - Generic API for form entries
  *
  * @package    mod_projetvet
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class activities {
+class entries {
     /**
-     * Get the activity form structure.
+     * Get the form structure for a form set.
      *
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
      * @return array
      */
-    public static function get_activity_structure(): array {
+    public static function get_form_structure(string $formsetidnumber = 'activities'): array {
         $actstructure = cache::make('mod_projetvet', 'activitystructures');
-        if ($actstructure->get('activitystructure')) {
-            return $actstructure->get('activitystructure');
+        $cachekey = 'activitystructure_' . $formsetidnumber;
+        if ($actstructure->get($cachekey)) {
+            return $actstructure->get($cachekey);
         }
-        $categories = form_cat::get_records([], 'sortorder');
+
+        // Get the form set.
+        $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
+        if (!$formset) {
+            return [];
+        }
+
+        $categories = form_cat::get_records(['formsetid' => $formset->get('id')], 'sortorder');
         $fields = form_field::get_records([], 'sortorder');
         $data = [];
         foreach ($categories as $category) {
@@ -56,19 +66,22 @@ class activities {
             ];
         }
         foreach ($fields as $field) {
-            $data[$field->get('categoryid')]->fields[] = (object) [
-                'id' => $field->get('id'),
-                'idnumber' => $field->get('idnumber'),
-                'name' => $field->get('name'),
-                'type' => $field->get('type'),
-                'description' => $field->get('description'),
-                'configdata' => $field->get('configdata'),
-                'capability' => $field->get('capability'),
-                'entrystatus' => $field->get('entrystatus'),
-                'listorder' => $field->get('listorder'),
-            ];
+            // Only include fields for categories in this form set.
+            if (isset($data[$field->get('categoryid')])) {
+                $data[$field->get('categoryid')]->fields[] = (object) [
+                    'id' => $field->get('id'),
+                    'idnumber' => $field->get('idnumber'),
+                    'name' => $field->get('name'),
+                    'type' => $field->get('type'),
+                    'description' => $field->get('description'),
+                    'configdata' => $field->get('configdata'),
+                    'capability' => $field->get('capability'),
+                    'entrystatus' => $field->get('entrystatus'),
+                    'listorder' => $field->get('listorder'),
+                ];
+            }
         }
-        $actstructure->set('activitystructure', array_values($data));
+        $actstructure->set($cachekey, array_values($data));
         return array_values($data);
     }
 
@@ -79,11 +92,16 @@ class activities {
      * @return stdClass
      */
     public static function get_entry(int $entryid): stdClass {
-        $structure = self::get_activity_structure();
         $actentry = form_entry::get_record(['id' => $entryid]);
         if (empty($actentry)) {
             throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
+
+        // Get the form set from the entry to load the correct structure.
+        $formset = form_set::get_record(['id' => $actentry->get('formsetid')]);
+        $formsetidnumber = $formset ? $formset->get('idnumber') : 'activities';
+        $structure = self::get_form_structure($formsetidnumber);
+
         return self::do_get_entry_content($structure, $actentry);
     }
 
@@ -145,13 +163,27 @@ class activities {
      * @param int $studentid The student id
      * @param array $fields The fields
      * @param int $entrystatus The entry status (default STATUS_DRAFT)
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
      *
      * @return int
      */
-    public static function create_activity(int $projetvetid, int $studentid, array $fields, int $entrystatus = form_entry::STATUS_DRAFT): int {
+    public static function create_entry(
+        int $projetvetid,
+        int $studentid,
+        array $fields,
+        int $entrystatus = form_entry::STATUS_DRAFT,
+        string $formsetidnumber = 'activities'
+    ): int {
+        // Get the form set.
+        $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
+        if (!$formset) {
+            throw new \moodle_exception('formsetnotfound', 'projetvet', '', $formsetidnumber);
+        }
+
         // Create the activity entry.
         $entry = new form_entry();
         $entry->set('projetvetid', $projetvetid);
+        $entry->set('formsetid', $formset->get('id'));
         $entry->set('studentid', $studentid);
         $entry->set('entrystatus', $entrystatus);
         $entry->create();
@@ -177,7 +209,7 @@ class activities {
      * @param int|null $entrystatus The entry status (null = no change)
      * @return void
      */
-    public static function update_activity(int $entryid, array $fields, ?int $entrystatus = null): void {
+    public static function update_entry(int $entryid, array $fields, ?int $entrystatus = null): void {
         // Update the activity.
         $entry = form_entry::get_record(['id' => $entryid]);
         if (empty($entry)) {
@@ -215,7 +247,7 @@ class activities {
      * @param int $entryid The entry id
      * @return bool
      */
-    public static function delete_activity(int $entryid): bool {
+    public static function delete_entry(int $entryid): bool {
         $entry = new form_entry($entryid);
         if (empty($entry)) {
             throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
@@ -242,11 +274,12 @@ class activities {
      *
      * @param int $projetvetid The projetvet instance id
      * @param int $studentid The user id
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
      * @return array
      */
-    public static function get_activity_list(int $projetvetid, int $studentid): array {
-        $entries = self::get_entries($projetvetid, $studentid);
-        $structure = self::get_activity_structure();
+    public static function get_entry_list(int $projetvetid, int $studentid, string $formsetidnumber = 'activities'): array {
+        $entries = self::get_entries($projetvetid, $studentid, $formsetidnumber);
+        $structure = self::get_form_structure($formsetidnumber);
 
         // Get fields with listorder > 0, sorted by listorder.
         $listfields = [];
@@ -274,8 +307,8 @@ class activities {
                 $activitydata['fields'][] = [
                     'idnumber' => $field->idnumber,
                     'name' => $field->name,
-                    'value' => self::get_activity_field_value($activity, $field->idnumber),
-                    'displayvalue' => self::get_activity_field_value($activity, $field->idnumber, true),
+                    'value' => self::get_entry_field_value($activity, $field->idnumber),
+                    'displayvalue' => self::get_entry_field_value($activity, $field->idnumber, true),
                 ];
             }
 
@@ -293,11 +326,26 @@ class activities {
      *
      * @param int $projetvetid The projetvet instance id
      * @param int $studentid The user id
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
      * @return stdClass
      */
-    public static function get_entries(int $projetvetid, int $studentid): stdClass {
-        $structure = self::get_activity_structure();
-        $entries = form_entry::get_records(['studentid' => $studentid, 'projetvetid' => $projetvetid]);
+    public static function get_entries(int $projetvetid, int $studentid, string $formsetidnumber = 'activities'): stdClass {
+        $structure = self::get_form_structure($formsetidnumber);
+
+        // Get the form set to filter entries.
+        $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
+        if (!$formset) {
+            return (object) [
+                'activities' => [],
+                'structure' => $structure,
+            ];
+        }
+
+        $entries = form_entry::get_records([
+            'studentid' => $studentid,
+            'projetvetid' => $projetvetid,
+            'formsetid' => $formset->get('id'),
+        ]);
         $activities = [];
         foreach ($entries as $entry) {
             $activities[] = self::do_get_entry_content($structure, $entry);
@@ -316,7 +364,7 @@ class activities {
      * @param bool $displayvalue
      * @return mixed|null
      */
-    private static function get_activity_field_value(mixed $activity, string $fieldidnumber, bool $displayvalue = false) {
+    private static function get_entry_field_value(mixed $activity, string $fieldidnumber, bool $displayvalue = false) {
         foreach ($activity->categories as $category) {
             foreach ($category->fields as $field) {
                 if ($field->idnumber === $fieldidnumber) {

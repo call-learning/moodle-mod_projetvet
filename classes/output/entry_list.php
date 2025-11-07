@@ -16,7 +16,7 @@
 
 namespace mod_projetvet\output;
 
-use mod_projetvet\local\api\activities;
+use mod_projetvet\local\api\entries;
 use mod_projetvet\local\persistent\form_entry;
 use renderer_base;
 use renderable;
@@ -30,7 +30,7 @@ use moodle_url;
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class activity_list implements renderable, templatable {
+class entry_list implements renderable, templatable {
 
     /**
      * @var object $moduleinstance The module instance.
@@ -53,18 +53,25 @@ class activity_list implements renderable, templatable {
     protected $isteacher;
 
     /**
+     * @var string $formsetidnumber The form set idnumber.
+     */
+    protected $formsetidnumber;
+
+    /**
      * Constructor.
      *
      * @param object $moduleinstance The module instance
      * @param object $cm The course module
      * @param int $studentid The student ID
      * @param bool $isteacher Whether the viewer is a teacher
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
      */
-    public function __construct($moduleinstance, $cm, $studentid, $isteacher = false) {
+    public function __construct($moduleinstance, $cm, $studentid, $isteacher = false, $formsetidnumber = 'activities') {
         $this->moduleinstance = $moduleinstance;
         $this->cm = $cm;
         $this->studentid = $studentid;
         $this->isteacher = $isteacher;
+        $this->formsetidnumber = $formsetidnumber;
     }
 
     /**
@@ -81,6 +88,7 @@ class activity_list implements renderable, templatable {
             'cmid' => $this->cm->id,
             'projetvetid' => $this->moduleinstance->id,
             'studentid' => $this->studentid,
+            'formsetidnumber' => $this->formsetidnumber,
         ];
 
         // Back link and student name for teachers viewing a student.
@@ -93,7 +101,7 @@ class activity_list implements renderable, templatable {
 
         // Get activities and field structure.
         try {
-            $listdata = activities::get_activity_list($this->moduleinstance->id, $this->studentid);
+            $listdata = entries::get_entry_list($this->moduleinstance->id, $this->studentid, $this->formsetidnumber);
             $activitylist = $listdata['activities'];
             $listfields = $listdata['listfields'];
         } catch (\Exception $e) {
