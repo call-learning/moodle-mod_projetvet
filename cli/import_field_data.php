@@ -27,7 +27,7 @@ define('CLI_SCRIPT', true);
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\field_data;
 
 /**
@@ -72,7 +72,7 @@ function import_field_data($fieldid, $jsonfile) {
 }
 
 // Get all tagselect fields.
-$fields = act_field::get_records(['type' => 'tagselect']);
+$fields = form_field::get_records(['type' => 'tagselect']);
 
 if (empty($fields)) {
     echo "No tagselect fields found\n";

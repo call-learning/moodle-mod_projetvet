@@ -17,7 +17,7 @@
 namespace mod_projetvet\output;
 
 use mod_projetvet\local\api\activities;
-use mod_projetvet\local\persistent\act_entry;
+use mod_projetvet\local\persistent\form_entry;
 use renderer_base;
 use renderable;
 use templatable;
@@ -91,11 +91,23 @@ class activity_list implements renderable, templatable {
             $data['studentname'] = fullname($student);
         }
 
-        // Get activities.
+        // Get activities and field structure.
         try {
-            $activitylist = activities::get_activity_list($this->moduleinstance->id, $this->studentid);
+            $listdata = activities::get_activity_list($this->moduleinstance->id, $this->studentid);
+            $activitylist = $listdata['activities'];
+            $listfields = $listdata['listfields'];
         } catch (\Exception $e) {
             $activitylist = [];
+            $listfields = [];
+        }
+
+        // Prepare list field headers.
+        $data['listfields'] = [];
+        foreach ($listfields as $field) {
+            $data['listfields'][] = [
+                'name' => $field->name,
+                'idnumber' => $field->idnumber,
+            ];
         }
 
         $data['hasactivities'] = !empty($activitylist);
@@ -104,26 +116,22 @@ class activity_list implements renderable, templatable {
         foreach ($activitylist as $activity) {
             // Determine status text and badge class based on entrystatus.
             $statuskey = match($activity['entrystatus']) {
-                act_entry::STATUS_DRAFT => 'status_draft',
-                act_entry::STATUS_SUBMITTED => 'status_submitted',
-                act_entry::STATUS_VALIDATED => 'status_validated',
-                act_entry::STATUS_COMPLETED => 'status_completed',
+                form_entry::STATUS_DRAFT => 'status_draft',
+                form_entry::STATUS_SUBMITTED => 'status_submitted',
+                form_entry::STATUS_VALIDATED => 'status_validated',
+                form_entry::STATUS_COMPLETED => 'status_completed',
                 default => 'status_draft',
             };
             $statusclass = match($activity['entrystatus']) {
-                act_entry::STATUS_DRAFT => 'badge-secondary',
-                act_entry::STATUS_SUBMITTED => 'badge-primary',
-                act_entry::STATUS_VALIDATED => 'badge-info',
-                act_entry::STATUS_COMPLETED => 'badge-success',
+                form_entry::STATUS_DRAFT => 'badge-secondary',
+                form_entry::STATUS_SUBMITTED => 'badge-primary',
+                form_entry::STATUS_VALIDATED => 'badge-info',
+                form_entry::STATUS_COMPLETED => 'badge-success',
                 default => 'badge-secondary',
             };
 
             $activitydata = [
-                'title' => $activity['title'],
-                'year' => $activity['year'],
-                'category' => $activity['category'],
-                'completed' => $activity['completed'],
-                'completedicon' => $activity['completed'] ? '✓' : '',
+                'fields' => $activity['fields'], // Dynamic fields based on listorder.
                 'entryid' => $activity['id'],
                 'entrystatus' => $activity['entrystatus'],
                 'statustext' => get_string($statuskey, 'mod_projetvet'),
@@ -134,10 +142,8 @@ class activity_list implements renderable, templatable {
                 // Students can edit and delete their own activities.
                 $activitydata['canedit'] = $activity['canedit'];
                 $activitydata['candelete'] = $activity['candelete'];
-            } else {
-                // Teachers can only view activities (read-only mode).
-                $activitydata['canview'] = true;
             }
+            $activitydata['canview'] = true;
 
             $data['activities'][] = $activitydata;
         }

@@ -19,7 +19,7 @@ namespace mod_projetvet\external;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_value;
-use mod_projetvet\local\persistent\act_entry;
+use mod_projetvet\local\persistent\form_entry;
 
 /**
  * Class delete_entry
@@ -44,7 +44,7 @@ class delete_entry extends external_api {
         );
 
         // Get the entry and validate context.
-        $entry = act_entry::get_record(['id' => $params['entryid']]);
+        $entry = form_entry::get_record(['id' => $params['entryid']]);
         if (!$entry) {
             throw new \moodle_exception('entry_not_found', 'mod_projetvet', '', $params['entryid']);
         }

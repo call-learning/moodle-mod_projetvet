@@ -17,7 +17,7 @@
 namespace mod_projetvet\output;
 
 use mod_projetvet\local\api\activities;
-use mod_projetvet\local\persistent\act_entry;
+use mod_projetvet\local\persistent\form_entry;
 use renderer_base;
 use renderable;
 use templatable;
@@ -174,7 +174,7 @@ class student_list implements renderable, templatable {
 
         // Check for entries with status submitted or higher.
         $sql = "SELECT COUNT(*)
-                  FROM {projetvet_act_entry}
+                  FROM {projetvet_form_entry}
                  WHERE projetvetid = :projetvetid
                    AND studentid = :studentid
                    AND entrystatus >= :submitted";
@@ -182,7 +182,7 @@ class student_list implements renderable, templatable {
         $count = $DB->count_records_sql($sql, [
             'projetvetid' => $this->moduleinstance->id,
             'studentid' => $studentid,
-            'submitted' => act_entry::STATUS_SUBMITTED,
+            'submitted' => form_entry::STATUS_SUBMITTED,
         ]);
 
         return $count > 0;

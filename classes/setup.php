@@ -17,7 +17,7 @@
 namespace mod_projetvet;
 
 use mod_projetvet\local\importer\fields_importer;
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_field;
 
 /**
  * Setup routines
@@ -34,7 +34,7 @@ class setup {
      */
     public static function create_default_activities() {
         global $CFG;
-        $fieldsimporter = new fields_importer(act_field::class);
+        $fieldsimporter = new fields_importer(form_field::class);
         $fieldsimporter->import($CFG->dirroot . "/mod/projetvet/data/default_activity_form.csv");
     }
 }

@@ -132,7 +132,7 @@ function xmldb_projetvet_upgrade($oldversion) {
 
         // Adding keys to table projetvet_field_data.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('fieldid', XMLDB_KEY_FOREIGN, ['fieldid'], 'projetvet_act_field', ['id']);
+        $table->add_key('fieldid', XMLDB_KEY_FOREIGN, ['fieldid'], 'projetvet_form_field', ['id']);
 
         // Adding indexes to table projetvet_field_data.
         $table->add_index('fieldid_uniqueid', XMLDB_INDEX_UNIQUE, ['fieldid', 'uniqueid']);
@@ -144,7 +144,7 @@ function xmldb_projetvet_upgrade($oldversion) {
         }
 
         // Import data from JSON files for tagselect fields.
-        $fields = $DB->get_records('projetvet_act_field', ['type' => 'tagselect']);
+        $fields = $DB->get_records('projetvet_form_field', ['type' => 'tagselect']);
         foreach ($fields as $field) {
             $jsonfile = null;
             if ($field->idnumber === 'competency') {
@@ -181,8 +181,8 @@ function xmldb_projetvet_upgrade($oldversion) {
 
     if ($oldversion < 2025102303) {
 
-        // Define field submitted to be added to projetvet_act_entry.
-        $table = new xmldb_table('projetvet_act_entry');
+        // Define field submitted to be added to projetvet_form_entry.
+        $table = new xmldb_table('projetvet_form_entry');
         $field = new xmldb_field('submitted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'studentid');
 
         // Conditionally launch add field submitted.
@@ -196,8 +196,8 @@ function xmldb_projetvet_upgrade($oldversion) {
 
     if ($oldversion < 2025110302) {
 
-        // Define fields capability and entrystatus to be added to projetvet_act_field.
-        $table = new xmldb_table('projetvet_act_field');
+        // Define fields capability and entrystatus to be added to projetvet_form_field.
+        $table = new xmldb_table('projetvet_form_field');
 
         $field = new xmldb_field('capability', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'configdata');
         // Conditionally launch add field capability.
@@ -211,8 +211,8 @@ function xmldb_projetvet_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // Rename field submitted to entrystatus in projetvet_act_entry.
-        $table = new xmldb_table('projetvet_act_entry');
+        // Rename field submitted to entrystatus in projetvet_form_entry.
+        $table = new xmldb_table('projetvet_form_entry');
         $field = new xmldb_field('submitted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'studentid');
 
         // Launch rename field entrystatus.
@@ -226,8 +226,8 @@ function xmldb_projetvet_upgrade($oldversion) {
 
     if ($oldversion < 2025110306) {
 
-        // Define fields capability and entrystatus to be added to projetvet_act_field.
-        $table = new xmldb_table('projetvet_act_cat');
+        // Define fields capability and entrystatus to be added to projetvet_form_field.
+        $table = new xmldb_table('projetvet_form_cat');
         $field = new xmldb_field('capability', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'description');
         // Conditionally launch add field capability.
         if (!$dbman->field_exists($table, $field)) {
@@ -242,6 +242,21 @@ function xmldb_projetvet_upgrade($oldversion) {
 
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2025110306, 'projetvet');
+    }
+
+    if ($oldversion < 2025110307) {
+
+        // Define field listorder to be added to projetvet_form_field.
+        $table = new xmldb_table('projetvet_form_field');
+        $field = new xmldb_field('listorder', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'entrystatus');
+
+        // Conditionally launch add field listorder.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025110307, 'projetvet');
     }
 
     return true;

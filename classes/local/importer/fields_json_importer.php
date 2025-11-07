@@ -16,8 +16,8 @@
 
 namespace mod_projetvet\local\importer;
 
-use mod_projetvet\local\persistent\act_cat;
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_cat;
+use mod_projetvet\local\persistent\form_field;
 
 /**
  * Fields JSON importer
@@ -65,9 +65,9 @@ class fields_json_importer {
 
         foreach ($data['categories'] as $categorydata) {
             // Create or get category.
-            $category = act_cat::get_record(['idnumber' => $categorydata['idnumber']]);
+            $category = form_cat::get_record(['idnumber' => $categorydata['idnumber']]);
             if (!$category) {
-                $category = new act_cat(0, (object)[
+                $category = new form_cat(0, (object)[
                     'idnumber' => $categorydata['idnumber'],
                     'name' => $categorydata['name'],
                     'description' => $categorydata['description'] ?? '',
@@ -102,7 +102,7 @@ class fields_json_importer {
      */
     protected function import_field(array $fielddata, int $categoryid): void {
         // Create or update field.
-        $field = act_field::get_record(['idnumber' => $fielddata['idnumber']]);
+        $field = form_field::get_record(['idnumber' => $fielddata['idnumber']]);
 
         $fieldrecord = (object)[
             'idnumber' => $fielddata['idnumber'],
@@ -114,13 +114,14 @@ class fields_json_importer {
             'configdata' => json_encode($fielddata['configdata'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'capability' => $fielddata['capability'] ?? null,
             'entrystatus' => $fielddata['entrystatus'] ?? 0,
+            'listorder' => $fielddata['listorder'] ?? 0,
         ];
 
         if ($field) {
             $field->from_record($fieldrecord);
             $field->update();
         } else {
-            $field = new act_field(0, $fieldrecord);
+            $field = new form_field(0, $fieldrecord);
             $field->create();
         }
     }

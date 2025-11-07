@@ -18,10 +18,10 @@ namespace mod_projetvet\local\api;
 
 use cache;
 use core\invalid_persistent_exception;
-use mod_projetvet\local\persistent\act_cat;
-use mod_projetvet\local\persistent\act_data;
-use mod_projetvet\local\persistent\act_entry;
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_cat;
+use mod_projetvet\local\persistent\form_data;
+use mod_projetvet\local\persistent\form_entry;
+use mod_projetvet\local\persistent\form_field;
 use stdClass;
 
 /**
@@ -42,8 +42,8 @@ class activities {
         if ($actstructure->get('activitystructure')) {
             return $actstructure->get('activitystructure');
         }
-        $categories = act_cat::get_records([], 'sortorder');
-        $fields = act_field::get_records([], 'sortorder');
+        $categories = form_cat::get_records([], 'sortorder');
+        $fields = form_field::get_records([], 'sortorder');
         $data = [];
         foreach ($categories as $category) {
             $data[$category->get('id')] = (object) [
@@ -65,6 +65,7 @@ class activities {
                 'configdata' => $field->get('configdata'),
                 'capability' => $field->get('capability'),
                 'entrystatus' => $field->get('entrystatus'),
+                'listorder' => $field->get('listorder'),
             ];
         }
         $actstructure->set('activitystructure', array_values($data));
@@ -79,7 +80,7 @@ class activities {
      */
     public static function get_entry(int $entryid): stdClass {
         $structure = self::get_activity_structure();
-        $actentry = act_entry::get_record(['id' => $entryid]);
+        $actentry = form_entry::get_record(['id' => $entryid]);
         if (empty($actentry)) {
             throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
@@ -90,11 +91,11 @@ class activities {
      * Entry structure content
      *
      * @param array $actstructure
-     * @param act_entry $actentry
+     * @param form_entry $actentry
      * @return object
      */
-    private static function do_get_entry_content(array $actstructure, act_entry $actentry): object {
-        $data = act_data::get_records(['entryid' => $actentry->get('id')], 'timecreated');
+    private static function do_get_entry_content(array $actstructure, form_entry $actentry): object {
+        $data = form_data::get_records(['entryid' => $actentry->get('id')], 'timecreated');
         $activity = [];
 
         foreach ($actstructure as $category) {
@@ -147,9 +148,9 @@ class activities {
      *
      * @return int
      */
-    public static function create_activity(int $projetvetid, int $studentid, array $fields, int $entrystatus = act_entry::STATUS_DRAFT): int {
+    public static function create_activity(int $projetvetid, int $studentid, array $fields, int $entrystatus = form_entry::STATUS_DRAFT): int {
         // Create the activity entry.
-        $entry = new act_entry();
+        $entry = new form_entry();
         $entry->set('projetvetid', $projetvetid);
         $entry->set('studentid', $studentid);
         $entry->set('entrystatus', $entrystatus);
@@ -158,7 +159,7 @@ class activities {
 
         // Create the activity data.
         foreach ($fields as $fieldid => $value) {
-            $data = new act_data();
+            $data = new form_data();
             $data->set('fieldid', $fieldid);
             $data->set('entryid', $entry->get('id'));
             $data->set_value($value);
@@ -178,7 +179,7 @@ class activities {
      */
     public static function update_activity(int $entryid, array $fields, ?int $entrystatus = null): void {
         // Update the activity.
-        $entry = act_entry::get_record(['id' => $entryid]);
+        $entry = form_entry::get_record(['id' => $entryid]);
         if (empty($entry)) {
             throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
@@ -193,12 +194,12 @@ class activities {
         }
 
         foreach ($fields as $fieldid => $value) {
-            $data = act_data::get_record(['entryid' => $entryid, 'fieldid' => $fieldid]);
+            $data = form_data::get_record(['entryid' => $entryid, 'fieldid' => $fieldid]);
             if ($data) {
                 $data->set_value($value);
                 $data->update();
             } else {
-                $data = new act_data();
+                $data = new form_data();
                 $data->set('fieldid', $fieldid);
                 $data->set('entryid', $entryid);
                 $data->set_value($value);
@@ -215,7 +216,7 @@ class activities {
      * @return bool
      */
     public static function delete_activity(int $entryid): bool {
-        $entry = new act_entry($entryid);
+        $entry = new form_entry($entryid);
         if (empty($entry)) {
             throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
@@ -224,7 +225,7 @@ class activities {
         }
         try {
             // Delete all associated data first.
-            $datarecords = act_data::get_records(['entryid' => $entryid]);
+            $datarecords = form_data::get_records(['entryid' => $entryid]);
             foreach ($datarecords as $data) {
                 $data->delete();
             }
@@ -245,20 +246,46 @@ class activities {
      */
     public static function get_activity_list(int $projetvetid, int $studentid): array {
         $entries = self::get_entries($projetvetid, $studentid);
+        $structure = self::get_activity_structure();
+
+        // Get fields with listorder > 0, sorted by listorder.
+        $listfields = [];
+        foreach ($structure as $category) {
+            foreach ($category->fields as $field) {
+                if ($field->listorder > 0) {
+                    $listfields[$field->listorder] = $field;
+                }
+            }
+        }
+        ksort($listfields);
+
         $activitylist = [];
         foreach ($entries->activities as $activity) {
-            $activitylist[] = [
+            $activitydata = [
                 'id' => $activity->id,
-                'title' => self::get_activity_field_value($activity, 'activity_title'),
-                'year' => self::get_activity_field_value($activity, 'year', true),
-                'category' => self::get_activity_field_value($activity, 'category', true),
-                'completed' => self::get_activity_field_value($activity, 'completed'),
+                'fields' => [],
                 'entrystatus' => $activity->entrystatus,
                 'canedit' => $activity->canedit,
                 'candelete' => $activity->candelete,
             ];
+
+            // Add dynamic fields based on listorder.
+            foreach ($listfields as $field) {
+                $activitydata['fields'][] = [
+                    'idnumber' => $field->idnumber,
+                    'name' => $field->name,
+                    'value' => self::get_activity_field_value($activity, $field->idnumber),
+                    'displayvalue' => self::get_activity_field_value($activity, $field->idnumber, true),
+                ];
+            }
+
+            $activitylist[] = $activitydata;
         }
-        return $activitylist;
+
+        return [
+            'activities' => $activitylist,
+            'listfields' => array_values($listfields),
+        ];
     }
 
     /**
@@ -270,7 +297,7 @@ class activities {
      */
     public static function get_entries(int $projetvetid, int $studentid): stdClass {
         $structure = self::get_activity_structure();
-        $entries = act_entry::get_records(['studentid' => $studentid, 'projetvetid' => $projetvetid]);
+        $entries = form_entry::get_records(['studentid' => $studentid, 'projetvetid' => $projetvetid]);
         $activities = [];
         foreach ($entries as $entry) {
             $activities[] = self::do_get_entry_content($structure, $entry);

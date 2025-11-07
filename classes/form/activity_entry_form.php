@@ -20,8 +20,8 @@ use context;
 use context_module;
 use core_form\dynamic_form;
 use mod_projetvet\local\api\activities;
-use mod_projetvet\local\persistent\act_entry;
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_entry;
+use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\field_data;
 use moodle_exception;
 use moodle_url;
@@ -48,10 +48,10 @@ class activity_entry_form extends dynamic_form {
 
         // Progress to next status on submission.
         // Current status is stored in hidden field, we increment it on form submission.
-        $currententrystatus = $data->entrystatus ?? act_entry::STATUS_DRAFT;
+        $currententrystatus = $data->entrystatus ?? form_entry::STATUS_DRAFT;
 
         // Progress to next status (0->1, 1->2, 2->3, 3 stays at 3).
-        $nextstatus = min($currententrystatus + 1, act_entry::STATUS_COMPLETED);
+        $nextstatus = min($currententrystatus + 1, form_entry::STATUS_COMPLETED);
         $entrystatus = $nextstatus;
 
         // Extract field values from form data.
@@ -168,7 +168,7 @@ class activity_entry_form extends dynamic_form {
         $context = context_module::instance($cmid);
 
         // Get current entry status if editing.
-        $currententrystatus = act_entry::STATUS_DRAFT;
+        $currententrystatus = form_entry::STATUS_DRAFT;
         if ($entryid) {
             $entry = activities::get_entry($entryid);
             $currententrystatus = $entry->entrystatus;
@@ -186,6 +186,14 @@ class activity_entry_form extends dynamic_form {
 
             // Add category header.
             $mform->addElement('header', 'category_' . $category->id, $category->name);
+
+            // Expand header if category entrystatus matches current entry status.
+            if ($category->entrystatus == $currententrystatus) {
+                $mform->setExpanded('category_' . $category->id);
+            } else {
+                $mform->setExpanded('category_' . $category->id, false);
+            }
+
 
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
@@ -274,9 +282,11 @@ class activity_entry_form extends dynamic_form {
                     $mform->addHelpButton($fieldname, $field->idnumber, 'mod_projetvet');
                 }
 
-                // If user cannot edit this field, freeze it.
+                // If user cannot edit this field, freeze it but preserve the value using setConstant.
                 if (!$canediffield) {
                     $mform->freeze($fieldname);
+                    // For frozen fields, we need to ensure the value is preserved on submission.
+                    // We'll set it as constant in set_data_for_dynamic_submission instead.
                 }
             }
         }
@@ -307,7 +317,7 @@ class activity_entry_form extends dynamic_form {
             'projetvetid' => $this->optional_param('projetvetid', 0, PARAM_INT),
             'studentid' => $this->optional_param('studentid', $USER->id, PARAM_INT),
             'entryid' => $this->optional_param('entryid', 0, PARAM_INT),
-            'entrystatus' => act_entry::STATUS_DRAFT, // Default to draft for new entries.
+            'entrystatus' => form_entry::STATUS_DRAFT, // Default to draft for new entries.
         ];
 
         // If editing an existing entry, load its data.
@@ -316,21 +326,29 @@ class activity_entry_form extends dynamic_form {
             // Set the entry status switch from the entry.
             $data['entrystatus'] = $entry->entrystatus;
             $structure = activities::get_activity_structure();
+
             foreach ($entry->categories as $category) {
                 foreach ($category->fields as $field) {
                     $fieldname = 'field_' . $field->id;
-                    // For autocomplete and tagselect fields, decode JSON to array.
                     $fieldobj = $this->get_field_by_id($structure, $field->id);
-                    if ($fieldobj && in_array($fieldobj->type, ['autocomplete', 'tagselect'])) {
+
+                    if (!$fieldobj) {
+                        continue;
+                    }
+
+                    // For autocomplete and tagselect fields, decode JSON to array.
+                    if (in_array($fieldobj->type, ['autocomplete', 'tagselect'])) {
                         $decoded = json_decode($field->value, true);
-                        $data[$fieldname] = is_array($decoded) ? $decoded : [];
+                        $fieldvalue = is_array($decoded) ? $decoded : [];
                     } else {
                         if ($fieldobj->type == 'date' && $field->value == '') {
-                            $data[$fieldname] = time();
+                            $fieldvalue = time();
                         } else {
-                            $data[$fieldname] = $field->value;
+                            $fieldvalue = $field->value;
                         }
                     }
+
+                    $data[$fieldname] = $fieldvalue;
                 }
             }
         }

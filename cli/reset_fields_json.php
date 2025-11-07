@@ -28,14 +28,14 @@ require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 
 use mod_projetvet\local\importer\fields_json_importer;
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_field;
 
 // Delete existing activity fields and categories.
 echo "Deleting existing activity data...\n";
-$DB->delete_records('projetvet_act_data');
-$DB->delete_records('projetvet_act_entry');
-$DB->delete_records('projetvet_act_field');
-$DB->delete_records('projetvet_act_cat');
+$DB->delete_records('projetvet_form_data');
+$DB->delete_records('projetvet_form_entry');
+$DB->delete_records('projetvet_form_field');
+$DB->delete_records('projetvet_form_cat');
 
 // Import from JSON file.
 echo "Importing fields from JSON...\n";
@@ -46,7 +46,7 @@ if (!file_exists($jsonfile)) {
     exit(1);
 }
 
-$importer = new fields_json_importer(act_field::class);
+$importer = new fields_json_importer(form_field::class);
 $importer->import($jsonfile);
 
 // Clear the activity structure cache.
@@ -56,6 +56,6 @@ $cache->purge();
 echo "Activity fields recreated successfully from JSON\n";
 
 // Display summary.
-$categorycount = $DB->count_records('projetvet_act_cat');
-$fieldcount = $DB->count_records('projetvet_act_field');
+$categorycount = $DB->count_records('projetvet_form_cat');
+$fieldcount = $DB->count_records('projetvet_form_field');
 echo "Created $categorycount categories and $fieldcount fields\n";

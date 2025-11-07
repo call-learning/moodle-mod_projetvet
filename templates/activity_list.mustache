@@ -61,10 +61,9 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>{{#str}}activitytitle, mod_projetvet{{/str}}</th>
-            <th>{{#str}}year, mod_projetvet{{/str}}</th>
-            <th>{{#str}}category, mod_projetvet{{/str}}</th>
-            <th>{{#str}}completed, mod_projetvet{{/str}}</th>
+            {{#listfields}}
+            <th>{{name}}</th>
+            {{/listfields}}
             <th>{{#str}}status, mod_projetvet{{/str}}</th>
             <th>{{#str}}actions, mod_projetvet{{/str}}</th>
         </tr>
@@ -72,10 +71,9 @@
     <tbody>
     {{#activities}}
         <tr>
-            <td>{{title}}</td>
-            <td>{{year}}</td>
-            <td>{{category}}</td>
-            <td>{{completedicon}}</td>
+            {{#fields}}
+            <td>{{displayvalue}}</td>
+            {{/fields}}
             <td><span class="badge {{statusclass}}">{{statustext}}</span></td>
             <td>
                 {{#canview}}

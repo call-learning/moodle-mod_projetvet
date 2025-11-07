@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'mod_projetvet';
-$plugin->release      = '1.6';
-$plugin->version      = 2025110306;
+$plugin->release      = '1.7';
+$plugin->version      = 2025110307;
 $plugin->requires     = 2024100700;
 $plugin->supported    = [405, 501];
 $plugin->maturity     = MATURITY_STABLE;

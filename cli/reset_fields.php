@@ -28,10 +28,10 @@ require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 
 // Delete existing activity fields and categories.
-$DB->delete_records('projetvet_act_data');
-$DB->delete_records('projetvet_act_entry');
-$DB->delete_records('projetvet_act_field');
-$DB->delete_records('projetvet_act_cat');
+$DB->delete_records('projetvet_form_data');
+$DB->delete_records('projetvet_form_entry');
+$DB->delete_records('projetvet_form_field');
+$DB->delete_records('projetvet_form_cat');
 
 // Recreate default fields.
 \mod_projetvet\setup::create_default_activities();

@@ -22,7 +22,7 @@
         <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="projetvet_act_cat" COMMENT="Activity field categories">
+    <TABLE NAME="projetvet_form_cat" COMMENT="Activity field categories">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="idnumber" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
@@ -42,7 +42,7 @@
         <INDEX NAME="idnumber" UNIQUE="true" FIELDS="idnumber"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="projetvet_act_field" COMMENT="Activity fields">
+    <TABLE NAME="projetvet_form_field" COMMENT="Activity fields">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="categoryid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -54,19 +54,20 @@
         <FIELD NAME="configdata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="capability" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Capability required to edit this field"/>
         <FIELD NAME="entrystatus" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Minimum entry status required to edit (0=draft, 1=submitted, 2=validated, 3=completed)"/>
+        <FIELD NAME="listorder" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Order in activity list (0=not shown, 1-N=shown in order)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="categoryid" TYPE="foreign" FIELDS="categoryid" REFTABLE="projetvet_act_cat" REFFIELDS="id"/>
+        <KEY NAME="categoryid" TYPE="foreign" FIELDS="categoryid" REFTABLE="projetvet_form_cat" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="idnumber" UNIQUE="true" FIELDS="idnumber"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="projetvet_act_entry" COMMENT="Activity entries">
+    <TABLE NAME="projetvet_form_entry" COMMENT="Activity entries">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="projetvetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -85,7 +86,7 @@
         <INDEX NAME="projetvet_student" UNIQUE="false" FIELDS="projetvetid,studentid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="projetvet_act_data" COMMENT="Activity data">
+    <TABLE NAME="projetvet_form_data" COMMENT="Activity data">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="fieldid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -101,8 +102,8 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="fieldid" TYPE="foreign" FIELDS="fieldid" REFTABLE="projetvet_act_field" REFFIELDS="id"/>
-        <KEY NAME="entryid" TYPE="foreign" FIELDS="entryid" REFTABLE="projetvet_act_entry" REFFIELDS="id"/>
+        <KEY NAME="fieldid" TYPE="foreign" FIELDS="fieldid" REFTABLE="projetvet_form_field" REFFIELDS="id"/>
+        <KEY NAME="entryid" TYPE="foreign" FIELDS="entryid" REFTABLE="projetvet_form_entry" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="field_entry" UNIQUE="false" FIELDS="fieldid,entryid"/>
@@ -152,7 +153,7 @@
     <TABLE NAME="projetvet_field_data" COMMENT="Lookup data for tagselect fields">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="fieldid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Reference to act_field"/>
+        <FIELD NAME="fieldid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Reference to form_field"/>
         <FIELD NAME="uniqueid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Unique ID from JSON"/>
         <FIELD NAME="itemtype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="heading or item"/>
         <FIELD NAME="parent" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Parent uniqueid"/>
@@ -163,7 +164,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="fieldid" TYPE="foreign" FIELDS="fieldid" REFTABLE="projetvet_act_field" REFFIELDS="id"/>
+        <KEY NAME="fieldid" TYPE="foreign" FIELDS="fieldid" REFTABLE="projetvet_form_field" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="field_uniqueid" UNIQUE="true" FIELDS="fieldid,uniqueid"/>

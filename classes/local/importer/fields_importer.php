@@ -16,8 +16,8 @@
 
 namespace mod_projetvet\local\importer;
 
-use mod_projetvet\local\persistent\act_cat;
-use mod_projetvet\local\persistent\act_field;
+use mod_projetvet\local\persistent\form_cat;
+use mod_projetvet\local\persistent\form_field;
 
 /**
  * Fields importer
@@ -67,9 +67,9 @@ class fields_importer {
             // Create or get category.
             $categoryname = $data['category'];
             if (!isset($categories[$categoryname])) {
-                $category = act_cat::get_record(['name' => $categoryname]);
+                $category = form_cat::get_record(['name' => $categoryname]);
                 if (!$category) {
-                    $category = new act_cat(0, (object)[
+                    $category = new form_cat(0, (object)[
                         'idnumber' => strtolower(str_replace(' ', '_', $categoryname)),
                         'name' => $categoryname,
                         'description' => '',
@@ -81,7 +81,7 @@ class fields_importer {
             }
 
             // Create or update field.
-            $field = act_field::get_record(['idnumber' => $data['idnumber']]);
+            $field = form_field::get_record(['idnumber' => $data['idnumber']]);
             $fielddata = (object)[
                 'idnumber' => $data['idnumber'],
                 'name' => $data['name'],
@@ -98,7 +98,7 @@ class fields_importer {
                 $field->from_record($fielddata);
                 $field->update();
             } else {
-                $field = new act_field(0, $fielddata);
+                $field = new form_field(0, $fielddata);
                 $field->create();
             }
         }

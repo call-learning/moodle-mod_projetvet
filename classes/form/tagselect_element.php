@@ -124,6 +124,11 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
     public function accept(&$renderer, $required = false, $error = null) {
         global $OUTPUT;
 
+        // If element is frozen, let parent handle it (creates proper frozen/static element).
+        if ($this->isFrozen()) {
+            return parent::accept($renderer, $required, $error);
+        }
+
         $elementname = $this->getName();
 
         // Make sure the element has an id.
