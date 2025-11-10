@@ -34,9 +34,17 @@ class form_entry extends persistent {
     /**
      * Entry status constants
      */
+
+    /** @var int Draft status - entry is being created */
     const STATUS_DRAFT = 0;
+
+    /** @var int Submitted status - entry has been submitted */
     const STATUS_SUBMITTED = 1;
+
+    /** @var int Validated status - entry has been validated */
     const STATUS_VALIDATED = 2;
+
+    /** @var int Completed status - entry is completed */
     const STATUS_COMPLETED = 3;
 
     /**
@@ -110,11 +118,11 @@ class form_entry extends persistent {
      */
     public function can_delete(): bool {
         global $USER;
-        // Students can delete their own entries
+        // Students can delete their own entries.
         if ($this->get('studentid') == $USER->id) {
             return true;
         }
-        // Teachers can delete any entry
+        // Teachers can delete any entry.
         $context = \context_module::instance($this->get_context()->instanceid);
         if (has_capability('mod/projetvet:edit', $context)) {
             return true;

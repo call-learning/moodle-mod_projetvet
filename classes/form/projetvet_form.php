@@ -16,6 +16,10 @@
 
 namespace mod_projetvet\form;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 use context;
 use context_module;
 use core_form\dynamic_form;
@@ -182,7 +186,6 @@ class projetvet_form extends dynamic_form {
         $structure = entries::get_form_structure($formsetidnumber);
 
         foreach ($structure as $category) {
-
             if ($category->entrystatus > $currententrystatus) {
                 // Skip this category as its entrystatus is higher than current entry status.
                 continue;
@@ -197,7 +200,6 @@ class projetvet_form extends dynamic_form {
             } else {
                 $mform->setExpanded('category_' . $category->id, false);
             }
-
 
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
@@ -294,18 +296,6 @@ class projetvet_form extends dynamic_form {
                 }
             }
         }
-
-        // Store current entry status in hidden field - it will be incremented on submission.
-        // Switch element commented out as it only supports 0/1 values, but we have 4 statuses (0-3).
-        // $mform->addElement('switch', 'entrystatus', get_string('sendtoteacher', 'mod_projetvet'), '', ['value' => 1]);
-        // $mform->addHelpButton('entrystatus', 'sendtoteacher', 'mod_projetvet');
-
-        // $buttonarray = [
-        //     $mform->createElement('submit', 'submittotutor', get_string('submittotutor', 'mod_projetvet')),
-        //     $mform->createElement('submit', 'saveasdraft', get_string('saveasdraft', 'mod_projetvet')),
-        //     $mform->createElement('cancel'),
-        // ];
-        // $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
     }
 
     /**

@@ -22,7 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_projetvet_activity_structure_step extends restore_activity_structure_step {
-
     /**
      * Structure step to restore one projetvet activity
      *
@@ -31,7 +30,32 @@ class restore_projetvet_activity_structure_step extends restore_activity_structu
     protected function define_structure() {
 
         $paths = [];
+
+        // Main activity element.
         $paths[] = new restore_path_element('projetvet', '/activity/projetvet');
+
+        // Configuration data elements (always restored).
+        $paths[] = new restore_path_element('formset', '/activity/projetvet/formsets/formset');
+        $paths[] = new restore_path_element(
+            'formcat',
+            '/activity/projetvet/formsets/formset/formcats/formcat'
+        );
+        $paths[] = new restore_path_element(
+            'formfield',
+            '/activity/projetvet/formsets/formset/formcats/formcat/formfields/formfield'
+        );
+        $paths[] = new restore_path_element(
+            'fielddata',
+            '/activity/projetvet/formsets/formset/formcats/formcat/formfields/formfield/fielddatas/fielddata'
+        );
+
+        // User data elements (only when userinfo is included).
+        if ($this->get_setting_value('userinfo')) {
+            $paths[] = new restore_path_element('formentry', '/activity/projetvet/formentries/formentry');
+            $paths[] = new restore_path_element('formdata', '/activity/projetvet/formentries/formentry/formdatas/formdata');
+            $paths[] = new restore_path_element('thesis', '/activity/projetvet/theses/thesis');
+            $paths[] = new restore_path_element('mobility', '/activity/projetvet/mobilities/mobility');
+        }
 
         // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
@@ -54,6 +78,176 @@ class restore_projetvet_activity_structure_step extends restore_activity_structu
         $newitemid = $DB->insert_record('projetvet', $data);
         // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
+    }
+
+    /**
+     * Process form set data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_formset($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+
+        // Check if the form set already exists by idnumber.
+        if (!$DB->record_exists('projetvet_form_set', ['idnumber' => $data->idnumber])) {
+            // Insert the form set record.
+            $newitemid = $DB->insert_record('projetvet_form_set', $data);
+        } else {
+            // Use existing form set.
+            $newitemid = $DB->get_field('projetvet_form_set', 'id', ['idnumber' => $data->idnumber]);
+        }
+        $this->set_mapping('formset', $oldid, $newitemid);
+    }
+
+    /**
+     * Process form category data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_formcat($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+        $data->formsetid = $this->get_new_parentid('formset');
+
+        // Check if the form category already exists by idnumber and formsetid.
+        $conditions = ['idnumber' => $data->idnumber, 'formsetid' => $data->formsetid];
+        if (!$DB->record_exists('projetvet_form_cat', $conditions)) {
+            // Insert the form category record.
+            $newitemid = $DB->insert_record('projetvet_form_cat', $data);
+        } else {
+            // Use existing form category.
+            $newitemid = $DB->get_field('projetvet_form_cat', 'id', $conditions);
+        }
+        $this->set_mapping('formcat', $oldid, $newitemid);
+    }
+
+    /**
+     * Process form field data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_formfield($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+        $data->categoryid = $this->get_new_parentid('formcat');
+
+        // Check if the form field already exists by idnumber and categoryid.
+        $conditions = ['idnumber' => $data->idnumber, 'categoryid' => $data->categoryid];
+        if (!$DB->record_exists('projetvet_form_field', $conditions)) {
+            // Insert the form field record.
+            $newitemid = $DB->insert_record('projetvet_form_field', $data);
+        } else {
+            // Use existing form field.
+            $newitemid = $DB->get_field('projetvet_form_field', 'id', $conditions);
+        }
+        $this->set_mapping('formfield', $oldid, $newitemid);
+    }
+
+    /**
+     * Process field data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_fielddata($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->fieldid = $this->get_new_parentid('formfield');
+
+        // Check if the field data already exists by fieldid and uniqueid.
+        if (!$DB->record_exists('projetvet_field_data', ['fieldid' => $data->fieldid, 'uniqueid' => $data->uniqueid])) {
+            // Insert the field data record.
+            $DB->insert_record('projetvet_field_data', $data);
+        }
+    }
+
+    /**
+     * Process form entry data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_formentry($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $data->projetvetid = $this->get_new_parentid('projetvet');
+        $data->formsetid = $this->get_mappingid('formset', $data->formsetid);
+        $data->studentid = $this->get_mappingid('user', $data->studentid);
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+
+        // Insert the form entry record.
+        $newitemid = $DB->insert_record('projetvet_form_entry', $data);
+        $this->set_mapping('formentry', $oldid, $newitemid);
+    }
+
+    /**
+     * Process form data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_formdata($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->fieldid = $this->get_mappingid('formfield', $data->fieldid);
+        $data->entryid = $this->get_new_parentid('formentry');
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+
+        // Insert the form data record.
+        $DB->insert_record('projetvet_form_data', $data);
+    }
+
+    /**
+     * Process thesis data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_thesis($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->projetvetid = $this->get_new_parentid('projetvet');
+        $data->userid = $this->get_mappingid('user', $data->userid);
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+
+        // Insert the thesis record.
+        $DB->insert_record('projetvet_thesis', $data);
+    }
+
+    /**
+     * Process mobility data
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_mobility($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->projetvetid = $this->get_new_parentid('projetvet');
+        $data->userid = $this->get_mappingid('user', $data->userid);
+        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+
+        // Insert the mobility record.
+        $DB->insert_record('projetvet_mobility', $data);
     }
 
     /**

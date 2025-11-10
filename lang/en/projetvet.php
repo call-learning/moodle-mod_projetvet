@@ -25,94 +25,76 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['actions'] = 'Actions';
+$string['activities'] = 'Activities';
+$string['activitiescount'] = 'Activities';
+$string['activitytitle'] = 'Title';
+$string['backtolist'] = 'Back to student list';
+$string['cachedef_activitystructures'] = 'Activity form structures';
+$string['cannotdeleteactivity'] = 'You cannot delete this activity';
+$string['cannoteditactivity'] = 'You cannot edit this activity';
+$string['category'] = 'Category';
+$string['choosesubmissiontype'] = 'Choose submission type';
+$string['completed'] = 'Completed';
+$string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
+$string['creditsbytype'] = 'Credits by type';
+$string['currentyear'] = 'Current year';
+$string['currentyear_help'] = 'The current year description (e.g., 3ème année)';
+$string['draft'] = 'Draft';
+$string['editactivity'] = 'Edit Activity';
+$string['entry_not_found'] = 'Activity entry not found: {$a}';
+$string['facetofacesessions'] = 'Face-to-face sessions';
+$string['internationalmobility'] = 'International mobility';
+$string['invaliddata'] = 'Invalid data for {$a}';
+$string['maxselections'] = 'Maximum of {$a} selections allowed';
+$string['mobilityerasmus'] = 'I completed my mobility through a long-term mobility program (ERASMUS type)';
+$string['mobilityfmp'] = 'I completed my international mobility during the FMP of A% (UC0526)';
+$string['mobilityformtitle'] = 'International Mobility';
 $string['modulename'] = 'Projetvet';
 $string['modulenameplural'] = 'Projectvet';
+$string['moreinfo'] = 'More info';
+$string['mystudents'] = 'My Students';
+$string['newactivity'] = 'New Activity';
+$string['noactivities'] = 'No activities yet. Click the button above to create your first activity.';
+$string['nostudents'] = 'No students in your groups yet.';
 $string['pluginadministration'] = 'Projetvet administration';
 $string['pluginname'] = 'Projetvet';
 $string['privacy:metadata'] = 'The Projetvet plugin doesn\'t store any personal data.';
 $string['projetvet:addinstance'] = 'Add a new Projetvet';
-$string['projetvet:view'] = 'View Projetvet';
-$string['projetvet:submit'] = 'Submit activities';
-$string['projetvet:viewallactivities'] = 'View all student activities';
-$string['projetvet:edit'] = 'Edit Projetvet activities';
-$string['projetvet:viewallstudents'] = 'View all students (managers)';
 $string['projetvet:approve'] = 'Approve student activities';
-
-// Settings.
+$string['projetvet:edit'] = 'Edit Projetvet activities';
+$string['projetvet:submit'] = 'Submit activities';
+$string['projetvet:view'] = 'View Projetvet';
+$string['projetvet:viewallactivities'] = 'View all student activities';
+$string['projetvet:viewallstudents'] = 'View all students (managers)';
 $string['promo'] = 'Promo';
 $string['promo_help'] = 'The promotion year (e.g., 2023)';
-$string['currentyear'] = 'Current year';
-$string['currentyear_help'] = 'The current year description (e.g., 3ème année)';
-
-// Activity strings.
-$string['activities'] = 'Activities';
-$string['facetofacesessions'] = 'Face-to-face sessions';
-$string['newactivity'] = 'New Activity';
-$string['editactivity'] = 'Edit Activity';
-$string['viewactivity'] = 'View Activity';
-$string['noactivities'] = 'No activities yet. Click the button above to create your first activity.';
-$string['activitytitle'] = 'Title';
-$string['year'] = 'Year';
-$string['category'] = 'Category';
-$string['completed'] = 'Completed';
-$string['actions'] = 'Actions';
-$string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
-$string['submittotutor'] = 'Submit to teacher';
-$string['submitandnotify'] = 'Submit to teacher';
+$string['promoyear'] = 'Promotion';
 $string['saveasdraft'] = 'Save as draft';
-$string['choosesubmissiontype'] = 'Choose submission type';
+$string['selecttags'] = 'Select tags';
 $string['sendtoteacher'] = 'Send to teacher';
 $string['sendtoteacher_help'] = 'When checked, your entry will be sent to your teacher for evaluation';
-$string['submitted'] = 'Submitted';
-$string['draft'] = 'Draft';
+$string['setsubject'] = 'Set subject';
+$string['settitle'] = 'Set title';
 $string['status'] = 'Status';
+$string['status_completed'] = 'Completed';
 $string['status_draft'] = 'Draft';
 $string['status_submitted'] = 'Submitted';
 $string['status_validated'] = 'Validated';
-$string['status_completed'] = 'Completed';
-
-// Teacher view strings.
-$string['mystudents'] = 'My Students';
-$string['studentname'] = 'Student Name';
-$string['activitiescount'] = 'Activities';
-$string['viewactivities'] = 'View Activities';
-$string['nostudents'] = 'No students in your groups yet.';
-$string['backtolist'] = 'Back to student list';
 $string['studentactivities'] = '{$a}\'s Activities';
-
-// Error strings.
-$string['invaliddata'] = 'Invalid data for {$a}';
-$string['entry_not_found'] = 'Activity entry not found: {$a}';
-$string['cannoteditactivity'] = 'You cannot edit this activity';
-$string['cannotdeleteactivity'] = 'You cannot delete this activity';
-
-// Cache strings.
-$string['cachedef_activitystructures'] = 'Activity form structures';
-
-// Info section.
-$string['totalcredits'] = 'Total credits';
-$string['creditsbytype'] = 'Credits by type';
-$string['tutorinterview'] = 'Tutor interviews';
-$string['promoyear'] = 'Promotion';
-$string['yearincourse'] = 'Current year';
-$string['tutor'] = 'Tutor';
-$string['thesissubject'] = 'Thesis subject';
-$string['internationalmobility'] = 'International mobility';
-$string['setsubject'] = 'Set subject';
-$string['settitle'] = 'Set title';
-$string['moreinfo'] = 'More info';
-
-// Thesis form.
-$string['thesisformtitle'] = 'Thesis Subject';
-$string['thesissubject_field'] = 'Subject';
+$string['studentname'] = 'Student Name';
+$string['submitandnotify'] = 'Submit to teacher';
+$string['submitted'] = 'Submitted';
+$string['submittotutor'] = 'Submit to teacher';
 $string['thesisdepositdate'] = 'Date of submission of the subject on TheseVet';
 $string['thesisdirector'] = 'Name of the thesis director';
-
-// Mobility form.
-$string['mobilityformtitle'] = 'International Mobility';
-$string['mobilityerasmus'] = 'I completed my mobility through a long-term mobility program (ERASMUS type)';
-$string['mobilityfmp'] = 'I completed my international mobility during the FMP of A% (UC0526)';
-
-// Tag select form element.
-$string['selecttags'] = 'Select tags';
-$string['maxselections'] = 'Maximum of {$a} selections allowed';
+$string['thesisformtitle'] = 'Thesis Subject';
+$string['thesissubject'] = 'Thesis subject';
+$string['thesissubject_field'] = 'Subject';
+$string['totalcredits'] = 'Total credits';
+$string['tutor'] = 'Tutor';
+$string['tutorinterview'] = 'Tutor interviews';
+$string['viewactivities'] = 'View Activities';
+$string['viewactivity'] = 'View Activity';
+$string['year'] = 'Year';
+$string['yearincourse'] = 'Current year';

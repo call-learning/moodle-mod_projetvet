@@ -34,22 +34,21 @@ require_once($CFG->libdir . '/form/checkbox.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class switch_element extends HTML_QuickForm_checkbox {
-
     /**
      * Constructor
      *
-     * @param string $elementName Element name
-     * @param mixed $elementLabel Label(s) for an element
+     * @param string $elementname Element name
+     * @param mixed $elementlabel Label(s) for an element
      * @param string $text Text to display next to the switch
      * @param mixed $attributes Element attributes
      */
-    public function __construct($elementName = null, $elementLabel = null, $text = '', $attributes = null) {
-        if ($elementName == null) {
+    public function __construct($elementname = null, $elementlabel = null, $text = '', $attributes = null) {
+        if ($elementname == null) {
             // This is broken quickforms messing with the constructors.
             return;
         }
 
-        parent::__construct($elementName, $elementLabel, $text, $attributes);
+        parent::__construct($elementname, $elementlabel, $text, $attributes);
         $this->_type = 'switch';
     }
 

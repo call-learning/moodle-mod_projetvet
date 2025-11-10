@@ -31,7 +31,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class entry_list implements renderable, templatable {
-
     /**
      * @var object $moduleinstance The module instance.
      */
@@ -123,14 +122,14 @@ class entry_list implements renderable, templatable {
 
         foreach ($activitylist as $activity) {
             // Determine status text and badge class based on entrystatus.
-            $statuskey = match($activity['entrystatus']) {
+            $statuskey = match ($activity['entrystatus']) {
                 form_entry::STATUS_DRAFT => 'status_draft',
                 form_entry::STATUS_SUBMITTED => 'status_submitted',
                 form_entry::STATUS_VALIDATED => 'status_validated',
                 form_entry::STATUS_COMPLETED => 'status_completed',
                 default => 'status_draft',
             };
-            $statusclass = match($activity['entrystatus']) {
+            $statusclass = match ($activity['entrystatus']) {
                 form_entry::STATUS_DRAFT => 'badge-secondary',
                 form_entry::STATUS_SUBMITTED => 'badge-primary',
                 form_entry::STATUS_VALIDATED => 'badge-info',

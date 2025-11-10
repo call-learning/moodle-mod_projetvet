@@ -33,7 +33,7 @@ use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\field_data;
 
 // Get CLI options.
-list($options, $unrecognized) = cli_get_params(
+[$options, $unrecognized] = cli_get_params(
     [
         'help' => false,
         'reset' => false,

@@ -44,7 +44,7 @@ class form_field extends persistent {
         'checkbox',
         'autocomplete',
         'tagselect',
-        'date'
+        'date',
     ];
 
     /**
@@ -142,6 +142,11 @@ class form_field extends persistent {
             case 'textarea':
             case 'number':
                 return $value;
+            case 'date':
+                if (empty($value)) {
+                    return '';
+                }
+                return userdate($value, get_string('strftimedatefullshort', 'core_langconfig'));
             case 'checkbox':
                 return $value ? get_string('yes') : get_string('no');
             case 'select':

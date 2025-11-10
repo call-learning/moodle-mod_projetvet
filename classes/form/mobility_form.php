@@ -30,7 +30,6 @@ use mod_projetvet\local\persistent\mobility;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mobility_form extends dynamic_form {
-
     /**
      * Form definition
      */

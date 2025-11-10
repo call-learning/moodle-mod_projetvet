@@ -58,9 +58,9 @@
           "description": "",
           "configdata": {
             "options": {
-              "face": "Face-à-face",
-              "visio": "Visio",
-              "telephone": "Téléphone"
+              "1": "Face-à-face",
+              "2": "Visio",
+              "3": "Téléphone"
             }
           },
           "capability": "mod/projetvet:entretiensubmit",

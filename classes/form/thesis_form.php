@@ -30,7 +30,6 @@ use mod_projetvet\local\persistent\thesis;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class thesis_form extends dynamic_form {
-
     /**
      * Form definition
      */

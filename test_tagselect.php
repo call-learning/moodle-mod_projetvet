@@ -39,7 +39,6 @@ $PAGE->set_heading('Tag Select Form Element Test');
  * Test form for tagselect element
  */
 class tagselect_test_form extends moodleform {
-
     /**
      * Define the form
      */

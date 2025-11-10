@@ -25,7 +25,6 @@ namespace mod_projetvet;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class lib_test extends \advanced_testcase {
-
     /**
      * Test create and delete module
      *
@@ -72,8 +71,10 @@ final class lib_test extends \advanced_testcase {
 
         // Createa a module.
         $course = $this->getDataGenerator()->create_course();
-        $mod = $this->getDataGenerator()->create_module('projetvet',
-            ['course' => $course->id, 'name' => 'My test module']);
+        $mod = $this->getDataGenerator()->create_module(
+            'projetvet',
+            ['course' => $course->id, 'name' => 'My test module']
+        );
         $cm = get_coursemodule_from_instance('projetvet', $mod->id);
 
         // Call duplicate_module - it will backup and restore this module.
@@ -86,6 +87,5 @@ final class lib_test extends \advanced_testcase {
 
         $name = $DB->get_field('projetvet', 'name', ['id' => $cmnew->instance]);
         $this->assertEquals('My test module (copy)', $name);
-        // TODO: check other fields and related tables.
     }
 }

@@ -35,7 +35,6 @@ require_once($CFG->libdir . '/form/autocomplete.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tagselect_element extends MoodleQuickForm_autocomplete {
-
     /** @var array Grouped options for display in the popup */
     protected $groupedoptions = [];
 
@@ -51,8 +50,8 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
     /**
      * Constructor
      *
-     * @param string $elementName Element name
-     * @param mixed $elementLabel Label(s) for an element
+     * @param string $elementname Element name
+     * @param mixed $elementlabel Label(s) for an element
      * @param array $options Flat array of options or grouped array
      * @param array $attributes Element attributes. Special options:
      *                          - 'groupedoptions': Array of grouped options [['name' => 'Group', 'items' => [...]]]
@@ -60,8 +59,8 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
      *                          - 'rowname': Display name for the row
      *                          - 'showtoggleall': Whether to show the toggle-all button (default: false)
      */
-    public function __construct($elementName = null, $elementLabel = null, $options = [], $attributes = null) {
-        if ($elementName == null) {
+    public function __construct($elementname = null, $elementlabel = null, $options = [], $attributes = null) {
+        if ($elementname == null) {
             // This is broken quickforms messing with the constructors.
             return;
         }
@@ -109,7 +108,7 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
             $options = $flatoptions;
         }
 
-        parent::__construct($elementName, $elementLabel, $options, $attributes);
+        parent::__construct($elementname, $elementlabel, $options, $attributes);
         $this->_type = 'tagselect';
     }
 

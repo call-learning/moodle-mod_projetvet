@@ -30,7 +30,6 @@ use templatable;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class student_info implements renderable, templatable {
-
     /**
      * @var object $moduleinstance The module instance.
      */

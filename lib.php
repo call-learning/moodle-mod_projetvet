@@ -39,7 +39,7 @@ function projetvet_supports($feature) {
         case FEATURE_BACKUP_MOODLE2:
             return true;
         case FEATURE_MOD_PURPOSE:
-        return MOD_PURPOSE_CONTENT;
+            return MOD_PURPOSE_CONTENT;
         default:
             return null;
     }
@@ -65,8 +65,12 @@ function projetvet_add_instance($moduleinstance, $form = null) {
 
     $id = $DB->insert_record('projetvet', $moduleinstance);
     $completiontimeexpected = !empty($moduleinstance->completionexpected) ? $moduleinstance->completionexpected : null;
-    \core_completion\api::update_completion_date_event($moduleinstance->coursemodule,
-        'projetvet', $id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event(
+        $moduleinstance->coursemodule,
+        'projetvet',
+        $id,
+        $completiontimeexpected
+    );
     return $id;
 }
 
@@ -91,8 +95,12 @@ function projetvet_update_instance($moduleinstance, $form = null) {
     $DB->update_record('projetvet', $moduleinstance);
 
     $completiontimeexpected = !empty($moduleinstance->completionexpected) ? $moduleinstance->completionexpected : null;
-    \core_completion\api::update_completion_date_event($moduleinstance->coursemodule, 'projetvet',
-      $moduleinstance->id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event(
+        $moduleinstance->coursemodule,
+        'projetvet',
+        $moduleinstance->id,
+        $completiontimeexpected
+    );
 
     return true;
 }

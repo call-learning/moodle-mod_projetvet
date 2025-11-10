@@ -31,7 +31,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class student_list implements renderable, templatable {
-
     /**
      * @var object $moduleinstance The module instance.
      */
@@ -152,8 +151,10 @@ class student_list implements renderable, templatable {
         foreach ($teachergroups[0] as $groupid) {
             $groupstudents = groups_get_members($groupid, 'u.*', 'u.lastname ASC, u.firstname ASC');
             foreach ($groupstudents as $student) {
-                if (has_capability('mod/projetvet:submit', $this->context, $student->id) &&
-                    !isset($seenstudents[$student->id])) {
+                if (
+                    has_capability('mod/projetvet:submit', $this->context, $student->id) &&
+                    !isset($seenstudents[$student->id])
+                ) {
                     $students[] = $student;
                     $seenstudents[$student->id] = true;
                 }
