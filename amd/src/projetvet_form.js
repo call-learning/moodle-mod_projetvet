@@ -43,6 +43,7 @@ export const init = () => {
         const titleString = button.dataset.entryid ? 'editactivity' : 'newactivity';
 
         const modalForm = new ModalForm({
+            moduleName: 'core/modal',
             modalConfig: {
                 title: getString(titleString, 'mod_projetvet'),
             },
@@ -50,13 +51,54 @@ export const init = () => {
             args: {
                 ...button.dataset,
             },
-            saveButtonText: getString('savechanges'),
         });
 
         // Intercept form submission to show dialog only if switch is not checked.
 
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
+    });
+
+    // Handle form button clicks for save/submit actions.
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.projetvet-form-button')) {
+            return;
+        }
+        const button = event.target.closest('.projetvet-form-button');
+        event.preventDefault();
+
+        const entrystatus = button.dataset.entrystatus;
+        const actionType = button.dataset.actionType;
+        const form = button.closest('form');
+
+        // Handle email action.
+        if (actionType === 'email' && form) {
+            const studentEmailInput = form.querySelector('input[name="studentemail"]');
+            if (studentEmailInput && studentEmailInput.value) {
+                const email = studentEmailInput.value;
+                const activityTitleInput = form.querySelector('input[name="activity_title"]');
+                const activityTitle = activityTitleInput ? activityTitleInput.value : 'votre activité';
+                const subject = encodeURIComponent('Discussion concernant: ' + activityTitle);
+                const body = encodeURIComponent('Bonjour,\n\nJe souhaiterais discuter avec vous concernant votre activité.\n\n');
+                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            }
+            return;
+        }
+
+        if (form) {
+            // Add a hidden field to indicate button submission.
+            let buttonField = form.querySelector('input[name="button_entrystatus"]');
+            if (!buttonField) {
+                buttonField = document.createElement('input');
+                buttonField.type = 'hidden';
+                buttonField.name = 'button_entrystatus';
+                form.appendChild(buttonField);
+            }
+            buttonField.value = entrystatus;
+
+            // Submit the form.
+            form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+        }
     });
 
     // Handle delete activity button clicks.

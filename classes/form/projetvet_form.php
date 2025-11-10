@@ -50,13 +50,19 @@ class projetvet_form extends dynamic_form {
         global $USER;
         $data = $this->get_data();
 
-        // Progress to next status on submission.
-        // Current status is stored in hidden field, we increment it on form submission.
+        // Use the entrystatus from form data (set by button clicks).
+        // If no specific status is set, use the current status from the entry.
         $currententrystatus = $data->entrystatus ?? form_entry::STATUS_DRAFT;
 
-        // Progress to next status (0->1, 1->2, 2->3, 3 stays at 3).
-        $nextstatus = min($currententrystatus + 1, form_entry::STATUS_COMPLETED);
-        $entrystatus = $nextstatus;
+        // Check if this is a button submission by looking for button_action in form data.
+        if (isset($data->button_entrystatus)) {
+            // Button was clicked, use the button's entrystatus.
+            $entrystatus = $data->button_entrystatus;
+        } else {
+            // Regular form submission, progress to next status.
+            $nextstatus = min($currententrystatus + 1, form_entry::STATUS_COMPLETED);
+            $entrystatus = $nextstatus;
+        }
 
         // Extract field values from form data.
         $fields = [];
@@ -163,14 +169,27 @@ class projetvet_form extends dynamic_form {
         $entryid = $this->optional_param('entryid', 0, PARAM_INT);
         $formsetidnumber = $this->optional_param('formsetidnumber', 'activities', PARAM_ALPHANUMEXT);
 
+        // Get student email for contact button.
+        $studentemail = '';
+        if ($studentid) {
+            $student = \core_user::get_user($studentid);
+            if ($student) {
+                $studentemail = $student->email;
+            }
+        }
+
         $mform->addElement('hidden', 'cmid', $cmid);
         $mform->addElement('hidden', 'projetvetid', $projetvetid);
         $mform->addElement('hidden', 'studentid', $studentid);
+        $mform->addElement('hidden', 'studentemail', $studentemail);
         $mform->addElement('hidden', 'entryid', $entryid);
         $mform->addElement('hidden', 'formsetidnumber', $formsetidnumber);
         $mform->setType('formsetidnumber', PARAM_ALPHANUMEXT);
+        $mform->setType('studentemail', PARAM_EMAIL);
         $mform->addElement('hidden', 'entrystatus');
         $mform->setType('entrystatus', PARAM_INT);
+        $mform->addElement('hidden', 'button_entrystatus');
+        $mform->setType('button_entrystatus', PARAM_INT);
 
         // Get the context for capability checking.
         $context = context_module::instance($cmid);
@@ -200,6 +219,9 @@ class projetvet_form extends dynamic_form {
             } else {
                 $mform->setExpanded('category_' . $category->id, false);
             }
+
+            // Array to collect button elements for grouping.
+            $buttonelements = [];
 
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
@@ -279,12 +301,52 @@ class projetvet_form extends dynamic_form {
                     case 'checkbox':
                         $mform->addElement('advcheckbox', $fieldname, $field->name, '', null, [0, 1]);
                         break;
+
+                    case 'button':
+                        // Get button configuration.
+                        $buttontext = $configdata['text'] ?? $field->name;
+                        $buttonicon = $configdata['icon'] ?? '';
+                        $buttonstatus = $configdata['entrystatus'] ?? 0;
+                        $buttonstyle = $configdata['style'] ?? 'secondary';
+                        $buttonaction = $configdata['action'] ?? '';
+
+                        // Create button label with icon if specified.
+                        $buttonlabel = $buttontext;
+                        if (!empty($buttonicon)) {
+                            $buttonlabel = '<i class="fa ' . $buttonicon . '"></i> ' . $buttontext;
+                        }
+
+                        // Create button attributes.
+                        $buttonattributes = [
+                            'class' => 'projetvet-form-button',
+                            'data-entrystatus' => $buttonstatus,
+                            'data-fieldid' => $field->id,
+                        ];
+
+                        if (!empty($buttonicon)) {
+                            $buttonattributes['data-icon'] = $buttonicon;
+                        }
+
+                        if (!empty($buttonaction)) {
+                            $buttonattributes['data-action-type'] = $buttonaction;
+                        }
+
+                        // Determine button styling based on style configuration.
+                        $styleclass = 'btn-' . $buttonstyle;
+                        $customclass = 'btn ' . $styleclass;
+
+                        // Collect button element for grouping (don't add immediately).
+                        $buttonelements[] = $mform->createElement('button', $fieldname, $buttonlabel, $buttonattributes, [
+                            'customclassoverride' => $customclass . ' projetvet-form-button',
+                        ]);
+                        break;
                 }
-                if (!empty($configdata['required']) && $configdata['required'] == true && $canediffield) {
+                $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
+                if ($isrequired && $canediffield && $field->type !== 'button') {
                     $mform->addRule($fieldname, null, 'required', null, 'client');
                 }
 
-                if (!empty($field->description)) {
+                if (!empty($field->description) && $field->type !== 'button') {
                     $mform->addHelpButton($fieldname, $field->idnumber, 'mod_projetvet');
                 }
 
@@ -294,6 +356,10 @@ class projetvet_form extends dynamic_form {
                     // For frozen fields, we need to ensure the value is preserved on submission.
                     // We'll set it as constant in set_data_for_dynamic_submission instead.
                 }
+            }
+            // Add all button elements as a group if any were found.
+            if (!empty($buttonelements) && ($category->entrystatus == $currententrystatus) && $canediffield) {
+                $mform->addGroup($buttonelements, 'buttongroup', '', [' '], false);
             }
         }
     }
@@ -330,6 +396,11 @@ class projetvet_form extends dynamic_form {
                     $fieldobj = $this->get_field_by_id($structure, $field->id);
 
                     if (!$fieldobj) {
+                        continue;
+                    }
+
+                    // Skip button fields - they don't store values and shouldn't have their labels overwritten.
+                    if ($fieldobj->type === 'button') {
                         continue;
                     }
 

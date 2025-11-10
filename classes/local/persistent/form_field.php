@@ -45,6 +45,7 @@ class form_field extends persistent {
         'autocomplete',
         'tagselect',
         'date',
+        'button',
     ];
 
     /**

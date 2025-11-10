@@ -102,45 +102,6 @@
           "type": "tagselect",
           "description": "",
           "configdata": {
-            "options": {
-              "2": "COPREV1 - Évaluer l'état général, le bien-être et l'état nutritionnel d'un animal ou d'un groupe d'animaux",
-              "3": "COPREV2 - Conseiller sur les principes d'hébergement, d'entretien, de reproduction, d'éducation et d'alimentation",
-              "4": "COPREV3 - Proposer et mettre en œuvre des programmes de prévention dans le respect des bonnes pratiques en matière de santé animale, de bien-être animal et de santé publique",
-              "5": "COPREV 4 - Appliquer les principes de biosécurité et conseiller sur la biosécurité",
-              "6": "D1 - Diriger et assurer la contention d'un animal afin de pouvoir l'observer, le manipuler et le soigner dans le respect des règles du bien-être",
-              "7": "D2 - Conduire une démarche diagnostique pour un animal ou un groupe d'animaux",
-              "8": "D3 - Effectuer, conditionner et transporter des prélèvements biologiques, choisir et réaliser ou prescrire les tests diagnostiques appropriés et les interpréter",
-              "9": "D4 - Prescrire, réaliser et interpréter un examen d'imagerie",
-              "10": "D5- Pratiquer un examen post-mortem",
-              "11": "ST1 - Elaborer et adapter une stratégie thérapeutique et administrer un traitement",
-              "12": "ST2 - Prescrire, délivrer des médicaments conformément à la réglementation et aux bonnes pratiques – limiter l'usage des antibiotiques",
-              "13": "ST3 - Pratiquer en toute sécurité une sédation, une anesthésie générale et une anesthésie loco-régionale",
-              "14": "ST4 - Elaborer un protocole chirurgical et réaliser une intervention chirurgicale adaptée à l'animal, à l'affection et au contexte d'intervention",
-              "15": "ST5 - Prévenir, évaluer et prendre en charge la douleur",
-              "16": "ST6 - Prendre en charge un animal en situation d'urgence et pratiquer les premiers soins",
-              "17": "ST7 - Reconnaître quand une euthanasie est appropriée et la pratiquer en utilisant une méthode adaptée au contexte ; conseiller sur le devenir du cadavre",
-              "18": "SP1 - Exercer les missions du vétérinaire sanitaire ou officiel en santé animale",
-              "19": "SP2 - Prévenir, détecter et gérer les maladies réglementées et zoonotiques",
-              "20": "SP3 - Garantir le respect des principes et des règles de protection animale",
-              "21": "SP4 - Effectuer une inspection ante mortem des animaux destinés à la chaîne alimentaire",
-              "22": "SP5 - Promouvoir, surveiller et contrôler la sécurité des aliments",
-              "23": "SP6 - Promouvoir, surveiller et maintenir l'hygiène, la santé et la sécurité ; mettre en œuvre les principes d'assurance qualité ; appliquer les principes de l'évaluation et de la gestion des risques et de gestion de crise",
-              "24": "E1- Travailler efficacement en tant que membre d'une équipe multidisciplinaire",
-              "25": "E2 - Organiser et gérer une activité vétérinaire professionnelle",
-              "26": "E3 - Conduire un projet et utiliser les principes et outils d'amélioration continue de la qualité",
-              "27": "COMM1 - Communiquer à l'oral de manière adaptée à la situation et à son interlocuteur",
-              "28": "COMM2 -Communiquer à l'écrit de manière adaptée à la situation et à son interlocuteur",
-              "29": "COMM3 - Communiquer en contexte international ou interculturel",
-              "30": "COMM4 - Communiquer en utilisant les outils numériques",
-              "31": "SC1 - Porter une analyse critique et évaluer la bibliographie et des communications",
-              "32": "SC2 - Appliquer l'analyse critique de l'organisation des soins et la médecine fondée sur les preuves (Evidence-based veterinary medicine, EBVM)",
-              "33": "SC3 - Contribuer à l'accroissement des connaissances en médecine vétérinaire et plus largement dans le domaine des sciences du vivant",
-              "34": "R1 - Comprendre les responsabilités éthiques et juridiques du vétérinaire vis-à-vis de lui- même, des animaux, des clients, des confrères, de l'administration, de la société et de l'environnement",
-              "35": "R2 - Comprendre et appliquer les réglementations relatives à l'activité vétérinaire professionnelle",
-              "36": "R3 - S'adapter à des informations incomplètes, à des imprévus et au changement",
-              "37": "R4 - Apprécier ses limites personnelles et professionnelles, et savoir comment solliciter un avis d'expert, un conseil, de l'assistance et du soutien en cas de besoin",
-              "38": "R5 - Se former dans un contexte professionnel et construire son projet professionnel"
-            }
           },
           "capability": "mod/projetvet:submit",
           "entrystatus": 0,
@@ -172,6 +133,38 @@
           "capability": "mod/projetvet:submit",
           "entrystatus": 0,
           "listorder": 7
+        },
+        {
+          "idnumber": "submit_to_tutor",
+          "name": "Enregistrer et soumettre au tuteur",
+          "sortorder": 10,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Enregistrer et soumettre au tuteur",
+            "icon": "fa-users",
+            "entrystatus": 1,
+            "style": "primary"
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "save_as_draft",
+          "name": "Enregistrer comme brouillon",
+          "sortorder": 11,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Enregistrer comme brouillon",
+            "icon": "fa-download",
+            "entrystatus": 0,
+            "style": "secondary"
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 0,
+          "listorder": 0
         }
       ]
     },
@@ -197,12 +190,50 @@
           "listorder": 0
         },
         {
-          "idnumber": "acceptance_check",
-          "name": "Accepter l'activité",
+          "idnumber": "accept_button",
+          "name": "Accepter",
           "sortorder": 20,
-          "type": "checkbox",
-          "description": "Cochez cette case pour accepter l'activité",
-          "configdata": {},
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Accepter",
+            "icon": "fa-check",
+            "entrystatus": 2,
+            "style": "primary"
+          },
+          "capability": "mod/projetvet:approve",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
+          "idnumber": "contact_student_button",
+          "name": "Contacter l'étudiant pour en discuter",
+          "sortorder": 21,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Contacter l'étudiant pour en discuter",
+            "icon": "fa-envelope",
+            "entrystatus": 1,
+            "style": "secondary",
+            "action": "email"
+          },
+          "capability": "mod/projetvet:approve",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
+          "idnumber": "return_to_student_button",
+          "name": "Retourner à l'étudiant",
+          "sortorder": 22,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Retourner à l'étudiant",
+            "icon": "fa-undo",
+            "entrystatus": 0,
+            "style": "warning"
+          },
           "capability": "mod/projetvet:approve",
           "entrystatus": 1,
           "listorder": 0
