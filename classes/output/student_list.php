@@ -100,7 +100,7 @@ class student_list implements renderable, templatable {
 
             try {
                 $activitylist = entries::get_entry_list($this->moduleinstance->id, $student->id);
-                $count = count($activitylist);
+                $count = count($activitylist['activities']);
             } catch (\Exception $e) {
                 $count = 0;
             }

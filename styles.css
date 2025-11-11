@@ -75,7 +75,7 @@
 .tagselect-popup .tag-form .tag-list .list-group-item.bg-light {
     cursor: default;
     font-weight: 600;
-    background-color: #e9ecef !important;
+    background-color: #e9ecef;
 }
 .tagselect-popup [data-region=selected-tags-popup] {
     min-height: 2rem;
