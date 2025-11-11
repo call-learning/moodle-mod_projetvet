@@ -354,6 +354,38 @@
           "capability": "mod/projetvet:submit",
           "entrystatus": 2,
           "listorder": 0
+        },
+        {
+          "idnumber": "final_to_tutor",
+          "name": "Enregistrer et soumettre au tuteur",
+          "sortorder": 19,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Enregistrer et soumettre au tuteur",
+            "icon": "fa-users",
+            "entrystatus": 3,
+            "style": "primary"
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2,
+          "listorder": 0
+        },
+        {
+          "idnumber": "final_as_draft",
+          "name": "Enregistrer comme brouillon",
+          "sortorder": 20,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Enregistrer comme brouillon",
+            "icon": "fa-download",
+            "entrystatus": 2,
+            "style": "secondary"
+          },
+          "capability": "mod/projetvet:submit",
+          "entrystatus": 2,
+          "listorder": 0
         }
       ]
     }
