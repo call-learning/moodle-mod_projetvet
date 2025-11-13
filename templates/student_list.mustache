@@ -39,14 +39,16 @@
         <tr>
             <th>{{#str}}studentname, mod_projetvet{{/str}}</th>
             <th>{{#str}}activitiescount, mod_projetvet{{/str}}</th>
+            <th>{{#str}}facetofacesessions, mod_projetvet{{/str}}</th>
             <th>{{#str}}actions, mod_projetvet{{/str}}</th>
         </tr>
     </thead>
     <tbody>
     {{#students}}
         <tr>
-            <td>{{fullname}}</td>
+            <td><img src="{{userpictureurl}}" alt="{{label}}" class="userpicture">{{fullname}}</td>
             <td>{{activitiescount}}</td>
+            <td>{{facetofacecount}}</td>
             <td>
                 <a href="{{viewurl}}" class="btn btn-sm btn-primary">
                     {{#str}}viewactivities, mod_projetvet{{/str}}

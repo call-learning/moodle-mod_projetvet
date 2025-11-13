@@ -46,6 +46,8 @@ class form_field extends persistent {
         'tagselect',
         'date',
         'button',
+        'tagconfirm',
+        'filemanager',
     ];
 
     /**
@@ -189,6 +191,53 @@ class form_field extends persistent {
                     }
                 }
                 return implode(', ', $displayvalues);
+            case 'tagconfirm':
+                // Same as tagselect - display confirmed tags.
+                $selectedvalues = json_decode($value, true);
+                if (!is_array($selectedvalues)) {
+                    return '';
+                }
+                // Need to get the lookup field ID from configdata.
+                $configdata = json_decode(stripslashes($this->get('configdata')), true);
+                $sourcefielidnumber = $configdata['tagselect'] ?? '';
+                if (!$sourcefielidnumber) {
+                    return '';
+                }
+                // Find the source field to get its lookup data.
+                // This is a simplified version - in production you'd cache this.
+                $sourcefield = self::get_record(['idnumber' => $sourcefielidnumber]);
+                if (!$sourcefield) {
+                    return '';
+                }
+                $lookupmap = field_data::get_lookup_map($sourcefield->get('id'), 'item');
+                $displayvalues = [];
+                foreach ($selectedvalues as $uniqueid) {
+                    if (isset($lookupmap[$uniqueid])) {
+                        $displayvalues[] = $lookupmap[$uniqueid];
+                    }
+                }
+                return implode(', ', $displayvalues);
+            case 'filemanager':
+                // For filemanager, value is the itemid. Display file count or links.
+                if (empty($value)) {
+                    return get_string('nofiles', 'mod_projetvet');
+                }
+                $fs = get_file_storage();
+                $files = $fs->get_area_files(
+                    \context_system::instance()->id,
+                    'mod_projetvet',
+                    'entry_files',
+                    $value,
+                    'filename',
+                    false
+                );
+                if (empty($files)) {
+                    return get_string('nofiles', 'mod_projetvet');
+                }
+                $filenames = array_map(function ($file) {
+                    return $file->get_filename();
+                }, $files);
+                return implode(', ', $filenames);
         }
         return '';
     }
@@ -222,10 +271,15 @@ class form_field extends persistent {
                 return 0;
             case 'autocomplete':
             case 'tagselect':
+            case 'tagconfirm':
                 if (is_array($value)) {
                     return json_encode(array_values($value));
                 }
                 return json_encode([]);
+            case 'filemanager':
+                // For filemanager, value is the draft itemid that will be used to save files.
+                // We store the itemid in the database.
+                return intval($value);
         }
     }
 }

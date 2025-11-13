@@ -162,7 +162,7 @@ class entries {
      * @param int $projetvetid The projetvet id
      * @param int $studentid The student id
      * @param array $fields The fields
-     * @param int $entrystatus The entry status (default STATUS_DRAFT)
+     * @param int $entrystatus The entry status (default 0)
      * @param string $formsetidnumber The form set idnumber (default: 'activities')
      *
      * @return int
@@ -171,7 +171,7 @@ class entries {
         int $projetvetid,
         int $studentid,
         array $fields,
-        int $entrystatus = form_entry::STATUS_DRAFT,
+        int $entrystatus = 0,
         string $formsetidnumber = 'activities'
     ): int {
         // Get the form set.
@@ -202,6 +202,37 @@ class entries {
     }
 
     /**
+     * Check if user can edit a specific category based on capability and entry status
+     *
+     * @param object $category The category object with capability and entrystatus properties
+     * @param int $currententrystatus The current entry status
+     * @param \context $context The module context
+     * @return bool
+     */
+    public static function can_edit_category(object $category, int $currententrystatus, \context $context): bool {
+        if ($category->capability == 'approve') {
+            // Only users with approve capability can edit approve categories.
+            return has_capability('mod/projetvet:approve', $context);
+        } else if ($category->capability == 'submit') {
+            // Users with submit capability can edit when category entrystatus matches current entry status.
+            if (
+                has_capability('mod/projetvet:submit', $context) &&
+                $category->entrystatus == $currententrystatus
+            ) {
+                return true;
+            }
+            // Users with approve capability can edit when category entrystatus is less than current entry status.
+            if (
+                has_capability('mod/projetvet:approve', $context) &&
+                $category->entrystatus < $currententrystatus
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Update an activity entry
      *
      * @param int $entryid The entry id
@@ -210,13 +241,42 @@ class entries {
      * @return void
      */
     public static function update_entry(int $entryid, array $fields, ?int $entrystatus = null): void {
-        // Update the activity.
+        global $DB;
+
+        // Get the entry.
         $entry = form_entry::get_record(['id' => $entryid]);
         if (empty($entry)) {
             throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
-        if (!$entry->can_edit()) {
-            throw new \moodle_exception('cannoteditactivity', 'projetvet');
+
+        // Get context for permission checks.
+        $cm = get_coursemodule_from_instance('projetvet', $entry->get('projetvetid'));
+        $context = \context_module::instance($cm->id);
+
+        // Get the form structure to validate field permissions.
+        $formset = form_set::get_record(['id' => $entry->get('formsetid')]);
+        $structure = self::get_form_structure($formset->get('idnumber'));
+
+        // Get current entry status (before update).
+        $currententrystatus = $entry->get('entrystatus');
+
+        // Build a map of fieldid => category for permission checking.
+        $fieldcategorymap = [];
+        foreach ($structure as $category) {
+            foreach ($category->fields as $field) {
+                $fieldcategorymap[$field->id] = $category;
+            }
+        }
+
+        // Validate that user can edit each field being submitted.
+        foreach ($fields as $fieldid => $value) {
+            if (!isset($fieldcategorymap[$fieldid])) {
+                continue; // Skip unknown fields.
+            }
+            $category = $fieldcategorymap[$fieldid];
+            if (!self::can_edit_category($category, $currententrystatus, $context)) {
+                throw new \moodle_exception('cannoteditfield', 'projetvet', '', $fieldid);
+            }
         }
 
         // Update entry status if provided.
@@ -225,6 +285,7 @@ class entries {
             $entry->update();
         }
 
+        // Update field values.
         foreach ($fields as $fieldid => $value) {
             $data = form_data::get_record(['entryid' => $entryid, 'fieldid' => $fieldid]);
             if ($data) {
@@ -283,13 +344,16 @@ class entries {
 
         // Get fields with listorder > 0, sorted by listorder.
         $listfields = [];
+        $capabilities = [];
         foreach ($structure as $category) {
+            $capabilities[$category->entrystatus] = $category->capability;
             foreach ($category->fields as $field) {
                 if ($field->listorder > 0) {
                     $listfields[$field->listorder] = $field;
                 }
             }
         }
+        $capabilities[count($structure)] = 'completed';
         ksort($listfields);
 
         $activitylist = [];
@@ -318,6 +382,7 @@ class entries {
         return [
             'activities' => $activitylist,
             'listfields' => array_values($listfields),
+            'capabilities' => $capabilities,
         ];
     }
 

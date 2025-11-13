@@ -53,7 +53,7 @@
             data-projetvetid="{{projetvetid}}"
             data-studentid="{{studentid}}"
             data-formsetidnumber="{{formsetidnumber}}">
-        {{#str}}newactivity, mod_projetvet{{/str}}
+        {{{addbuttonlabel}}}
     </button>
 </div>
 {{/isteacher}}
@@ -73,19 +73,30 @@
     {{#activities}}
         <tr>
             {{#fields}}
-            <td>{{displayvalue}}</td>
+            <td>
+            {{#isfirst}}
+            <a href="#" data-action="activity-entry-form"
+                data-readonly="1"
+                data-cmid="{{cmid}}"
+                data-projetvetid="{{projetvetid}}"
+                data-studentid="{{studentid}}"
+                data-entryid="{{entryid}}"
+                data-formsetidnumber="{{formsetidnumber}}">
+            {{displayvalue}}
+            </a>
+            {{/isfirst}}{{^isfirst}}{{displayvalue}}{{/isfirst}}</td>
             {{/fields}}
             <td><span class="badge {{statusclass}}">{{statustext}}</span></td>
             <td>
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-icon btn-secondary dropdown-toggle"
+                    <button class="btn btn-sm btn-icon icon-no-margin"
                             type="button"
                             id="entry-actions-{{entryid}}"
                             data-toggle="dropdown"
                             aria-haspopup="true"
                             aria-expanded="false"
                             aria-label="{{#str}}actions, mod_projetvet{{/str}}">
-                        <i class="icon fa fa-ellipsis-v fa-fw" aria-hidden="true"></i>
+                        <i class="icon fa fa-ellipsis fa-fw" aria-hidden="true"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="entry-actions-{{entryid}}">
                         {{#canview}}

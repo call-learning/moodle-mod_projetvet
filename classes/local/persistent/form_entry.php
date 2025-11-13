@@ -32,22 +32,6 @@ class form_entry extends persistent {
     const TABLE = 'projetvet_form_entry';
 
     /**
-     * Entry status constants
-     */
-
-    /** @var int Draft status - entry is being created */
-    const STATUS_DRAFT = 0;
-
-    /** @var int Submitted status - entry has been submitted */
-    const STATUS_SUBMITTED = 1;
-
-    /** @var int Validated status - entry has been validated */
-    const STATUS_VALIDATED = 2;
-
-    /** @var int Completed status - entry is completed */
-    const STATUS_COMPLETED = 3;
-
-    /**
      * Return the custom definition of the properties of this model.
      *
      * Each property MUST be listed here.
@@ -78,34 +62,39 @@ class form_entry extends persistent {
 
     /**
      * Check if the current user can edit this entry
+     * Returns true if the user can edit ANY category in the entry
      *
      * @return bool
      */
     public function can_edit(): bool {
-        global $USER;
-
         $context = $this->get_context();
         $entrystatus = $this->get('entrystatus');
-        $isstudent = $this->get('studentid') == $USER->id;
 
-        // STATUS_DRAFT (0): Only the student can edit their own entry.
-        if ($entrystatus == self::STATUS_DRAFT) {
-            return $isstudent && has_capability('mod/projetvet:submit', $context, $USER->id);
+        // Get the form structure.
+        $formset = form_set::get_record(['id' => $this->get('formsetid')]);
+        if (!$formset) {
+            return false;
         }
 
-        // STATUS_SUBMITTED (1): Only teachers with edit capability can edit.
-        if ($entrystatus == self::STATUS_SUBMITTED) {
-            return has_capability('mod/projetvet:edit', $context, $USER->id);
+        // Get all categories for this form set.
+        $categories = form_cat::get_records(['formsetid' => $formset->get('id')]);
+        if (empty($categories)) {
+            return false;
         }
 
-        // STATUS_VALIDATED (2): Student can edit again.
-        if ($entrystatus == self::STATUS_VALIDATED) {
-            return $isstudent && has_capability('mod/projetvet:submit', $context, $USER->id);
-        }
+        // Check if user can edit any category.
+        foreach ($categories as $categoryrecord) {
+            // Convert persistent to object with required properties.
+            $category = (object)[
+                'id' => $categoryrecord->get('id'),
+                'capability' => $categoryrecord->get('capability'),
+                'entrystatus' => $categoryrecord->get('entrystatus'),
+            ];
 
-        // STATUS_COMPLETED (3): Only users with viewallstudents capability (managers) can edit.
-        if ($entrystatus == self::STATUS_COMPLETED) {
-            return has_capability('mod/projetvet:viewallstudents', $context, $USER->id);
+            // Use the API function to check if user can edit this category.
+            if (\mod_projetvet\local\api\entries::can_edit_category($category, $entrystatus, $context)) {
+                return true;
+            }
         }
 
         return false;

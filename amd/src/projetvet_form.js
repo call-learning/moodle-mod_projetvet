@@ -40,13 +40,8 @@ export const init = () => {
         const button = event.target.closest('[data-action="activity-entry-form"]');
         event.preventDefault();
 
-        const titleString = button.dataset.entryid ? 'editactivity' : 'newactivity';
-
         const modalForm = new ModalForm({
             moduleName: 'core/modal',
-            modalConfig: {
-                title: getString(titleString, 'mod_projetvet'),
-            },
             formClass: '\\mod_projetvet\\form\\projetvet_form',
             args: {
                 ...button.dataset,

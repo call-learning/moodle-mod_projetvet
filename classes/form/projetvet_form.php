@@ -52,7 +52,7 @@ class projetvet_form extends dynamic_form {
 
         // Use the entrystatus from form data (set by button clicks).
         // If no specific status is set, use the current status from the entry.
-        $currententrystatus = $data->entrystatus ?? form_entry::STATUS_DRAFT;
+        $currententrystatus = $data->entrystatus ?? 0;
 
         // Check if this is a button submission by looking for button_action in form data.
         if (isset($data->button_entrystatus)) {
@@ -60,19 +60,62 @@ class projetvet_form extends dynamic_form {
             $entrystatus = $data->button_entrystatus;
         } else {
             // Regular form submission, progress to next status.
-            $nextstatus = min($currententrystatus + 1, form_entry::STATUS_COMPLETED);
+            $nextstatus = $currententrystatus + 1;
             $entrystatus = $nextstatus;
         }
 
-        // Extract field values from form data.
+        // Extract field values from form data - only for categories user can edit.
         $fields = [];
         $formsetidnumber = $data->formsetidnumber ?? 'activities';
         $structure = entries::get_form_structure($formsetidnumber);
+        $context = $this->get_context_for_dynamic_submission();
+
         foreach ($structure as $category) {
-            foreach ($category->fields as $field) {
-                $fieldname = 'field_' . $field->id;
-                if (isset($data->$fieldname)) {
-                    $fields[$field->id] = $data->$fieldname;
+            // Check if user can edit this category.
+            $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
+
+            if ($caneditcategory) {
+                // Only collect fields from categories the user can edit.
+                foreach ($category->fields as $field) {
+                    $fieldname = 'field_' . $field->id;
+                    if (isset($data->$fieldname)) {
+                        $fields[$field->id] = $data->$fieldname;
+                    }
+                }
+            }
+        }
+
+        // Save files for filemanager fields - only for editable categories.
+        foreach ($structure as $category) {
+            // Check if user can edit this category.
+            $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
+
+            if ($caneditcategory) {
+                foreach ($category->fields as $field) {
+                    if ($field->type === 'filemanager') {
+                        $fieldname = 'field_' . $field->id;
+                        if (isset($data->$fieldname)) {
+                            // The itemid in the entry becomes the permanent storage location.
+                            // We use the field->id combined with entryid to create a unique itemid.
+                            $itemid = $entryid * 1000 + $field->id;
+
+                            file_save_draft_area_files(
+                                $data->$fieldname, // Draft itemid.
+                                $context->id,
+                                'mod_projetvet',
+                                'entry_files',
+                                $itemid,
+                                [
+                                    'subdirs' => 0,
+                                    'maxbytes' => 0,
+                                    'maxfiles' => 50,
+                                ]
+                            );
+
+                            // Update the field value to store the permanent itemid.
+                            $fields[$field->id] = $itemid;
+                        }
+                    }
                 }
             }
         }
@@ -158,6 +201,11 @@ class projetvet_form extends dynamic_form {
             'mod_projetvet\form\tagselect_element'
         );
         \MoodleQuickForm::registerElementType(
+            'tagconfirm',
+            "$CFG->dirroot/mod/projetvet/classes/form/tagconfirm_element.php",
+            'mod_projetvet\form\tagconfirm_element'
+        );
+        \MoodleQuickForm::registerElementType(
             'switch',
             "$CFG->dirroot/mod/projetvet/classes/form/switch_element.php",
             'mod_projetvet\form\switch_element'
@@ -195,7 +243,7 @@ class projetvet_form extends dynamic_form {
         $context = context_module::instance($cmid);
 
         // Get current entry status if editing.
-        $currententrystatus = form_entry::STATUS_DRAFT;
+        $currententrystatus = 0;
         if ($entryid) {
             $entry = entries::get_entry($entryid);
             $currententrystatus = $entry->entrystatus;
@@ -210,11 +258,14 @@ class projetvet_form extends dynamic_form {
                 continue;
             }
 
+            // Use the API function to determine if user can edit this category.
+            $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
+
             // Add category header.
             $mform->addElement('header', 'category_' . $category->id, $category->name);
 
             // Expand header if category entrystatus matches current entry status.
-            if ($category->entrystatus == $currententrystatus) {
+            if ($category->entrystatus == $currententrystatus || $currententrystatus == count($structure)) {
                 $mform->setExpanded('category_' . $category->id);
             } else {
                 $mform->setExpanded('category_' . $category->id, false);
@@ -226,15 +277,8 @@ class projetvet_form extends dynamic_form {
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
 
-                // Check if user can edit this field based on capability and entry status.
-                $canediffield = true;
-                if (!empty($field->capability)) {
-                    $canediffield = has_capability($field->capability, $context);
-                }
-                // Also check if entry status allows editing this field.
-                if ($canediffield && $field->entrystatus != $currententrystatus) {
-                    $canediffield = false;
-                }
+                // Use category-level edit permission for all fields in the category.
+                $canediffield = $caneditcategory;
 
                 // Decode configdata - it may be a string or already decoded.
                 if (is_string($field->configdata)) {
@@ -260,7 +304,11 @@ class projetvet_form extends dynamic_form {
 
                     case 'textarea':
                         $rows = $configdata['rows'] ?? 4;
-                        $mform->addElement('textarea', $fieldname, $field->name, ['rows' => $rows]);
+                        $textareaattributes = [
+                            'rows' => $rows,
+                            'placeholder' => $field->description,
+                        ];
+                        $mform->addElement('textarea', $fieldname, $field->name, $textareaattributes);
                         $mform->setType($fieldname, PARAM_TEXT);
                         break;
 
@@ -269,7 +317,7 @@ class projetvet_form extends dynamic_form {
                         if (isset($configdata['max'])) {
                             $attributes['max'] = $configdata['max'];
                         }
-                        $mform->addElement('text', $fieldname, $field->name, $attributes);
+                        $mform->addElement('float', $fieldname, $field->name, $attributes);
                         $mform->setType($fieldname, PARAM_INT);
                         break;
 
@@ -298,8 +346,56 @@ class projetvet_form extends dynamic_form {
                         ]);
                         break;
 
+                    case 'tagconfirm':
+                        // Get the source field idnumber from configdata.
+                        $sourcefielidnumber = $configdata['tagselect'] ?? '';
+                        $sourcetags = [];
+                        $lookupfieldid = 0;
+
+                        // Find the source field and get its selected values.
+                        if ($sourcefielidnumber && $entryid) {
+                            $entry = entries::get_entry($entryid);
+                            foreach ($entry->categories as $entrycategory) {
+                                foreach ($entrycategory->fields as $entryfield) {
+                                    if ($entryfield->idnumber === $sourcefielidnumber) {
+                                        // Decode the JSON value to get selected tags.
+                                        $decoded = json_decode($entryfield->value, true);
+                                        $sourcetags = is_array($decoded) ? $decoded : [];
+                                        // Get the field ID for lookup data.
+                                        $lookupfieldid = $entryfield->id;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        $mform->addElement('tagconfirm', $fieldname, $field->name, [
+                            'sourcefielidnumber' => $sourcefielidnumber,
+                            'sourcetags' => $sourcetags,
+                            'lookupfieldid' => $lookupfieldid,
+                        ]);
+                        break;
+
                     case 'checkbox':
                         $mform->addElement('advcheckbox', $fieldname, $field->name, '', null, [0, 1]);
+                        break;
+
+                    case 'filemanager':
+                        // Get configuration for file manager options.
+                        $maxfiles = $configdata['maxfiles'] ?? 50;
+                        $maxbytes = $configdata['maxbytes'] ?? 0; // 0 means use course/site limit.
+                        $acceptedtypes = $configdata['accepted_types'] ?? '*';
+                        $subdirs = $configdata['subdirs'] ?? 0;
+
+                        $filemanageroptions = [
+                            'subdirs' => $subdirs,
+                            'maxbytes' => $maxbytes,
+                            'areamaxbytes' => 10485760, // 10MB.
+                            'maxfiles' => $maxfiles,
+                            'accepted_types' => $acceptedtypes,
+                        ];
+
+                        $mform->addElement('filemanager', $fieldname, $field->name, null, $filemanageroptions);
                         break;
 
                     case 'button':
@@ -358,7 +454,7 @@ class projetvet_form extends dynamic_form {
                 }
             }
             // Add all button elements as a group if any were found.
-            if (!empty($buttonelements) && ($category->entrystatus == $currententrystatus) && $canediffield) {
+            if (!empty($buttonelements) && ($category->entrystatus == $currententrystatus) && $caneditcategory) {
                 $mform->addGroup($buttonelements, 'buttongroup', '', [' '], false);
             }
         }
@@ -380,7 +476,7 @@ class projetvet_form extends dynamic_form {
             'studentid' => $this->optional_param('studentid', $USER->id, PARAM_INT),
             'entryid' => $this->optional_param('entryid', 0, PARAM_INT),
             'formsetidnumber' => $formsetidnumber,
-            'entrystatus' => form_entry::STATUS_DRAFT, // Default to draft for new entries.
+            'entrystatus' => 0, // Default to draft for new entries.
         ];
 
         // If editing an existing entry, load its data.
@@ -404,10 +500,33 @@ class projetvet_form extends dynamic_form {
                         continue;
                     }
 
-                    // For autocomplete and tagselect fields, decode JSON to array.
-                    if (in_array($fieldobj->type, ['autocomplete', 'tagselect'])) {
+                    // For autocomplete, tagselect, and tagconfirm fields, decode JSON to array.
+                    if (in_array($fieldobj->type, ['autocomplete', 'tagselect', 'tagconfirm'])) {
                         $decoded = json_decode($field->value, true);
                         $fieldvalue = is_array($decoded) ? $decoded : [];
+                    } else if ($fieldobj->type === 'filemanager') {
+                        // For filemanager, prepare the draft area with existing files.
+                        // Get a new draft itemid for this specific field in this specific entry.
+                        $draftitemid = file_get_submitted_draft_itemid($fieldname . '_' . $data['entryid']);
+
+                        // If there's no submitted draft (i.e., we're loading the form),
+                        // and there are existing files, copy them to a new draft area.
+                        if (!empty($field->value)) {
+                            $context = $this->get_context_for_dynamic_submission();
+                            file_prepare_draft_area(
+                                $draftitemid,
+                                $context->id,
+                                'mod_projetvet',
+                                'entry_files',
+                                $field->value, // The permanent itemid from the database.
+                                [
+                                    'subdirs' => 0,
+                                    'maxbytes' => 0,
+                                    'maxfiles' => 50,
+                                ]
+                            );
+                        }
+                        $fieldvalue = $draftitemid;
                     } else {
                         if ($fieldobj->type == 'date' && $field->value == '') {
                             $fieldvalue = time();

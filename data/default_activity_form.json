@@ -5,7 +5,7 @@
       "idnumber": "activity_details",
       "description": "Informations générales",
       "sortorder": 1,
-      "capability": "mod/projetvet:submit",
+      "capability": "submit",
       "entrystatus": 0,
       "fields": [
         {
@@ -17,7 +17,7 @@
           "configdata": {
             "required": true
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 1
         },
@@ -31,7 +31,7 @@
             "rows": 4,
             "required": true
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         },
@@ -50,7 +50,7 @@
               "5": "Année 5"
             }
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 2
         },
@@ -63,7 +63,7 @@
           "configdata": {
             "required": true
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 4
         },
@@ -80,7 +80,7 @@
               "3": "C"
             }
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 5
         },
@@ -91,7 +91,7 @@
           "type": "checkbox",
           "description": "",
           "configdata": {},
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         },
@@ -103,7 +103,7 @@
           "description": "",
           "configdata": {
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         },
@@ -116,7 +116,7 @@
           "configdata": {
             "required": true
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 6
         },
@@ -130,7 +130,7 @@
             "max": 5,
             "required": true
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 7
         },
@@ -146,7 +146,7 @@
             "entrystatus": 1,
             "style": "primary"
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         },
@@ -162,7 +162,7 @@
             "entrystatus": 0,
             "style": "secondary"
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         }
@@ -173,7 +173,7 @@
       "idnumber": "acceptance_form",
       "description": "Formulaire d'acceptation",
       "sortorder": 2,
-      "capability": "mod/projetvet:approve",
+      "capability": "approve",
       "entrystatus": 1,
       "fields": [
         {
@@ -185,7 +185,7 @@
           "configdata": {
             "rows": 4
           },
-          "capability": "mod/projetvet:approve",
+          "capability": "approve",
           "entrystatus": 1,
           "listorder": 0
         },
@@ -201,7 +201,7 @@
             "entrystatus": 2,
             "style": "primary"
           },
-          "capability": "mod/projetvet:approve",
+          "capability": "approve",
           "entrystatus": 1,
           "listorder": 0
         },
@@ -218,7 +218,7 @@
             "style": "secondary",
             "action": "email"
           },
-          "capability": "mod/projetvet:approve",
+          "capability": "approve",
           "entrystatus": 1,
           "listorder": 0
         },
@@ -234,7 +234,7 @@
             "entrystatus": 0,
             "style": "warning"
           },
-          "capability": "mod/projetvet:approve",
+          "capability": "approve",
           "entrystatus": 1,
           "listorder": 0
         }
@@ -245,7 +245,7 @@
       "idnumber": "compte_rendu_validation",
       "description": "Section rapport et validation",
       "sortorder": 3,
-      "capability": "mod/projetvet:submit",
+      "capability": "submit",
       "entrystatus": 2,
       "fields": [
         {
@@ -255,7 +255,7 @@
           "type": "date",
           "description": "Indiquez ici la période pendant laquelle s'est déroulée l'activité de CPP",
           "configdata": {},
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
@@ -266,99 +266,114 @@
           "type": "date",
           "description": "",
           "configdata": {},
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 3
         },
         {
           "idnumber": "resume_actions",
-          "name": "Décrire ici de façon concrète ce que vous avez fait",
+          "name": "Résumé des principales réalisations et actions menées pendant ce projet",
           "sortorder": 12,
           "type": "textarea",
-          "description": "Résumé des principales réalisations et actions menées pendant ce projet",
+          "description": "Décrire ici de façon concrète ce que vous avez fait",
           "configdata": {
             "rows": 6
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "productions",
-          "name": "Le cas échéant, lister ici toute production écrite ou orale liée à l'activité",
+          "name": "Liste des productions",
           "sortorder": 13,
           "type": "textarea",
           "description": "Le cas échéant, lister ici toute production écrite ou orale liée à l'activité. Par exemple : rapport de stage, présentation orale, etc.",
           "configdata": {
             "rows": 4
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
+          "entrystatus": 2,
+          "listorder": 0
+        },
+        {
+          "idnumber": "documents",
+          "name": "Documents complémentaires",
+          "sortorder": 14,
+          "type": "filemanager",
+          "description": "",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "progresses_sur",
           "name": "Grâce à cette activité, j'ai progressé sur…",
-          "sortorder": 14,
-          "type": "textarea",
-          "description": "",
-          "configdata": {
-            "rows": 4
-          },
-          "capability": "mod/projetvet:submit",
-          "entrystatus": 2,
-          "listorder": 0
-        },
-        {
-          "idnumber": "doit_encore_progresser_sur",
-          "name": "Au cours de cette activité, j'ai réalisé que je devais encore progresser sur…",
           "sortorder": 15,
           "type": "textarea",
           "description": "",
           "configdata": {
             "rows": 4
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
+          "entrystatus": 2,
+          "listorder": 0
+        },
+        {
+          "idnumber": "doit_encore_progresser_sur",
+          "name": "Au cours de cette activité, j'ai réalisé que je devais encore progresser sur…",
+          "sortorder": 16,
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "competences_pratiquees",
           "name": "Compétences réellement mises en pratique",
-          "sortorder": 16,
-          "type": "tagselect",
+          "sortorder": 17,
+          "type": "tagconfirm",
           "description": "Parmi les compétences définies lors de la soumission du projet, indiquez celles que vous avez réellement mises en pratique. Vous pouvez également en ajouter.",
-          "configdata": {},
-          "capability": "mod/projetvet:submit",
+          "configdata": {
+            "tagselect": "competency"
+          },
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "nb_heures_realisees",
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
-          "sortorder": 17,
+          "sortorder": 18,
           "type": "number",
           "description": "",
           "configdata": {},
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "nb_ects_final",
           "name": "Nombre d'ECTS final",
-          "sortorder": 18,
+          "sortorder": 19,
           "type": "number",
           "description": "",
           "configdata": {},
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "final_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
-          "sortorder": 19,
+          "sortorder": 20,
           "type": "button",
           "description": "",
           "configdata": {
@@ -367,14 +382,14 @@
             "entrystatus": 3,
             "style": "primary"
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
         },
         {
           "idnumber": "final_as_draft",
           "name": "Enregistrer comme brouillon",
-          "sortorder": 20,
+          "sortorder": 21,
           "type": "button",
           "description": "",
           "configdata": {
@@ -383,8 +398,81 @@
             "entrystatus": 2,
             "style": "secondary"
           },
-          "capability": "mod/projetvet:submit",
+          "capability": "submit",
           "entrystatus": 2,
+          "listorder": 0
+        }
+      ]
+    },
+    {
+      "name": "Validation finale",
+      "idnumber": "final_validation",
+      "description": "Validation finale par le tuteur",
+      "sortorder": 4,
+      "capability": "approve",
+      "entrystatus": 3,
+      "fields": [
+        {
+          "idnumber": "final_validation_comments",
+          "name": "Commentaires finaux",
+          "sortorder": 22,
+          "type": "textarea",
+          "description": "Commentaires finaux sur le compte rendu et la réalisation de l'activité",
+          "configdata": {
+            "rows": 6
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
+          "idnumber": "final_validation_grade",
+          "name": "Évaluation finale",
+          "sortorder": 23,
+          "type": "select",
+          "description": "",
+          "configdata": {
+            "options": {
+              "excellent": "Excellent",
+              "bien": "Bien",
+              "satisfaisant": "Satisfaisant",
+              "insuffisant": "Insuffisant"
+            }
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
+          "idnumber": "validate_button",
+          "name": "Valider définitivement",
+          "sortorder": 24,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Valider définitivement",
+            "icon": "fa-check-circle",
+            "entrystatus": 4,
+            "style": "success"
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
+          "idnumber": "return_to_student_final",
+          "name": "Retourner à l'étudiant pour révision",
+          "sortorder": 25,
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Retourner à l'étudiant pour révision",
+            "icon": "fa-undo",
+            "entrystatus": 2,
+            "style": "warning"
+          },
+          "capability": "approve",
+          "entrystatus": 3,
           "listorder": 0
         }
       ]

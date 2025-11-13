@@ -43,6 +43,7 @@ class form_data extends persistent {
         'autocomplete' => 'textvalue',
         'tagselect' => 'textvalue',
         'date' => 'intvalue',
+        'tagconfirm' => 'textvalue',
     ];
     /**
      * @var form_field $field The field object

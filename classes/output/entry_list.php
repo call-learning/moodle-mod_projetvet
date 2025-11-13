@@ -88,6 +88,7 @@ class entry_list implements renderable, templatable {
             'projetvetid' => $this->moduleinstance->id,
             'studentid' => $this->studentid,
             'formsetidnumber' => $this->formsetidnumber,
+            'addbuttonlabel' => get_string('new' . $this->formsetidnumber, 'mod_projetvet'),
         ];
 
         // Back link and student name for teachers viewing a student.
@@ -103,6 +104,7 @@ class entry_list implements renderable, templatable {
             $listdata = entries::get_entry_list($this->moduleinstance->id, $this->studentid, $this->formsetidnumber);
             $activitylist = $listdata['activities'];
             $listfields = $listdata['listfields'];
+            $capabilities = $listdata['capabilities'];
         } catch (\Exception $e) {
             $activitylist = [];
             $listfields = [];
@@ -110,6 +112,7 @@ class entry_list implements renderable, templatable {
 
         // Prepare list field headers.
         $data['listfields'] = [];
+
         foreach ($listfields as $field) {
             $data['listfields'][] = [
                 'name' => $field->name,
@@ -121,29 +124,16 @@ class entry_list implements renderable, templatable {
         $data['activities'] = [];
 
         foreach ($activitylist as $activity) {
-            // Determine status text and badge class based on entrystatus.
-            $statuskey = match ($activity['entrystatus']) {
-                form_entry::STATUS_DRAFT => 'status_draft',
-                form_entry::STATUS_SUBMITTED => 'status_submitted',
-                form_entry::STATUS_VALIDATED => 'status_validated',
-                form_entry::STATUS_COMPLETED => 'status_completed',
-                default => 'status_draft',
-            };
-            $statusclass = match ($activity['entrystatus']) {
-                form_entry::STATUS_DRAFT => 'badge-secondary',
-                form_entry::STATUS_SUBMITTED => 'badge-primary',
-                form_entry::STATUS_VALIDATED => 'badge-info',
-                form_entry::STATUS_COMPLETED => 'badge-success',
-                default => 'badge-secondary',
-            };
-
             $activitydata = [
                 'fields' => $activity['fields'], // Dynamic fields based on listorder.
                 'entryid' => $activity['id'],
                 'entrystatus' => $activity['entrystatus'],
-                'statustext' => get_string($statuskey, 'mod_projetvet'),
-                'statusclass' => $statusclass,
+                'statustext' => $capabilities[$activity['entrystatus']] . ' ' . $activity['entrystatus'],
+                'statusclass' => 'badge-secondary',
             ];
+            if (!empty($activitydata['fields'])) {
+                $activitydata['fields'][0]['isfirst'] = true;
+            }
 
             if (!$this->isteacher) {
                 // Students can edit and delete their own activities.

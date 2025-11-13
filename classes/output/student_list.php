@@ -22,6 +22,8 @@ use renderer_base;
 use renderable;
 use templatable;
 use moodle_url;
+use user_picture;
+use core_user;
 
 /**
  * Student list renderable class.
@@ -79,6 +81,7 @@ class student_list implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
+        global $PAGE;
         // Get students based on role - managers see all, teachers see their groups.
         if ($this->ismanager) {
             $students = $this->get_all_students();
@@ -100,7 +103,7 @@ class student_list implements renderable, templatable {
 
             try {
                 $activitylist = entries::get_entry_list($this->moduleinstance->id, $student->id);
-                $count = count($activitylist['activities']);
+                $facetofacelist = entries::get_entry_list($this->moduleinstance->id, $student->id, 'facetoface');
             } catch (\Exception $e) {
                 $count = 0;
             }
@@ -109,10 +112,15 @@ class student_list implements renderable, templatable {
                 'id' => $this->cm->id,
                 'studentid' => $student->id,
             ]);
-
+            $student = core_user::get_user($student->id);
+            $userpicture = new user_picture($student);
+            $userpicture->includetoken = true;
+            $userpicture->size = 2; // Size f1.
             $data['students'][] = [
                 'fullname' => fullname($student),
-                'activitiescount' => $count,
+                'userpictureurl' => $userpicture->get_url($PAGE)->out(false),
+                'facetofacecount' => count($facetofacelist['activities']),
+                'activitiescount' => count($activitylist['activities']),
                 'viewurl' => $viewurl->out(false),
             ];
         }
@@ -178,12 +186,12 @@ class student_list implements renderable, templatable {
                   FROM {projetvet_form_entry}
                  WHERE projetvetid = :projetvetid
                    AND studentid = :studentid
-                   AND entrystatus >= :submitted";
+                   AND entrystatus > :draft";
 
         $count = $DB->count_records_sql($sql, [
             'projetvetid' => $this->moduleinstance->id,
             'studentid' => $studentid,
-            'submitted' => form_entry::STATUS_SUBMITTED,
+            'draft' => 0,
         ]);
 
         return $count > 0;
