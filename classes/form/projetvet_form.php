@@ -210,6 +210,11 @@ class projetvet_form extends dynamic_form {
             "$CFG->dirroot/mod/projetvet/classes/form/switch_element.php",
             'mod_projetvet\form\switch_element'
         );
+        \MoodleQuickForm::registerElementType(
+            'number',
+            "$CFG->dirroot/mod/projetvet/classes/form/number_element.php",
+            'mod_projetvet\form\number_element'
+        );
 
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
         $projetvetid = $this->optional_param('projetvetid', null, PARAM_INT);
@@ -298,7 +303,20 @@ class projetvet_form extends dynamic_form {
                         break;
 
                     case 'date':
-                        $mform->addElement('date_selector', $fieldname, $field->name);
+                        $dateoptions = [
+                            'startyear' => date('Y') - 5,
+                            'stopyear' => date('Y') + 1,
+                        ];
+                        $mform->addElement('date_selector', $fieldname, $field->name, $dateoptions);
+                        $mform->setDefault($fieldname, time());
+                        break;
+
+                    case 'datetime':
+                        $datetimeoptions = [
+                            'startyear' => date('Y') - 5,
+                            'stopyear' => date('Y') + 1,
+                        ];
+                        $mform->addElement('date_time_selector', $fieldname, $field->name, $datetimeoptions);
                         $mform->setDefault($fieldname, time());
                         break;
 
@@ -313,12 +331,18 @@ class projetvet_form extends dynamic_form {
                         break;
 
                     case 'number':
-                        $attributes = [];
-                        if (isset($configdata['max'])) {
-                            $attributes['max'] = $configdata['max'];
+                        $numberattributes = [];
+                        if (isset($configdata['min'])) {
+                            $numberattributes['min'] = $configdata['min'];
                         }
-                        $mform->addElement('float', $fieldname, $field->name, $attributes);
-                        $mform->setType($fieldname, PARAM_INT);
+                        if (isset($configdata['max'])) {
+                            $numberattributes['max'] = $configdata['max'];
+                        }
+                        if (isset($configdata['step'])) {
+                            $numberattributes['step'] = $configdata['step'];
+                        }
+                        $mform->addElement('number', $fieldname, $field->name, $numberattributes);
+                        $mform->setType($fieldname, PARAM_FLOAT);
                         break;
 
                     case 'select':

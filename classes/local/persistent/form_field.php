@@ -45,6 +45,7 @@ class form_field extends persistent {
         'autocomplete',
         'tagselect',
         'date',
+        'datetime',
         'button',
         'tagconfirm',
         'filemanager',
@@ -146,6 +147,7 @@ class form_field extends persistent {
             case 'number':
                 return $value;
             case 'date':
+            case 'datetime':
                 if (empty($value)) {
                     return '';
                 }
@@ -255,6 +257,7 @@ class form_field extends persistent {
             case 'number':
             case 'checkbox':
             case 'date':
+            case 'datetime':
                 return intval($value);
             case 'select':
                 if (is_numeric($value)) {

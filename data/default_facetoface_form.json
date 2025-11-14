@@ -5,17 +5,17 @@
       "idnumber": "informations_generales",
       "description": "Informations générales sur l'entretien",
       "sortorder": 1,
-      "capability": "mod/projetvet:entretiensubmit",
+      "capability": "submit",
       "entrystatus": 0,
       "fields": [
         {
           "idnumber": "date_entretien",
           "name": "Date de l'entretien",
           "sortorder": 1,
-          "type": "date",
+          "type": "datetime",
           "description": "",
           "configdata": { "required": true },
-          "capability": "mod/projetvet:entretiensubmit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 1
         },
@@ -35,7 +35,7 @@
               "5": "Année 5"
             }
           },
-          "capability": "mod/projetvet:entretiensubmit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 3
         },
@@ -46,7 +46,7 @@
           "type": "text",
           "description": "Nom du tuteur",
           "configdata": { "readonly": true },
-          "capability": "mod/projetvet:entretiensubmit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 2
         },
@@ -63,41 +63,9 @@
               "3": "Téléphone"
             }
           },
-          "capability": "mod/projetvet:entretiensubmit",
+          "capability": "submit",
           "entrystatus": 0,
           "listorder": 4
-        },
-        {
-          "idnumber": "facetoface_to_tutor",
-          "name": "Enregistrer et soumettre au tuteur",
-          "sortorder": 5,
-          "type": "button",
-          "description": "",
-          "configdata": {
-            "text": "Enregistrer et soumettre au tuteur",
-            "icon": "fa-users",
-            "entrystatus": 1,
-            "style": "primary"
-          },
-          "capability": "mod/projetvet:entretiensubmit",
-          "entrystatus": 0,
-          "listorder": 0
-        },
-        {
-          "idnumber": "facetoface_as_draft",
-          "name": "Enregistrer comme brouillon",
-          "sortorder": 5,
-          "type": "button",
-          "description": "",
-          "configdata": {
-            "text": "Enregistrer comme brouillon",
-            "icon": "fa-download",
-            "entrystatus": 0,
-            "style": "secondary"
-          },
-          "capability": "mod/projetvet:entretiensubmit",
-          "entrystatus": 0,
-          "listorder": 0
         }
       ]
     },
@@ -106,8 +74,8 @@
       "idnumber": "compte_rendu_entretien",
       "description": "Compte-rendu partagé entre l'étudiant et le tuteur",
       "sortorder": 3,
-      "capability": "mod/projetvet:entretiensubmit",
-      "entrystatus": 1,
+      "capability": "submit",
+      "entrystatus": 0,
       "fields": [
         {
           "idnumber": "compte_rendu",
@@ -116,8 +84,8 @@
           "type": "textarea",
           "description": "Saisissez le compte-rendu de l'entretien avec votre tuteur. Ce texte est visible par le tuteur et le DEVE.",
           "configdata": { "rows": 6 },
-          "capability": "mod/projetvet:entretiensubmit",
-          "entrystatus": 1,
+          "capability": "submit",
+          "entrystatus": 0,
           "listorder": 5
         },
         {
@@ -127,40 +95,40 @@
           "type": "textarea",
           "description": "Notes visibles uniquement par l'étudiant.",
           "configdata": { "rows": 6 },
-          "capability": "mod/projetvet:entretiensubmit",
-          "entrystatus": 1,
+          "capability": "submit",
+          "entrystatus": 0,
           "listorder": 0
         },
         {
           "idnumber": "entretien_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
-          "sortorder": 19,
+          "sortorder": 10,
           "type": "button",
           "description": "",
           "configdata": {
             "text": "Enregistrer et soumettre au tuteur",
             "icon": "fa-users",
-            "entrystatus": 2,
+            "entrystatus": 1,
             "style": "primary"
           },
-          "capability": "mod/projetvet:submit",
-          "entrystatus": 1,
+          "capability": "submit",
+          "entrystatus": 0,
           "listorder": 0
         },
         {
           "idnumber": "entretien_as_draft",
           "name": "Enregistrer comme brouillon",
-          "sortorder": 20,
+          "sortorder": 11,
           "type": "button",
           "description": "",
           "configdata": {
             "text": "Enregistrer comme brouillon",
             "icon": "fa-download",
-            "entrystatus": 1,
+            "entrystatus": 0,
             "style": "secondary"
           },
-          "capability": "mod/projetvet:submit",
-          "entrystatus": 1,
+          "capability": "submit",
+          "entrystatus": 0,
           "listorder": 0
         }
       ]
@@ -170,37 +138,9 @@
       "idnumber": "validation_tuteur",
       "description": "Validation de l'entretien par le tuteur",
       "sortorder": 4,
-      "capability": "mod/projetvet:entretienapprove",
-      "entrystatus": 3,
+      "capability": "approve",
+      "entrystatus": 1,
       "fields": [
-        {
-          "idnumber": "validation_commentaires",
-          "name": "Commentaires du tuteur",
-          "sortorder": 1,
-          "type": "textarea",
-          "description": "Observations ou remarques du tuteur sur l'entretien",
-          "configdata": { "rows": 4 },
-          "capability": "mod/projetvet:entretienapprove",
-          "entrystatus": 2,
-          "listorder": 0
-        },
-        {
-          "idnumber": "validation_statut",
-          "name": "Statut de validation",
-          "sortorder": 2,
-          "type": "select",
-          "description": "État de validation de l'entretien",
-          "configdata": {
-            "options": {
-              "1": "Non confirmé",
-              "2": "En attente de confirmation",
-              "3": "Réalisation confirmée par le tuteur"
-            }
-          },
-          "capability": "mod/projetvet:entretienapprove",
-          "entrystatus": 2,
-          "listorder": 6
-        },
         {
           "idnumber": "entretien_validate",
           "name": "Enregistrer et confirmer que l'entretien a eu lieu",
@@ -210,11 +150,11 @@
           "configdata": {
             "text": "Enregistrer et confirmer que l'entretien a eu lieu",
             "icon": "fa-users",
-            "entrystatus": 3,
+            "entrystatus": 2,
             "style": "primary"
           },
-          "capability": "mod/projetvet:entretienapprove",
-          "entrystatus": 2,
+          "capability": "approve",
+          "entrystatus": 1,
           "listorder": 0
         }
       ]
