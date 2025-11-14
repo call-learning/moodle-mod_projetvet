@@ -67,8 +67,10 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
 
         // If optgrps contains our custom attributes, it means it was called with 3 params.
         // In that case, the 3rd param is actually attributes, not optgrps.
-        if (is_array($optgrps) && (isset($optgrps['sourcefielidnumber']) || isset($optgrps['sourcetags'])
-            || isset($optgrps['lookupfieldid']))) {
+        if (
+            is_array($optgrps) &&
+            (isset($optgrps['sourcefielidnumber']) || isset($optgrps['sourcetags']) || isset($optgrps['lookupfieldid']))
+        ) {
             $attributes = $optgrps;
             $optgrps = [];
         }
@@ -104,7 +106,7 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
      *
      * @return string
      */
-    public function toHtml() {
+    public function toHtml() { // @codingStandardsIgnoreLine
         global $OUTPUT;
         $context = $this->export_for_template($OUTPUT);
         return $OUTPUT->render_from_template('mod_projetvet/form/element_tagconfirm_wrapper', $context);
@@ -171,7 +173,7 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
      * @param bool $notused
      * @return array
      */
-    public function exportValue(&$submitvalues, $notused = false) {
+    public function exportValue(&$submitvalues, $notused = false) { // @codingStandardsIgnoreLine
         $valuearray = [];
         $elementname = $this->getName();
 
