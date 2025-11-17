@@ -29,6 +29,7 @@ $string['actions'] = 'Actions';
 $string['activities'] = 'Activities';
 $string['activitiescount'] = 'Activities';
 $string['activitytitle'] = 'Title';
+$string['addcompetence'] = 'Add a competence';
 $string['backtolist'] = 'Back to student list';
 $string['cachedef_activitystructures'] = 'Activity form structures';
 $string['cannotdeleteactivity'] = 'You cannot delete this activity';

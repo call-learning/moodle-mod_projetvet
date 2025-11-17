@@ -46,38 +46,109 @@
         ]
     }
 }}
-<div class="tagconfirm-element" id="{{elementid}}_container">
-    {{#hasgroups}}
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>{{#str}}competency, mod_projetvet{{/str}}</th>
-                <th class="text-center">{{#str}}practiced, mod_projetvet{{/str}}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#groups}}
-            <tr class="table-active">
-                <td colspan="2"><strong>{{heading}}</strong></td>
-            </tr>
-            {{#items}}
-            <tr>
-                <td>{{name}}</td>
-                <td class="text-center">
-                    <input type="checkbox"
-                           name="{{elementname}}[{{uniqueid}}]"
-                           id="{{elementid}}_{{uniqueid}}"
-                           value="1"
-                           {{#checked}}checked{{/checked}}
-                           class="tagconfirm-checkbox">
-                </td>
-            </tr>
-            {{/items}}
-            {{/groups}}
-        </tbody>
-    </table>
-    {{/hasgroups}}
-    {{^hasgroups}}
-    <p class="text-muted">{{#str}}nocompetenciesselected, mod_projetvet{{/str}}</p>
-    {{/hasgroups}}
+<div class="tagconfirm-wrapper" data-element-id="{{elementid}}">
+    <div class="tagconfirm-element" id="{{elementid}}_container" data-region="tagconfirm-table">
+        {{#hasgroups}}
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>{{#str}}competency, mod_projetvet{{/str}}</th>
+                    <th class="text-center">{{#str}}practiced, mod_projetvet{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody data-region="tagconfirm-tbody">
+                {{#groups}}
+                <tr class="table-active">
+                    <td colspan="2"><strong>{{heading}}</strong></td>
+                </tr>
+                {{#items}}
+                <tr data-tag-id="{{uniqueid}}">
+                    <td>{{name}}</td>
+                    <td class="text-center">
+                        <input type="checkbox"
+                               name="{{elementname}}[{{uniqueid}}]"
+                               id="{{elementid}}_{{uniqueid}}"
+                               value="1"
+                               {{#checked}}checked{{/checked}}
+                               {{#frozen}}disabled{{/frozen}}
+                               class="tagconfirm-checkbox"
+                               data-tag-id="{{uniqueid}}">
+                    </td>
+                </tr>
+                {{/items}}
+                {{/groups}}
+            </tbody>
+        </table>
+        {{/hasgroups}}
+        {{^hasgroups}}
+        <p class="text-muted">{{#str}}nocompetenciesselected, mod_projetvet{{/str}}</p>
+        {{/hasgroups}}
+    </div>
+
+    {{^frozen}}
+    {{! Add competence button }}
+    <button type="button"
+            class="btn btn-secondary btn-sm mt-2"
+            data-action="open-tagconfirm-popup"
+            data-element-id="{{elementid}}">
+        {{#pix}}t/add, core{{/pix}}
+        {{#str}}addcompetence, mod_projetvet{{/str}}
+    </button>
+
+    {{! Popup for adding additional competences }}
+    <div class="tagselect-popup d-none" data-region="tagconfirm-popup" data-element-id="{{elementid}}">
+        <div class="tagselect-popup-backdrop" data-action="close-tagconfirm-popup"></div>
+        <div class="tagselect-popup-content">
+            <div class="tag-form" data-region="tagform">
+                <div class="d-flex icon-no-margin">
+                    <h5>{{#str}}addcompetence, mod_projetvet{{/str}}</h5>
+                    <button type="button" class="btn btn-success ml-auto mb-2 btn-sm" data-action="save-tagconfirm-additions">
+                        {{#pix}}e/save, core{{/pix}}
+                        <span class="sr-only">{{#str}}save, admin{{/str}}</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary ml-1 mb-2 btn-sm" data-action="close-tagconfirm-popup">
+                        {{#pix}}e/cancel, core{{/pix}}
+                        <span class="sr-only">{{#str}}close, admin{{/str}}</span>
+                    </button>
+                </div>
+                <div class="form-group d-flex mb-0">
+                    <label for="tagconfirm-search-{{elementid}}" class="sr-only">{{#str}}search{{/str}}</label>
+                    <div class="col-12 p-0">
+                        <input type="search"
+                               class="form-control"
+                               id="tagconfirm-search-{{elementid}}"
+                               placeholder="{{#str}}search{{/str}}"
+                               data-region="tagconfirm-search">
+                    </div>
+                </div>
+                <hr class="mb-1">
+                <div data-region="selected-additions-popup" class="d-flex flex-wrap mb-2">
+                    {{! Selected additions will appear here }}
+                </div>
+                <hr class="mt-1">
+                <div class="list-group tag-list" data-region="tagconfirm-tag-list">
+                    {{#groupedoptions}}
+                        <div class="list-group-item py-1 px-2 bg-light">
+                            <div class="strong">{{name}}</div>
+                        </div>
+                        {{#items}}
+                            <a href="#"
+                               class="list-group-item list-group-item-action p-2 {{#isSelected}}d-none{{/isSelected}}"
+                               data-action="select-addition"
+                               data-tag-id="{{uniqueid}}"
+                               data-tag-name="{{name}}">
+                                {{name}}
+                            </a>
+                        {{/items}}
+                    {{/groupedoptions}}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/frozen}}
 </div>
+{{#js}}
+require(['mod_projetvet/tagconfirm'], function(tagconfirm) {
+    tagconfirm.init('{{elementid}}', '{{elementname}}');
+});
+{{/js}}

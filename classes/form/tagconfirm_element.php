@@ -109,7 +109,7 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
     public function toHtml() { // @codingStandardsIgnoreLine
         global $OUTPUT;
         $context = $this->export_for_template($OUTPUT);
-        return $OUTPUT->render_from_template('mod_projetvet/form/element_tagconfirm_wrapper', $context);
+        return $OUTPUT->render_from_template('mod_projetvet/form/element_tagconfirm', $context);
     }
 
     /**
@@ -132,13 +132,16 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
             $confirmedvalues = [];
         }
 
+        // Combine source tags with any additional manually added tags.
+        $allselectedtags = array_unique(array_merge($this->sourcetags, $confirmedvalues));
+
         // Build grouped items with checkboxes.
         $groups = [];
         foreach ($this->groupedoptions as $group) {
             $items = [];
             foreach ($group['items'] as $item) {
-                // Only include items that were selected in the source field.
-                if (in_array($item['uniqueid'], $this->sourcetags)) {
+                // Include items that were selected in the source field OR confirmed.
+                if (in_array($item['uniqueid'], $allselectedtags)) {
                     $items[] = [
                         'uniqueid' => $item['uniqueid'],
                         'name' => $item['name'],
@@ -156,6 +159,23 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
             }
         }
 
+        // Mark items as selected in groupedoptions for the popup.
+        $groupedoptionswithselection = [];
+        foreach ($this->groupedoptions as $group) {
+            $groupitems = [];
+            foreach ($group['items'] as $item) {
+                $groupitems[] = [
+                    'uniqueid' => $item['uniqueid'],
+                    'name' => $item['name'],
+                    'isSelected' => in_array($item['uniqueid'], $allselectedtags),
+                ];
+            }
+            $groupedoptionswithselection[] = [
+                'name' => $group['name'],
+                'items' => $groupitems,
+            ];
+        }
+
         return [
             'elementname' => $elementname,
             'elementid' => $elementid,
@@ -163,6 +183,8 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
             'groups' => $groups,
             'hasgroups' => !empty($groups),
             'frozen' => $isfrozen,
+            'groupedoptions' => $groupedoptionswithselection,
+            'allselectedtags' => $allselectedtags,
         ];
     }
 
