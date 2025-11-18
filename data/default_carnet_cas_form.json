@@ -1,0 +1,139 @@
+{
+  "categories": [
+    {
+      "name": "Carnet de cas",
+      "idnumber": "carnet_cas",
+      "description": "Enregistrement d'un cas clinique",
+      "capability": "submit",
+      "entrystatus": 0,
+      "fields": [
+        {
+          "idnumber": "cas_date",
+          "name": "Date",
+          "type": "date",
+          "description": "",
+          "configdata": {
+            "required": true
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "cas_nom_animal",
+          "name": "Nom (ou numéro de l'animal)",
+          "type": "text",
+          "description": "",
+          "configdata": {
+            "required": true
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "cas_espece_race",
+          "name": "Espèce / Race",
+          "type": "text",
+          "description": "",
+          "configdata": {
+            "required": true
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "cas_description",
+          "name": "Description succinte",
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4,
+            "required": true
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "cas_encadrant",
+          "name": "Encadrant",
+          "type": "text",
+          "description": "",
+          "configdata": {},
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "cas_fait_seul",
+          "name": "Ce que j'ai fait par moi-même",
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "cas_retenu",
+          "name": "Ce que je retiens du cas pour progresser",
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "statuscas0_date",
+          "name": "Date de soumission",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "dateformat": "strftimedatemonthtimeshort",
+            "action": "setcurrentdate"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "submit_cas",
+          "name": "Enregistrer et soumettre",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Enregistrer et soumettre",
+            "icon": "fa-check",
+            "entrystatus": 1,
+            "style": "primary"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "savecas_as_draft",
+          "name": "Enregistrer comme brouillon",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "Enregistrer comme brouillon",
+            "icon": "fa-download",
+            "entrystatus": 0,
+            "style": "secondary"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        }
+      ]
+    }
+  ]
+}

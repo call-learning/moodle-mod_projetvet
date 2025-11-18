@@ -124,7 +124,7 @@
           "listorder": 7
         },
         {
-          "idnumber": "status0_date",
+          "idnumber": "statusact_date",
           "name": "Date de soumission au tuteur",
           "type": "hidden",
           "description": "",

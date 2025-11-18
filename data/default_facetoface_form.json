@@ -65,19 +65,6 @@
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 4
-        },
-        {
-          "idnumber": "statusf2f0_date",
-          "name": "Date de soumission",
-          "type": "hidden",
-          "description": "",
-          "configdata": {
-            "dateformat": "strftimedatemonthtimeshort",
-            "action": "setcurrentdate"
-          },
-          "capability": "submit",
-          "entrystatus": 0,
-          "listorder": 0
         }
       ]
     },

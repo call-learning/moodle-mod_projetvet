@@ -34,14 +34,48 @@ class setup {
      */
     public static function create_default_activities() {
         global $CFG;
-        $jsonfile = $CFG->dirroot . '/mod/projetvet/data/default_activity_form.json';
 
-        if (!file_exists($jsonfile)) {
-            echo "Error: JSON file not found at $jsonfile\n";
-            exit(1);
+        // Define all form sets to import.
+        $formsets = [
+            'activities' => [
+                'name' => 'Activities',
+                'description' => 'Activity form fields',
+                'sortorder' => 0,
+                'jsonfile' => 'default_activity_form.json',
+            ],
+            'facetoface' => [
+                'name' => 'Face-to-face sessions',
+                'description' => 'Face-to-face session forms',
+                'sortorder' => 1,
+                'jsonfile' => 'default_facetoface_form.json',
+            ],
+            'carnet_cas' => [
+                'name' => 'Carnet de cas',
+                'description' => 'Carnet de cas cliniques',
+                'sortorder' => 2,
+                'jsonfile' => 'default_carnet_cas_form.json',
+            ],
+        ];
+
+        // Import each form set.
+        foreach ($formsets as $idnumber => $config) {
+            $jsonfile = $CFG->dirroot . '/mod/projetvet/data/' . $config['jsonfile'];
+
+            if (!file_exists($jsonfile)) {
+                debugging("JSON file not found: {$config['jsonfile']}", DEBUG_DEVELOPER);
+                continue;
+            }
+
+            $importer = new fields_json_importer(
+                $idnumber,
+                $config['name'],
+                $config['description'],
+                $config['sortorder']
+            );
+            $importer->import($jsonfile);
         }
 
-        $importer = new fields_json_importer(form_field::class);
-        $importer->import($jsonfile);
+        // Import field lookup data for tagselect fields.
+        fields_json_importer::import_field_lookup_data();
     }
 }

@@ -31,6 +31,7 @@ use mod_projetvet\local\persistent\form_set;
 use mod_projetvet\local\persistent\form_cat;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\field_data;
+use mod_projetvet\local\importer\fields_json_importer;
 
 // Get CLI options.
 [$options, $unrecognized] = cli_get_params(
@@ -84,6 +85,12 @@ $formsets = [
         'sortorder' => 1,
         'jsonfile' => 'default_facetoface_form.json',
     ],
+    'carnet_cas' => [
+        'name' => 'Carnet de cas',
+        'description' => 'Carnet de cas cliniques',
+        'sortorder' => 2,
+        'jsonfile' => 'default_carnet_cas_form.json',
+    ],
 ];
 
 // Filter by requested form set if specified.
@@ -132,99 +139,29 @@ if ($options['reset']) {
 function import_formset($idnumber, $config) {
     global $CFG;
 
-    $stats = ['categories' => 0, 'fields' => 0];
-
-    // Get or create the form set.
+    // Check if form set already exists.
     $formset = form_set::get_record(['idnumber' => $idnumber]);
     if (!$formset) {
         echo "Creating form set: {$config['name']}\n";
-        $formset = new form_set(0, (object)[
-            'idnumber' => $idnumber,
-            'name' => $config['name'],
-            'description' => $config['description'],
-            'sortorder' => $config['sortorder'],
-        ]);
-        $formset->create();
     } else {
         echo "Using existing form set: {$config['name']} (ID: {$formset->get('id')})\n";
     }
 
-    // Load JSON file.
+    // Create importer and import.
+    $importer = new fields_json_importer(
+        $idnumber,
+        $config['name'],
+        $config['description'],
+        $config['sortorder']
+    );
+
     $jsonfile = $CFG->dirroot . '/mod/projetvet/data/' . $config['jsonfile'];
     if (!file_exists($jsonfile)) {
         echo "  ERROR: File not found: {$config['jsonfile']}\n";
-        return $stats;
+        return ['categories' => 0, 'fields' => 0];
     }
 
-    $jsondata = file_get_contents($jsonfile);
-    $data = json_decode($jsondata, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo "  ERROR: Invalid JSON: " . json_last_error_msg() . "\n";
-        return $stats;
-    }
-
-    if (!isset($data['categories']) || !is_array($data['categories'])) {
-        echo "  ERROR: Missing categories array in JSON\n";
-        return $stats;
-    }
-
-    // Import categories and fields.
-    foreach ($data['categories'] as $categoryindex => $categorydata) {
-        $category = form_cat::get_record(['idnumber' => $categorydata['idnumber']]);
-
-        if (!$category) {
-            echo "  Creating category: {$categorydata['name']}\n";
-            $category = new form_cat(0, (object)[
-                'formsetid' => $formset->get('id'),
-                'idnumber' => $categorydata['idnumber'],
-                'name' => $categorydata['name'],
-                'description' => $categorydata['description'] ?? '',
-                'sortorder' => $categoryindex + 1,
-                'capability' => $categorydata['capability'] ?? null,
-                'entrystatus' => $categorydata['entrystatus'] ?? 0,
-            ]);
-            $category->create();
-            $stats['categories']++;
-        } else {
-            echo "  Updating category: {$categorydata['name']}\n";
-            $category->set('formsetid', $formset->get('id'));
-            $category->set('name', $categorydata['name']);
-            $category->set('description', $categorydata['description'] ?? '');
-            $category->set('sortorder', $categoryindex + 1);
-            $category->update();
-        }
-
-        // Import fields.
-        if (isset($categorydata['fields']) && is_array($categorydata['fields'])) {
-            foreach ($categorydata['fields'] as $fieldindex => $fielddata) {
-                $field = form_field::get_record(['idnumber' => $fielddata['idnumber']]);
-
-                $fieldrecord = (object)[
-                    'idnumber' => $fielddata['idnumber'],
-                    'name' => $fielddata['name'],
-                    'type' => $fielddata['type'],
-                    'description' => $fielddata['description'] ?? '',
-                    'sortorder' => $fieldindex + 1,
-                    'categoryid' => $category->get('id'),
-                    'configdata' => json_encode($fielddata['configdata'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                    'capability' => $fielddata['capability'] ?? null,
-                    'entrystatus' => $fielddata['entrystatus'] ?? 0,
-                    'listorder' => $fielddata['listorder'] ?? 0,
-                ];
-
-                if ($field) {
-                    $field->from_record($fieldrecord);
-                    $field->update();
-                } else {
-                    echo "    Creating field: {$fielddata['name']}\n";
-                    $field = new form_field(0, $fieldrecord);
-                    $field->create();
-                    $stats['fields']++;
-                }
-            }
-        }
-    }
+    $stats = $importer->import($jsonfile);
 
     return $stats;
 }
@@ -235,10 +172,6 @@ function import_formset($idnumber, $config) {
  * @return int Number of records imported
  */
 function import_field_data() {
-    global $CFG;
-
-    $totalcount = 0;
-
     // Get all tagselect fields.
     $fields = form_field::get_records(['type' => 'tagselect']);
 
@@ -249,48 +182,16 @@ function import_field_data() {
 
     echo "\nImporting field lookup data...\n";
 
+    // Show which fields will be processed.
     foreach ($fields as $field) {
-        // Determine which JSON file to use based on idnumber.
-        $jsonfile = null;
-        if ($field->get('idnumber') === 'competency') {
-            $jsonfile = $CFG->dirroot . '/mod/projetvet/data/complist.json';
-        } else if ($field->get('idnumber') === 'category') {
-            $jsonfile = $CFG->dirroot . '/mod/projetvet/data/categories.json';
-        }
-
-        if (!$jsonfile || !file_exists($jsonfile)) {
-            continue;
-        }
-
         echo "  Processing field: {$field->get('name')} (idnumber: {$field->get('idnumber')})\n";
+    }
 
-        $json = file_get_contents($jsonfile);
-        $data = json_decode($json, true);
+    // Use the importer class to import field lookup data.
+    $totalcount = fields_json_importer::import_field_lookup_data();
 
-        if (empty($data)) {
-            echo "    No data found in: " . basename($jsonfile) . "\n";
-            continue;
-        }
-
-        // Delete existing data for this field.
-        field_data::delete_field_data($field->get('id'));
-
-        $count = 0;
-        foreach ($data as $item) {
-            $record = new field_data(0, (object)[
-                'fieldid' => $field->get('id'),
-                'uniqueid' => $item['uniqueid'],
-                'itemtype' => $item['type'],
-                'parent' => $item['parent'],
-                'name' => $item['name'],
-                'sortorder' => $item['sortorder'],
-            ]);
-            $record->create();
-            $count++;
-        }
-
-        echo "    Imported $count records from " . basename($jsonfile) . "\n";
-        $totalcount += $count;
+    if ($totalcount > 0) {
+        echo "  Imported $totalcount total records\n";
     }
 
     return $totalcount;
