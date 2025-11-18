@@ -331,17 +331,7 @@ class projetvet_form extends dynamic_form {
                         break;
 
                     case 'number':
-                        $numberattributes = [];
-                        if (isset($configdata['min'])) {
-                            $numberattributes['min'] = $configdata['min'];
-                        }
-                        if (isset($configdata['max'])) {
-                            $numberattributes['max'] = $configdata['max'];
-                        }
-                        if (isset($configdata['step'])) {
-                            $numberattributes['step'] = $configdata['step'];
-                        }
-                        $mform->addElement('number', $fieldname, $field->name, $numberattributes);
+                        $mform->addElement('number', $fieldname, $field->name);
                         $mform->setType($fieldname, PARAM_FLOAT);
                         break;
 
@@ -419,7 +409,34 @@ class projetvet_form extends dynamic_form {
                             'accepted_types' => $acceptedtypes,
                         ];
 
-                        $mform->addElement('filemanager', $fieldname, $field->name, null, $filemanageroptions);
+                        // If field cannot be edited, show files as static HTML instead of frozen filemanager.
+                        if (!$canediffield) {
+                            $mform->addElement('static', $fieldname . '_static', $field->name, '');
+                        } else {
+                            $mform->addElement('filemanager', $fieldname, $field->name, null, $filemanageroptions);
+                        }
+                        break;
+
+                    case 'hidden':
+                        // Handle hidden fields for dates.
+                        $action = $configdata['action'] ?? '';
+
+                        if ($action === 'setcurrentdate') {
+                            // Only add this hidden field if category entrystatus matches current entry status.
+                            if ($category->entrystatus == $currententrystatus && $caneditcategory) {
+                                $mform->addElement('hidden', $fieldname);
+                                $mform->setType($fieldname, PARAM_INT);
+                                $mform->setDefault($fieldname, time());
+                            } else {
+                                // If not current entrystatus, it will be displayed as static text in set_data.
+                                // Add a static element placeholder that will be populated with formatted date.
+                                $mform->addElement('static', $fieldname . '_static', $field->name, '');
+                            }
+                        } else {
+                            // For other hidden fields, add them normally.
+                            $mform->addElement('hidden', $fieldname);
+                            $mform->setType($fieldname, PARAM_INT);
+                        }
                         break;
 
                     case 'button':
@@ -471,7 +488,8 @@ class projetvet_form extends dynamic_form {
                 }
 
                 // If user cannot edit this field, freeze it but preserve the value using setConstant.
-                if (!$canediffield) {
+                // Exception: filemanager fields are shown as static HTML instead.
+                if (!$canediffield && $field->type !== 'filemanager') {
                     $mform->freeze($fieldname);
                     // For frozen fields, we need to ensure the value is preserved on submission.
                     // We'll set it as constant in set_data_for_dynamic_submission instead.
@@ -509,8 +527,13 @@ class projetvet_form extends dynamic_form {
             // Set the entry status switch from the entry.
             $data['entrystatus'] = $entry->entrystatus;
             $structure = entries::get_form_structure($formsetidnumber);
+            $context = $this->get_context_for_dynamic_submission();
+            $currententrystatus = $entry->entrystatus;
 
             foreach ($entry->categories as $category) {
+                // Get the category object from structure to check permissions.
+                $categoryobj = $this->get_category_by_id($structure, $category->id);
+
                 foreach ($category->fields as $field) {
                     $fieldname = 'field_' . $field->id;
                     $fieldobj = $this->get_field_by_id($structure, $field->id);
@@ -524,19 +547,67 @@ class projetvet_form extends dynamic_form {
                         continue;
                     }
 
+                    // Handle hidden fields with special date formatting.
+                    if ($fieldobj->type === 'hidden') {
+                        // Decode configdata if it's a string.
+                        $fieldconfigdata = $fieldobj->configdata;
+                        if (is_string($fieldconfigdata)) {
+                            $fieldconfigdata = json_decode(stripslashes($fieldconfigdata), true);
+                            if (json_last_error() !== JSON_ERROR_NONE) {
+                                $fieldconfigdata = [];
+                            }
+                        } else {
+                            $fieldconfigdata = (array) $fieldconfigdata;
+                        }
+
+                        $action = $fieldconfigdata['action'] ?? '';
+                        $dateformat = $fieldconfigdata['dateformat'] ?? 'strftimedatetime';
+
+                        if ($action === 'setcurrentdate') {
+                            // Only set value if category entrystatus matches current entry status.
+                            if ($categoryobj && $categoryobj->entrystatus == $currententrystatus) {
+                                // Use existing value if set, otherwise use current time.
+                                $fieldvalue = !empty($field->value) ? $field->value : time();
+                                $data[$fieldname] = $fieldvalue;
+                            } else if (!empty($field->value)) {
+                                // Display as static formatted date for past entrystatus.
+                                $data[$fieldname . '_static'] = userdate($field->value, get_string($dateformat, 'langconfig'));
+                            }
+                            // Skip further processing.
+                            continue;
+                        } else if (!empty($field->value)) {
+                            // For other hidden fields with a value.
+                            $data[$fieldname] = $field->value;
+                            continue;
+                        } else {
+                            // No value, skip this field.
+                            continue;
+                        }
+                    }
+
                     // For autocomplete, tagselect, and tagconfirm fields, decode JSON to array.
                     if (in_array($fieldobj->type, ['autocomplete', 'tagselect', 'tagconfirm'])) {
                         $decoded = json_decode($field->value, true);
                         $fieldvalue = is_array($decoded) ? $decoded : [];
                     } else if ($fieldobj->type === 'filemanager') {
-                        // For filemanager, prepare the draft area with existing files.
+                        // Check if user can edit this field using the category object from structure.
+                        $canediffield = $categoryobj ? entries::can_edit_category($categoryobj, $currententrystatus, $context) :
+                            true;
+
+                        if (!$canediffield && !empty($field->value)) {
+                            // For frozen filemanager, show list of files as static HTML.
+                            $data[$fieldname . '_static'] = $this->get_filemanager_display_html($context, $field->value);
+                            // Don't set fieldvalue - we don't need the filemanager element.
+                            continue;
+                        }
+
+                        // For editable filemanager, prepare the draft area with existing files.
                         // Get a new draft itemid for this specific field in this specific entry.
                         $draftitemid = file_get_submitted_draft_itemid($fieldname . '_' . $data['entryid']);
 
                         // If there's no submitted draft (i.e., we're loading the form),
                         // and there are existing files, copy them to a new draft area.
                         if (!empty($field->value)) {
-                            $context = $this->get_context_for_dynamic_submission();
                             file_prepare_draft_area(
                                 $draftitemid,
                                 $context->id,
@@ -583,5 +654,64 @@ class projetvet_form extends dynamic_form {
             }
         }
         return null;
+    }
+
+    /**
+     * Get category object by id from structure
+     *
+     * @param array $structure
+     * @param int $categoryid
+     * @return object|null
+     */
+    private function get_category_by_id($structure, $categoryid) {
+        foreach ($structure as $category) {
+            if ($category->id == $categoryid) {
+                return $category;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get HTML display for frozen filemanager showing list of files
+     *
+     * @param context $context The context
+     * @param int $itemid The file area itemid
+     * @return string HTML string with file list
+     */
+    private function get_filemanager_display_html($context, $itemid) {
+        global $OUTPUT;
+
+        $fs = get_file_storage();
+        $files = $fs->get_area_files(
+            $context->id,
+            'mod_projetvet',
+            'entry_files',
+            $itemid,
+            'filename',
+            false
+        );
+
+        $filesdata = [];
+        foreach ($files as $file) {
+            $filesdata[] = [
+                'filename' => $file->get_filename(),
+                'filesize' => display_size($file->get_filesize()),
+                'url' => \moodle_url::make_pluginfile_url(
+                    $context->id,
+                    'mod_projetvet',
+                    'entry_files',
+                    $itemid,
+                    $file->get_filepath(),
+                    $file->get_filename()
+                )->out(),
+                'mimetype' => $file->get_mimetype(),
+            ];
+        }
+
+        return $OUTPUT->render_from_template('mod_projetvet/filemanager_files', [
+            'hasfiles' => !empty($filesdata),
+            'files' => $filesdata,
+        ]);
     }
 }

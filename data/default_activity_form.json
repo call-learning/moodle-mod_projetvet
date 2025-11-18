@@ -4,14 +4,12 @@
       "name": "Informations générales",
       "idnumber": "activity_details",
       "description": "Informations générales",
-      "sortorder": 1,
       "capability": "submit",
       "entrystatus": 0,
       "fields": [
         {
           "idnumber": "activity_title",
           "name": "Intitulé de l'activité",
-          "sortorder": 1,
           "type": "text",
           "description": "",
           "configdata": {
@@ -24,7 +22,6 @@
         {
           "idnumber": "summary",
           "name": "Description sommaire",
-          "sortorder": 2,
           "type": "textarea",
           "description": "",
           "configdata": {
@@ -38,7 +35,6 @@
         {
           "idnumber": "year",
           "name": "Année d'étude à laquelle le projet se terminera",
-          "sortorder": 4,
           "type": "select",
           "description": "",
           "configdata": {
@@ -57,7 +53,6 @@
         {
           "idnumber": "category",
           "name": "Catégorie",
-          "sortorder": 5,
           "type": "tagselect",
           "description": "",
           "configdata": {
@@ -70,7 +65,6 @@
         {
           "idnumber": "rang",
           "name": "Rang",
-          "sortorder": 6,
           "type": "select",
           "description": "",
           "configdata": {
@@ -87,7 +81,6 @@
         {
           "idnumber": "completed",
           "name": "Complété",
-          "sortorder": 7,
           "type": "checkbox",
           "description": "",
           "configdata": {},
@@ -98,11 +91,9 @@
         {
           "idnumber": "competency",
           "name": "Compétence visée",
-          "sortorder": 3,
           "type": "tagselect",
           "description": "",
-          "configdata": {
-          },
+          "configdata": {},
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
@@ -110,7 +101,6 @@
         {
           "idnumber": "hours",
           "name": "Volume horaire prévu (approximativement)",
-          "sortorder": 8,
           "type": "number",
           "description": "",
           "configdata": {
@@ -123,7 +113,6 @@
         {
           "idnumber": "credits",
           "name": "Nombre de crédits suggéré après discussion avec le tuteur",
-          "sortorder": 9,
           "type": "number",
           "description": "",
           "configdata": {
@@ -135,9 +124,21 @@
           "listorder": 7
         },
         {
+          "idnumber": "status0_date",
+          "name": "Date de soumission au tuteur",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "dateformat": "strftimedatemonthtimeshort",
+            "action": "setcurrentdate"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "submit_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
-          "sortorder": 10,
           "type": "button",
           "description": "",
           "configdata": {
@@ -153,7 +154,6 @@
         {
           "idnumber": "save_as_draft",
           "name": "Enregistrer comme brouillon",
-          "sortorder": 11,
           "type": "button",
           "description": "",
           "configdata": {
@@ -172,14 +172,12 @@
       "name": "Acceptation",
       "idnumber": "acceptance_form",
       "description": "Formulaire d'acceptation",
-      "sortorder": 2,
       "capability": "approve",
       "entrystatus": 1,
       "fields": [
         {
           "idnumber": "acceptance_comments",
           "name": "Commentaires",
-          "sortorder": 19,
           "type": "textarea",
           "description": "Commentaires sur l'activité",
           "configdata": {
@@ -190,9 +188,21 @@
           "listorder": 0
         },
         {
+          "idnumber": "status1_date",
+          "name": "Date de soumission",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "dateformat": "strftimedatemonthtimeshort",
+            "action": "setcurrentdate"
+          },
+          "capability": "approve",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
           "idnumber": "accept_button",
           "name": "Accepter",
-          "sortorder": 20,
           "type": "button",
           "description": "",
           "configdata": {
@@ -208,7 +218,6 @@
         {
           "idnumber": "contact_student_button",
           "name": "Contacter l'étudiant pour en discuter",
-          "sortorder": 21,
           "type": "button",
           "description": "",
           "configdata": {
@@ -225,7 +234,6 @@
         {
           "idnumber": "return_to_student_button",
           "name": "Retourner à l'étudiant",
-          "sortorder": 22,
           "type": "button",
           "description": "",
           "configdata": {
@@ -244,14 +252,12 @@
       "name": "Compte rendu & validation",
       "idnumber": "compte_rendu_validation",
       "description": "Section rapport et validation",
-      "sortorder": 3,
       "capability": "submit",
       "entrystatus": 2,
       "fields": [
         {
           "idnumber": "date_debut_realisation",
           "name": "Date de début de réalisation",
-          "sortorder": 10,
           "type": "date",
           "description": "Indiquez ici la période pendant laquelle s'est déroulée l'activité de CPP",
           "configdata": {},
@@ -262,7 +268,6 @@
         {
           "idnumber": "date_fin_realisation",
           "name": "Date de fin de réalisation",
-          "sortorder": 11,
           "type": "date",
           "description": "",
           "configdata": {},
@@ -273,7 +278,6 @@
         {
           "idnumber": "resume_actions",
           "name": "Résumé des principales réalisations et actions menées pendant ce projet",
-          "sortorder": 12,
           "type": "textarea",
           "description": "Décrire ici de façon concrète ce que vous avez fait",
           "configdata": {
@@ -286,7 +290,6 @@
         {
           "idnumber": "productions",
           "name": "Liste des productions",
-          "sortorder": 13,
           "type": "textarea",
           "description": "Le cas échéant, lister ici toute production écrite ou orale liée à l'activité. Par exemple : rapport de stage, présentation orale, etc.",
           "configdata": {
@@ -299,7 +302,6 @@
         {
           "idnumber": "documents",
           "name": "Documents complémentaires",
-          "sortorder": 14,
           "type": "filemanager",
           "description": "",
           "configdata": {
@@ -312,7 +314,6 @@
         {
           "idnumber": "progresses_sur",
           "name": "Grâce à cette activité, j'ai progressé sur…",
-          "sortorder": 15,
           "type": "textarea",
           "description": "",
           "configdata": {
@@ -325,7 +326,6 @@
         {
           "idnumber": "doit_encore_progresser_sur",
           "name": "Au cours de cette activité, j'ai réalisé que je devais encore progresser sur…",
-          "sortorder": 16,
           "type": "textarea",
           "description": "",
           "configdata": {
@@ -338,7 +338,6 @@
         {
           "idnumber": "competences_pratiquees",
           "name": "Compétences réellement mises en pratique",
-          "sortorder": 17,
           "type": "tagconfirm",
           "description": "Parmi les compétences définies lors de la soumission du projet, indiquez celles que vous avez réellement mises en pratique. Vous pouvez également en ajouter.",
           "configdata": {
@@ -351,7 +350,6 @@
         {
           "idnumber": "nb_heures_realisees",
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
-          "sortorder": 18,
           "type": "number",
           "description": "",
           "configdata": {},
@@ -362,7 +360,6 @@
         {
           "idnumber": "nb_ects_final",
           "name": "Nombre d'ECTS final",
-          "sortorder": 19,
           "type": "number",
           "description": "",
           "configdata": {},
@@ -371,9 +368,21 @@
           "listorder": 0
         },
         {
+          "idnumber": "status2_date",
+          "name": "Date de soumission",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "dateformat": "strftimedatemonthtimeshort",
+            "action": "setcurrentdate"
+          },
+          "capability": "submit",
+          "entrystatus": 2,
+          "listorder": 0
+        },
+        {
           "idnumber": "final_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
-          "sortorder": 20,
           "type": "button",
           "description": "",
           "configdata": {
@@ -389,7 +398,6 @@
         {
           "idnumber": "final_as_draft",
           "name": "Enregistrer comme brouillon",
-          "sortorder": 21,
           "type": "button",
           "description": "",
           "configdata": {
@@ -408,14 +416,12 @@
       "name": "Validation finale",
       "idnumber": "final_validation",
       "description": "Validation finale par le tuteur",
-      "sortorder": 4,
       "capability": "approve",
       "entrystatus": 3,
       "fields": [
         {
           "idnumber": "final_validation_comments",
           "name": "Commentaires finaux",
-          "sortorder": 22,
           "type": "textarea",
           "description": "Commentaires finaux sur le compte rendu et la réalisation de l'activité",
           "configdata": {
@@ -428,7 +434,6 @@
         {
           "idnumber": "final_validation_grade",
           "name": "Évaluation finale",
-          "sortorder": 23,
           "type": "select",
           "description": "",
           "configdata": {
@@ -444,9 +449,21 @@
           "listorder": 0
         },
         {
+          "idnumber": "status3_date",
+          "name": "Date de validation",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "dateformat": "strftimedatemonthtimeshort",
+            "action": "setcurrentdate"
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
           "idnumber": "validate_button",
           "name": "Valider définitivement",
-          "sortorder": 24,
           "type": "button",
           "description": "",
           "configdata": {
@@ -462,7 +479,6 @@
         {
           "idnumber": "return_to_student_final",
           "name": "Retourner à l'étudiant pour révision",
-          "sortorder": 25,
           "type": "button",
           "description": "",
           "configdata": {

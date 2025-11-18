@@ -1,0 +1,56 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_projetvet/filemanager_files
+
+    Display list of files for frozen filemanager.
+
+    Context variables required for this template:
+    * hasfiles - Whether there are files to display
+    * files - Array of file objects with:
+        * filename - The name of the file
+        * filesize - The size of the file (formatted)
+        * url - The download URL
+        * mimetype - The MIME type (optional, for icon)
+
+    Example context (json):
+    {
+        "hasfiles": true,
+        "files": [
+            {
+                "filename": "document.pdf",
+                "filesize": "1.5 MB",
+                "url": "https://example.com/file.pdf"
+            }
+        ]
+    }
+}}
+{{#hasfiles}}
+<ul class="list-unstyled">
+    {{#files}}
+    <li>
+        <a href="{{url}}" target="_blank">
+            {{#pix}}f/{{mimetype}}, core{{/pix}}
+            {{filename}} ({{filesize}})
+        </a>
+    </li>
+    {{/files}}
+</ul>
+{{/hasfiles}}
+{{^hasfiles}}
+<em>{{#str}}nofiles, mod_projetvet{{/str}}</em>
+{{/hasfiles}}

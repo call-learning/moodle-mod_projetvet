@@ -49,6 +49,7 @@ class form_field extends persistent {
         'button',
         'tagconfirm',
         'filemanager',
+        'hidden',
     ];
 
     /**
@@ -145,6 +146,7 @@ class form_field extends persistent {
             case 'text':
             case 'textarea':
             case 'number':
+            case 'hidden':
                 return $value;
             case 'date':
             case 'datetime':
@@ -253,6 +255,7 @@ class form_field extends persistent {
         switch ($this->get('type')) {
             case 'text':
             case 'textarea':
+            case 'hidden':
                 return $value;
             case 'number':
             case 'checkbox':

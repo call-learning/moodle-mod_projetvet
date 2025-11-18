@@ -170,7 +170,7 @@ function import_formset($idnumber, $config) {
     }
 
     // Import categories and fields.
-    foreach ($data['categories'] as $categorydata) {
+    foreach ($data['categories'] as $categoryindex => $categorydata) {
         $category = form_cat::get_record(['idnumber' => $categorydata['idnumber']]);
 
         if (!$category) {
@@ -180,7 +180,7 @@ function import_formset($idnumber, $config) {
                 'idnumber' => $categorydata['idnumber'],
                 'name' => $categorydata['name'],
                 'description' => $categorydata['description'] ?? '',
-                'sortorder' => $categorydata['sortorder'] ?? 0,
+                'sortorder' => $categoryindex + 1,
                 'capability' => $categorydata['capability'] ?? null,
                 'entrystatus' => $categorydata['entrystatus'] ?? 0,
             ]);
@@ -191,13 +191,13 @@ function import_formset($idnumber, $config) {
             $category->set('formsetid', $formset->get('id'));
             $category->set('name', $categorydata['name']);
             $category->set('description', $categorydata['description'] ?? '');
-            $category->set('sortorder', $categorydata['sortorder'] ?? 0);
+            $category->set('sortorder', $categoryindex + 1);
             $category->update();
         }
 
         // Import fields.
         if (isset($categorydata['fields']) && is_array($categorydata['fields'])) {
-            foreach ($categorydata['fields'] as $fielddata) {
+            foreach ($categorydata['fields'] as $fieldindex => $fielddata) {
                 $field = form_field::get_record(['idnumber' => $fielddata['idnumber']]);
 
                 $fieldrecord = (object)[
@@ -205,7 +205,7 @@ function import_formset($idnumber, $config) {
                     'name' => $fielddata['name'],
                     'type' => $fielddata['type'],
                     'description' => $fielddata['description'] ?? '',
-                    'sortorder' => $fielddata['sortorder'] ?? 0,
+                    'sortorder' => $fieldindex + 1,
                     'categoryid' => $category->get('id'),
                     'configdata' => json_encode($fielddata['configdata'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                     'capability' => $fielddata['capability'] ?? null,
