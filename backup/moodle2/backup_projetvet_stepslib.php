@@ -45,7 +45,7 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
 
         $formcats = new backup_nested_element('formcats');
         $formcat = new backup_nested_element('formcat', ['id'], [
-            'formsetid', 'idnumber', 'name', 'description', 'capability', 'entrystatus',
+            'formsetid', 'idnumber', 'name', 'description', 'capability', 'entrystatus', 'statusmsg',
             'sortorder', 'timecreated', 'timemodified', 'usermodified',
         ]);
 
@@ -63,7 +63,7 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
         // User data elements (only when userinfo is included).
         $formentries = new backup_nested_element('formentries');
         $formentry = new backup_nested_element('formentry', ['id'], [
-            'projetvetid', 'formsetid', 'studentid', 'entrystatus', 'timecreated', 'timemodified', 'usermodified',
+            'projetvetid', 'formsetid', 'studentid', 'parententryid', 'entrystatus', 'timecreated', 'timemodified', 'usermodified',
         ]);
 
         $formdatas = new backup_nested_element('formdatas');
@@ -138,6 +138,7 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
             $formentry->annotate_ids('user', 'studentid');
             $formentry->annotate_ids('user', 'usermodified');
             $formentry->annotate_ids('formset', 'formsetid');
+            $formentry->annotate_ids('formentry', 'parententryid');
             $formdata->annotate_ids('user', 'usermodified');
             $formdata->annotate_ids('formfield', 'fieldid');
             $formdata->annotate_ids('formentry', 'entryid');

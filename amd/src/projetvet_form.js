@@ -25,6 +25,7 @@ import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import Notification from 'core/notification';
 import Repository from 'mod_projetvet/repository';
+import Templates from 'core/templates';
 
 export const init = () => {
 
@@ -48,9 +49,81 @@ export const init = () => {
             },
         });
 
+        // Add custom class to modal after it's loaded.
+        modalForm.addEventListener(modalForm.events.LOADED, () => {
+            modalForm.modal.getModal().addClass('modal-fullscreen-form');
+        });
+
         // Intercept form submission to show dialog only if switch is not checked.
 
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
+        modalForm.show();
+    });
+
+    // Handle subset entry form button clicks (forms within forms).
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('[data-action="subset-entry-form"]')) {
+            return;
+        }
+        const button = event.target.closest('[data-action="subset-entry-form"]');
+        event.preventDefault();
+
+        const modalForm = new ModalForm({
+            moduleName: 'core/modal',
+            formClass: '\\mod_projetvet\\form\\projetvet_form',
+            args: {
+                ...button.dataset,
+            },
+        });
+
+        // After form submission, reload the subset entries list via AJAX.
+        modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, async() => {
+            // Get the element ID and container.
+            const elementId = button.dataset.elementid;
+            const listContainer = document.querySelector(`#${elementId}_list`);
+
+            if (!listContainer) {
+                return;
+            }
+
+            try {
+                // Fetch updated entry list from the webservice.
+                const data = await Repository.getEntryList({
+                    projetvetid: parseInt(button.dataset.projetvetid),
+                    studentid: parseInt(button.dataset.studentid),
+                    formsetidnumber: button.dataset.formsetidnumber,
+                    parententryid: parseInt(button.dataset.parententryid),
+                });
+
+                // Build context for the partial template.
+                const context = {
+                    hasentries: data.activities && data.activities.length > 0,
+                    entries: data.activities && data.activities.length > 0 ? {
+                        headers: data.listfields.map(field => ({name: field.name})),
+                        rows: data.activities.map(activity => ({
+                            id: activity.id,
+                            fields: activity.fields.map(field => ({value: field.displayvalue})),
+                        })),
+                    } : null,
+                    subsetformsetidnumber: button.dataset.formsetidnumber,
+                    parententryid: button.dataset.parententryid,
+                    studentid: button.dataset.studentid,
+                    cmid: button.dataset.cmid,
+                    projetvetid: button.dataset.projetvetid,
+                    elementid: elementId,
+                };
+
+                // Re-render the entry list using the partial template.
+                const {html, js} = await Templates.renderForPromise(
+                    'mod_projetvet/form/element_subset_entries',
+                    context
+                );
+                Templates.replaceNodeContents(listContainer, html, js);
+            } catch (error) {
+                Notification.exception(error);
+            }
+        });
+
         modalForm.show();
     });
 

@@ -191,6 +191,11 @@ class restore_projetvet_activity_structure_step extends restore_activity_structu
         $data->studentid = $this->get_mappingid('user', $data->studentid);
         $data->usermodified = $this->get_mappingid('user', $data->usermodified);
 
+        // Map parententryid to the new ID if it exists.
+        if (!empty($data->parententryid)) {
+            $data->parententryid = $this->get_mappingid('formentry', $data->parententryid);
+        }
+
         // Insert the form entry record.
         $newitemid = $DB->insert_record('projetvet_form_entry', $data);
         $this->set_mapping('formentry', $oldid, $newitemid);

@@ -52,6 +52,11 @@ class form_entry extends persistent {
                 'null' => NULL_NOT_ALLOWED,
                 'type' => PARAM_INT,
             ],
+            'parententryid' => [
+                'null' => NULL_ALLOWED,
+                'type' => PARAM_INT,
+                'default' => 0,
+            ],
             'entrystatus' => [
                 'null' => NULL_NOT_ALLOWED,
                 'type' => PARAM_INT,

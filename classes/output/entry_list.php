@@ -104,7 +104,6 @@ class entry_list implements renderable, templatable {
             $listdata = entries::get_entry_list($this->moduleinstance->id, $this->studentid, $this->formsetidnumber);
             $activitylist = $listdata['activities'];
             $listfields = $listdata['listfields'];
-            $capabilities = $listdata['capabilities'];
         } catch (\Exception $e) {
             $activitylist = [];
             $listfields = [];
@@ -128,8 +127,7 @@ class entry_list implements renderable, templatable {
                 'fields' => $activity['fields'], // Dynamic fields based on listorder.
                 'entryid' => $activity['id'],
                 'entrystatus' => $activity['entrystatus'],
-                'statustext' => $capabilities[$activity['entrystatus']] . ' ' . $activity['entrystatus'],
-                'statusclass' => 'badge-secondary',
+                'statustext' => $activity['statustext'],
             ];
             if (!empty($activitydata['fields'])) {
                 $activitydata['fields'][0]['isfirst'] = true;

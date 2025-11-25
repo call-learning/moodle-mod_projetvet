@@ -49,6 +49,7 @@
         <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="capability" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="entrystatus" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Minimum entry status required to edit (0=draft, 1=submitted, 2=validated, 3=completed)"/>
+        <FIELD NAME="statusmsg" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" COMMENT="Status message for this category (e.g., draft, teacheraccept, validated)"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -93,6 +94,7 @@
         <FIELD NAME="projetvetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="formsetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="parententryid" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Parent entry ID for subset forms"/>
         <FIELD NAME="entrystatus" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=draft, 1=submitted to teacher"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -103,9 +105,11 @@
         <KEY NAME="projetvetid" TYPE="foreign" FIELDS="projetvetid" REFTABLE="projetvet" REFFIELDS="id"/>
         <KEY NAME="formsetid" TYPE="foreign" FIELDS="formsetid" REFTABLE="projetvet_form_set" REFFIELDS="id"/>
         <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="parententryid" TYPE="foreign" FIELDS="parententryid" REFTABLE="projetvet_form_entry" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="projetvet_student" UNIQUE="false" FIELDS="projetvetid,studentid"/>
+        <INDEX NAME="parententryid_idx" UNIQUE="false" FIELDS="parententryid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="projetvet_form_data" COMMENT="Activity data">

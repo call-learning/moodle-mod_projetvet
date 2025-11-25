@@ -33,5 +33,43 @@ function xmldb_projetvet_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
+    if ($oldversion < 2025111900) {
+        // Define field parententryid to be added to projetvet_form_entry.
+        $table = new xmldb_table('projetvet_form_entry');
+        $field = new xmldb_field('parententryid', XMLDB_TYPE_INTEGER, '10', null, false, null, '0', 'studentid');
+
+        // Conditionally launch add field parententryid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add foreign key for parententryid.
+        $key = new xmldb_key('parententryid', XMLDB_KEY_FOREIGN, ['parententryid'], 'projetvet_form_entry', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Add index for parententryid.
+        $index = new xmldb_index('parententryid_idx', XMLDB_INDEX_NOTUNIQUE, ['parententryid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025111900, 'projetvet');
+    }
+
+    if ($oldversion < 2025112000) {
+        // Define field statusmsg to be added to projetvet_form_cat.
+        $table = new xmldb_table('projetvet_form_cat');
+        $field = new xmldb_field('statusmsg', XMLDB_TYPE_CHAR, '50', null, null, null, null, 'entrystatus');
+
+        // Conditionally launch add field statusmsg.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025112000, 'projetvet');
+    }
+
     return true;
 }

@@ -6,6 +6,7 @@
       "description": "Enregistrement d'un cas clinique",
       "capability": "submit",
       "entrystatus": 0,
+      "statusmsg": "draft",
       "fields": [
         {
           "idnumber": "cas_date",
@@ -17,10 +18,10 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 1
         },
         {
-          "idnumber": "cas_nom_animal",
+          "idnumber": "case_animal_name",
           "name": "Nom (ou numéro de l'animal)",
           "type": "text",
           "description": "",
@@ -29,10 +30,10 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 2
         },
         {
-          "idnumber": "cas_espece_race",
+          "idnumber": "case_species_breed",
           "name": "Espèce / Race",
           "type": "text",
           "description": "",
@@ -41,7 +42,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 3
         },
         {
           "idnumber": "cas_description",
@@ -54,20 +55,20 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 4
         },
         {
-          "idnumber": "cas_encadrant",
+          "idnumber": "case_supervisor",
           "name": "Encadrant",
           "type": "text",
           "description": "",
           "configdata": {},
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 5
         },
         {
-          "idnumber": "cas_fait_seul",
+          "idnumber": "case_done_alone",
           "name": "Ce que j'ai fait par moi-même",
           "type": "textarea",
           "description": "",
@@ -79,7 +80,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "cas_retenu",
+          "idnumber": "case_learned",
           "name": "Ce que je retiens du cas pour progresser",
           "type": "textarea",
           "description": "",
@@ -88,7 +89,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 6
         },
         {
           "idnumber": "statuscas0_date",
@@ -109,25 +110,10 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer et soumettre",
+            "text": "btn_save_submit",
             "icon": "fa-check",
-            "entrystatus": 1,
-            "style": "primary"
-          },
-          "capability": "submit",
-          "entrystatus": 0,
-          "listorder": 0
-        },
-        {
-          "idnumber": "savecas_as_draft",
-          "name": "Enregistrer comme brouillon",
-          "type": "button",
-          "description": "",
-          "configdata": {
-            "text": "Enregistrer comme brouillon",
-            "icon": "fa-download",
             "entrystatus": 0,
-            "style": "secondary"
+            "style": "primary"
           },
           "capability": "submit",
           "entrystatus": 0,

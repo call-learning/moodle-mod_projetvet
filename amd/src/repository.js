@@ -45,6 +45,23 @@ class Repository {
 
         return promise;
     }
+
+    /**
+     * Get entry list for a formset.
+     * @param {Object} args The arguments containing projetvetid, studentid, formsetidnumber, parententryid.
+     * @return {Promise} The promise.
+     */
+    getEntryList(args) {
+        const request = {
+            methodname: 'mod_projetvet_get_entry_list',
+            args: args
+        };
+
+        let promise = Ajax.call([request])[0]
+            .fail(Notification.exception);
+
+        return promise;
+    }
 }
 
 const RepositoryInstance = new Repository();

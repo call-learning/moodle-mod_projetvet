@@ -41,7 +41,8 @@ class entries {
      */
     public static function get_form_structure(string $formsetidnumber = 'activities'): array {
         $actstructure = cache::make('mod_projetvet', 'activitystructures');
-        $cachekey = 'activitystructure_' . $formsetidnumber;
+        // Include current language in cache key since field names are translated.
+        $cachekey = 'activitystructure_' . $formsetidnumber . '_' . current_language();
         if ($actstructure->get($cachekey)) {
             return $actstructure->get($cachekey);
         }
@@ -58,10 +59,11 @@ class entries {
         foreach ($categories as $category) {
             $data[$category->get('id')] = (object) [
                 'id' => $category->get('id'),
-                'name' => $category->get('name'),
+                'name' => get_string('category_' . $category->get('idnumber'), 'mod_projetvet'),
                 'description' => $category->get('description'),
                 'capability' => $category->get('capability'),
                 'entrystatus' => $category->get('entrystatus'),
+                'statusmsg' => $category->get('statusmsg'),
                 'fields' => [],
             ];
         }
@@ -71,7 +73,7 @@ class entries {
                 $data[$field->get('categoryid')]->fields[] = (object) [
                     'id' => $field->get('id'),
                     'idnumber' => $field->get('idnumber'),
-                    'name' => $field->get('name'),
+                    'name' => get_string('field_' . $field->get('idnumber'), 'mod_projetvet'),
                     'type' => $field->get('type'),
                     'description' => $field->get('description'),
                     'configdata' => $field->get('configdata'),
@@ -147,6 +149,7 @@ class entries {
             'projetvetid' => $actentry->get('projetvetid'),
             'studentid' => $actentry->get('studentid'),
             'timecreated' => $actentry->get('timecreated'),
+            'timemodified' => $actentry->get('timemodified'),
             'usermodified' => $actentry->get('usermodified'),
             'entrystatus' => $actentry->get('entrystatus'),
             'categories' => $activity,
@@ -164,6 +167,7 @@ class entries {
      * @param array $fields The fields
      * @param int $entrystatus The entry status (default 0)
      * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @param int $parententryid The parent entry id for subset forms (default 0)
      *
      * @return int
      */
@@ -172,7 +176,8 @@ class entries {
         int $studentid,
         array $fields,
         int $entrystatus = 0,
-        string $formsetidnumber = 'activities'
+        string $formsetidnumber = 'activities',
+        int $parententryid = 0
     ): int {
         // Get the form set.
         $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
@@ -185,6 +190,7 @@ class entries {
         $entry->set('projetvetid', $projetvetid);
         $entry->set('formsetid', $formset->get('id'));
         $entry->set('studentid', $studentid);
+        $entry->set('parententryid', $parententryid);
         $entry->set('entrystatus', $entrystatus);
         $entry->create();
         $entry->save();
@@ -331,37 +337,54 @@ class entries {
     }
 
     /**
-     * Get the activity entries for a student
+     * Get the activity entry list for display in tables
      *
      * @param int $projetvetid The projetvet instance id
      * @param int $studentid The user id
      * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @param int $parententryid The parent entry id for subset entries (optional, default 0)
      * @return array
      */
-    public static function get_entry_list(int $projetvetid, int $studentid, string $formsetidnumber = 'activities'): array {
-        $entries = self::get_entries($projetvetid, $studentid, $formsetidnumber);
+    public static function get_entry_list(
+        int $projetvetid,
+        int $studentid,
+        string $formsetidnumber = 'activities',
+        int $parententryid = 0
+    ): array {
+        $entries = self::get_entries($projetvetid, $studentid, $formsetidnumber, $parententryid);
         $structure = self::get_form_structure($formsetidnumber);
 
         // Get fields with listorder > 0, sorted by listorder.
         $listfields = [];
-        $capabilities = [];
+        $statusmsgs = [];
         foreach ($structure as $category) {
-            $capabilities[$category->entrystatus] = $category->capability;
+            $statusmsgs[$category->entrystatus] = $category->statusmsg ?? '';
             foreach ($category->fields as $field) {
                 if ($field->listorder > 0) {
                     $listfields[$field->listorder] = $field;
                 }
             }
         }
-        $capabilities[count($structure)] = 'completed';
         ksort($listfields);
+        // Always add a final statusmsg 'final' with highest entrystatus + 1.
+        if (!empty($statusmsgs)) {
+            $maxentrystatus = max(array_keys($statusmsgs));
+            $statusmsgs[$maxentrystatus + 1] = 'final';
+        }
 
         $activitylist = [];
         foreach ($entries->activities as $activity) {
+            // Get status message from language file with formatted date.
+            $statusmsgkey = $statusmsgs[$activity->entrystatus] ?? '';
+            $dateformatted = userdate($activity->timemodified, get_string('strftimedatetimeshort', 'langconfig'));
+            $statustext = $statusmsgkey ? get_string('statusmsg_' . $statusmsgkey, 'mod_projetvet', $dateformatted) : '';
+
             $activitydata = [
                 'id' => $activity->id,
                 'fields' => [],
                 'entrystatus' => $activity->entrystatus,
+                'statustext' => $statustext,
+                'timemodified' => $activity->timemodified,
                 'canedit' => $activity->canedit,
                 'candelete' => $activity->candelete,
             ];
@@ -382,7 +405,6 @@ class entries {
         return [
             'activities' => $activitylist,
             'listfields' => array_values($listfields),
-            'capabilities' => $capabilities,
         ];
     }
 
@@ -392,9 +414,15 @@ class entries {
      * @param int $projetvetid The projetvet instance id
      * @param int $studentid The user id
      * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @param int $parententryid The parent entry id for subset entries (optional, default 0)
      * @return stdClass
      */
-    public static function get_entries(int $projetvetid, int $studentid, string $formsetidnumber = 'activities'): stdClass {
+    public static function get_entries(
+        int $projetvetid,
+        int $studentid,
+        string $formsetidnumber = 'activities',
+        int $parententryid = 0
+    ): stdClass {
         $structure = self::get_form_structure($formsetidnumber);
 
         // Get the form set to filter entries.
@@ -406,11 +434,18 @@ class entries {
             ];
         }
 
-        $entries = form_entry::get_records([
+        $filter = [
             'studentid' => $studentid,
             'projetvetid' => $projetvetid,
             'formsetid' => $formset->get('id'),
-        ]);
+        ];
+
+        // Add parententryid filter if specified.
+        if ($parententryid > 0) {
+            $filter['parententryid'] = $parententryid;
+        }
+
+        $entries = form_entry::get_records($filter);
         $activities = [];
         foreach ($entries as $entry) {
             $activities[] = self::do_get_entry_content($structure, $entry);

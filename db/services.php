@@ -34,4 +34,12 @@ $functions = [
         'ajax'          => true,
         'capabilities'  => 'mod/projetvet:view',
     ],
+    'mod_projetvet_get_entry_list' => [
+        'classname'     => 'mod_projetvet\external\entry_list',
+        'methodname'    => 'execute',
+        'description'   => 'Get entry list for a form set',
+        'type'          => 'read',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:view',
+    ],
 ];

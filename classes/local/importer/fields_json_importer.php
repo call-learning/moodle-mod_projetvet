@@ -96,6 +96,15 @@ class fields_json_importer {
             return $stats;
         }
 
+        // Validate uniqueness of idnumbers.
+        $validation = $this->validate_idnumbers($data);
+        if (!empty($validation['errors'])) {
+            foreach ($validation['errors'] as $error) {
+                debugging($error, DEBUG_DEVELOPER);
+            }
+            return $stats;
+        }
+
         // Get or create the form set.
         $formset = form_set::get_record(['idnumber' => $this->formsetidnumber]);
         if (!$formset) {
@@ -120,6 +129,7 @@ class fields_json_importer {
                     'sortorder' => $categoryindex + 1, // Use array index for sortorder.
                     'capability' => $categorydata['capability'] ?? null,
                     'entrystatus' => $categorydata['entrystatus'] ?? 0,
+                    'statusmsg' => $categorydata['statusmsg'] ?? null,
                 ]);
                 $category->create();
                 $stats['categories']++;
@@ -129,6 +139,7 @@ class fields_json_importer {
                 $category->set('name', $categorydata['name']);
                 $category->set('description', $categorydata['description'] ?? '');
                 $category->set('sortorder', $categoryindex + 1); // Use array index for sortorder.
+                $category->set('statusmsg', $categorydata['statusmsg'] ?? null);
                 $category->update();
             }
 
@@ -147,6 +158,54 @@ class fields_json_importer {
     }
 
     /**
+     * Validate that all idnumbers are unique within the JSON data
+     *
+     * @param array $data Decoded JSON data
+     * @return array Array with 'errors' key containing validation error messages
+     */
+    protected function validate_idnumbers(array $data): array {
+        $errors = [];
+        $categoryidnumbers = [];
+        $fieldidnumbers = [];
+
+        foreach ($data['categories'] as $categoryindex => $categorydata) {
+            $catidnumber = $categorydata['idnumber'] ?? '';
+
+            // Check category idnumber.
+            if (empty($catidnumber)) {
+                $errors[] = "Category at index $categoryindex is missing idnumber";
+            } else if (isset($categoryidnumbers[$catidnumber])) {
+                $errors[] = "Duplicate category idnumber '$catidnumber' found at index $categoryindex " .
+                    "(previously at index {$categoryidnumbers[$catidnumber]})";
+            } else {
+                $categoryidnumbers[$catidnumber] = $categoryindex;
+            }
+
+            // Check field idnumbers within this category.
+            if (isset($categorydata['fields']) && is_array($categorydata['fields'])) {
+                foreach ($categorydata['fields'] as $fieldindex => $fielddata) {
+                    $fieldidnumber = $fielddata['idnumber'] ?? '';
+
+                    if (empty($fieldidnumber)) {
+                        $errors[] = "Field at index $fieldindex in category '$catidnumber' is missing idnumber";
+                    } else if (isset($fieldidnumbers[$fieldidnumber])) {
+                        $errors[] = "Duplicate field idnumber '$fieldidnumber' found in category '$catidnumber' " .
+                            "at index $fieldindex (previously in category '{$fieldidnumbers[$fieldidnumber]['category']}' " .
+                            "at index {$fieldidnumbers[$fieldidnumber]['index']})";
+                    } else {
+                        $fieldidnumbers[$fieldidnumber] = [
+                            'category' => $catidnumber,
+                            'index' => $fieldindex,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return ['errors' => $errors];
+    }
+
+    /**
      * Import a single field
      *
      * @param array $fielddata Field data from JSON
@@ -156,7 +215,7 @@ class fields_json_importer {
      */
     protected function import_field(array $fielddata, int $categoryid, int $fieldindex): bool {
         // Create or update field.
-        $field = form_field::get_record(['idnumber' => $fielddata['idnumber']]);
+        $field = form_field::get_record(['idnumber' => $fielddata['idnumber'], 'categoryid' => $categoryid]);
 
         $fieldrecord = (object)[
             'idnumber' => $fielddata['idnumber'],

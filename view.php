@@ -58,6 +58,9 @@ $PAGE->set_context($context);
 // Determine if user can view all activities (teacher or manager).
 $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
 
+// Get the current group for this activity.
+$currentgroup = groups_get_activity_group($cm, true);
+
 // Get the renderer.
 $renderer = $PAGE->get_renderer('mod_projetvet');
 
@@ -66,10 +69,41 @@ if ($canviewall && !$studentid) {
     // Teacher/Manager view: show list of students with submitted entries.
     echo $OUTPUT->header();
     echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
-    echo $renderer->render_student_list($moduleinstance, $cm, $context);
+
+    // Display group selector if groups are enabled.
+    groups_print_activity_menu($cm, $PAGE->url);
+
+    echo $renderer->render_student_list($moduleinstance, $cm, $context, $currentgroup);
 } else {
     // Student view or teacher/manager viewing a specific student.
     $viewingstudentid = $studentid ? $studentid : $USER->id;
+
+    // Verify access: teachers can only view students from their groups (unless they have accessallgroups).
+    if ($studentid && $canviewall && $viewingstudentid != $USER->id) {
+        // Check if teacher has accessallgroups capability.
+        $hasaccessallgroups = has_capability('moodle/site:accessallgroups', $context);
+
+        if (!$hasaccessallgroups) {
+            // Get the group mode for this activity.
+            $groupmode = groups_get_activity_groupmode($cm);
+
+            // In separate groups mode, verify the student is in an allowed group.
+            if ($groupmode == SEPARATEGROUPS) {
+                $allowedstudents = get_enrolled_users(
+                    $context,
+                    'mod/projetvet:submit',
+                    $currentgroup,
+                    'u.id'
+                );
+
+                $studentids = array_keys($allowedstudents);
+                if (!in_array($viewingstudentid, $studentids)) {
+                    // Teacher doesn't have access to this student.
+                    throw new \moodle_exception('nopermissions', 'error', '', get_string('viewallactivities', 'mod_projetvet'));
+                }
+            }
+        }
+    }
 
     // Load JavaScript for activity forms.
     $PAGE->requires->js_call_amd('mod_projetvet/projetvet_form', 'init');
@@ -89,11 +123,11 @@ if ($canviewall && !$studentid) {
 
     // Render activities list.
     echo $OUTPUT->heading(get_string('activities', 'mod_projetvet'), 3);
-    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'activities');
+    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'activities', $currentgroup);
 
     // Render face-to-face sessions list.
     echo $OUTPUT->heading(get_string('facetofacesessions', 'mod_projetvet'), 3);
-    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'facetoface');
+    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'facetoface', $currentgroup);
 }
 
 echo $OUTPUT->footer();

@@ -30,12 +30,13 @@ class renderer extends \plugin_renderer_base {
      * @param \stdClass $moduleinstance The projetvet instance
      * @param \stdClass $cm The course module
      * @param \context_module $context The context
+     * @param int $currentgroup The current group (0 = all groups)
      * @return string HTML to output
      */
-    public function render_student_list($moduleinstance, $cm, $context) {
+    public function render_student_list($moduleinstance, $cm, $context, $currentgroup = 0) {
         global $USER;
 
-        $studentlist = new student_list($moduleinstance, $cm, $context, $USER->id);
+        $studentlist = new student_list($moduleinstance, $cm, $context, $USER->id, $currentgroup);
         return $this->render_from_template('mod_projetvet/student_list', $studentlist->export_for_template($this));
     }
 
@@ -61,9 +62,17 @@ class renderer extends \plugin_renderer_base {
      * @param \context_module $context The context
      * @param int $studentid The student ID
      * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @param int $currentgroup The current group (0 = all groups)
      * @return string HTML to output
      */
-    public function render_entry_list($moduleinstance, $cm, $context, $studentid, $formsetidnumber = 'activities') {
+    public function render_entry_list(
+        $moduleinstance,
+        $cm,
+        $context,
+        $studentid,
+        $formsetidnumber = 'activities',
+        $currentgroup = 0
+    ) {
         global $USER;
 
         // Determine if viewer has elevated permissions.

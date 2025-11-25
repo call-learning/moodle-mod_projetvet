@@ -50,6 +50,7 @@ class form_field extends persistent {
         'tagconfirm',
         'filemanager',
         'hidden',
+        'subset',
     ];
 
     /**
@@ -159,8 +160,14 @@ class form_field extends persistent {
             case 'select':
                 $configdata = json_decode(stripslashes($this->get('configdata')), true);
                 if (!empty($configdata['options'])) {
+                    // Check if we have optionstrings for translation.
+                    $optionstrings = $configdata['optionstrings'] ?? [];
                     foreach ($configdata['options'] as $key => $option) {
                         if ($key == $value) {
+                            // Use translated string if available, otherwise fall back to option.
+                            if (!empty($optionstrings[$key])) {
+                                return get_string($optionstrings[$key], 'mod_projetvet');
+                            }
                             return $option;
                         }
                     }
@@ -242,6 +249,9 @@ class form_field extends persistent {
                     return $file->get_filename();
                 }, $files);
                 return implode(', ', $filenames);
+            case 'subset':
+                // Subset fields don't store values directly, they reference sub-entries.
+                return '';
         }
         return '';
     }
@@ -286,6 +296,9 @@ class form_field extends persistent {
                 // For filemanager, value is the draft itemid that will be used to save files.
                 // We store the itemid in the database.
                 return intval($value);
+            case 'subset':
+                // Subset fields don't store values.
+                return 0;
         }
     }
 }

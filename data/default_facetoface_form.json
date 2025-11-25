@@ -6,6 +6,7 @@
       "description": "Informations générales sur l'entretien",
       "capability": "submit",
       "entrystatus": 0,
+      "statusmsg": "draft",
       "fields": [
         {
           "idnumber": "date_entretien",
@@ -20,7 +21,7 @@
           "listorder": 1
         },
         {
-          "idnumber": "annee_etude",
+          "idnumber": "study_year",
           "name": "Année d'étude à laquelle l'entretien a été réalisé",
           "type": "select",
           "description": "",
@@ -32,6 +33,13 @@
               "3": "Année 3",
               "4": "Année 4",
               "5": "Année 5"
+            },
+            "optionstrings": {
+              "1": "year_one",
+              "2": "year_two",
+              "3": "year_three",
+              "4": "year_four",
+              "5": "year_five"
             }
           },
           "capability": "submit",
@@ -60,6 +68,11 @@
               "1": "Face-à-face",
               "2": "Visio",
               "3": "Téléphone"
+            },
+            "optionstrings": {
+              "1": "face_to_face",
+              "2": "video_call",
+              "3": "phone_call"
             }
           },
           "capability": "submit",
@@ -70,10 +83,11 @@
     },
     {
       "name": "Compte-rendu de l'entretien",
-      "idnumber": "compte_rendu_entretien",
+      "idnumber": "interview_report",
       "description": "Compte-rendu partagé entre l'étudiant et le tuteur",
       "capability": "submit",
       "entrystatus": 0,
+      "statusmsg": "draft",
       "fields": [
         {
           "idnumber": "compte_rendu",
@@ -88,7 +102,7 @@
           "listorder": 5
         },
         {
-          "idnumber": "notes_personnelles",
+          "idnumber": "personal_notes",
           "name": "Notes personnelles",
           "type": "textarea",
           "description": "Notes visibles uniquement par l'étudiant.",
@@ -118,7 +132,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer et soumettre au tuteur",
+            "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 1,
             "style": "primary"
@@ -133,7 +147,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer comme brouillon",
+            "text": "btn_save_draft",
             "icon": "fa-download",
             "entrystatus": 0,
             "style": "secondary"
@@ -150,6 +164,7 @@
       "description": "Validation de l'entretien par le tuteur",
       "capability": "approve",
       "entrystatus": 1,
+      "statusmsg": "teacheraccept",
       "fields": [
         {
           "idnumber": "statusf2f1_date",
@@ -170,7 +185,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer et confirmer que l'entretien a eu lieu",
+            "text": "btn_confirm_interview",
             "icon": "fa-users",
             "entrystatus": 2,
             "style": "primary"

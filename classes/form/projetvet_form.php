@@ -92,12 +92,12 @@ class projetvet_form extends dynamic_form {
 
             if ($caneditcategory) {
                 foreach ($category->fields as $field) {
-                    if ($field->type === 'filemanager') {
+                    if ($field->type === 'filemanager' && !empty($data->entryid)) {
                         $fieldname = 'field_' . $field->id;
                         if (isset($data->$fieldname)) {
                             // The itemid in the entry becomes the permanent storage location.
                             // We use the field->id combined with entryid to create a unique itemid.
-                            $itemid = $entryid * 1000 + $field->id;
+                            $itemid = $data->entryid * 1000 + $field->id;
 
                             file_save_draft_area_files(
                                 $data->$fieldname, // Draft itemid.
@@ -127,7 +127,15 @@ class projetvet_form extends dynamic_form {
         } else {
             // Create new entry.
             $studentid = $data->studentid ?? $USER->id;
-            $entryid = entries::create_entry($data->projetvetid, $studentid, $fields, $entrystatus, $formsetidnumber);
+            $parententryid = $data->parententryid ?? 0;
+            $entryid = entries::create_entry(
+                $data->projetvetid,
+                $studentid,
+                $fields,
+                $entrystatus,
+                $formsetidnumber,
+                $parententryid
+            );
         }
 
         return [
@@ -215,11 +223,17 @@ class projetvet_form extends dynamic_form {
             "$CFG->dirroot/mod/projetvet/classes/form/number_element.php",
             'mod_projetvet\form\number_element'
         );
+        \MoodleQuickForm::registerElementType(
+            'subset',
+            "$CFG->dirroot/mod/projetvet/classes/form/subset_element.php",
+            'mod_projetvet\form\subset_element'
+        );
 
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
         $projetvetid = $this->optional_param('projetvetid', null, PARAM_INT);
         $studentid = $this->optional_param('studentid', null, PARAM_INT);
         $entryid = $this->optional_param('entryid', 0, PARAM_INT);
+        $parententryid = $this->optional_param('parententryid', 0, PARAM_INT);
         $formsetidnumber = $this->optional_param('formsetidnumber', 'activities', PARAM_ALPHANUMEXT);
 
         // Get student email for contact button.
@@ -236,6 +250,8 @@ class projetvet_form extends dynamic_form {
         $mform->addElement('hidden', 'studentid', $studentid);
         $mform->addElement('hidden', 'studentemail', $studentemail);
         $mform->addElement('hidden', 'entryid', $entryid);
+        $mform->addElement('hidden', 'parententryid', $parententryid);
+        $mform->setType('parententryid', PARAM_INT);
         $mform->addElement('hidden', 'formsetidnumber', $formsetidnumber);
         $mform->setType('formsetidnumber', PARAM_ALPHANUMEXT);
         $mform->setType('studentemail', PARAM_EMAIL);
@@ -256,7 +272,7 @@ class projetvet_form extends dynamic_form {
 
         // Get the activity structure and add fields.
         $structure = entries::get_form_structure($formsetidnumber);
-
+        $hasexpanded = false;
         foreach ($structure as $category) {
             if ($category->entrystatus > $currententrystatus) {
                 // Skip this category as its entrystatus is higher than current entry status.
@@ -266,12 +282,18 @@ class projetvet_form extends dynamic_form {
             // Use the API function to determine if user can edit this category.
             $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
 
+            if ($category->entrystatus == $currententrystatus && !$caneditcategory) {
+                // Skip this category as user cannot edit it in current status.
+                continue;
+            }
+
             // Add category header.
             $mform->addElement('header', 'category_' . $category->id, $category->name);
 
             // Expand header if category entrystatus matches current entry status.
-            if ($category->entrystatus == $currententrystatus || $currententrystatus == count($structure)) {
+            if ($category->entrystatus == $currententrystatus) {
                 $mform->setExpanded('category_' . $category->id);
+                $hasexpanded = true;
             } else {
                 $mform->setExpanded('category_' . $category->id, false);
             }
@@ -337,7 +359,20 @@ class projetvet_form extends dynamic_form {
 
                     case 'select':
                         $options = $configdata['options'] ?? [];
-                        $selectoptions = ['' => get_string('choose')] + $options;
+                        $optionstrings = $configdata['optionstrings'] ?? [];
+
+                        // If optionstrings are provided, use language strings instead of hardcoded values.
+                        if (!empty($optionstrings)) {
+                            $translatedoptions = [];
+                            foreach ($optionstrings as $key => $stringkey) {
+                                $translatedoptions[$key] = get_string($stringkey, 'mod_projetvet');
+                            }
+                            $selectoptions = ['' => get_string('choose')] + $translatedoptions;
+                        } else {
+                            // Fall back to hardcoded options if no optionstrings.
+                            $selectoptions = ['' => get_string('choose')] + $options;
+                        }
+
                         $mform->addElement('select', $fieldname, $field->name, $selectoptions);
                         break;
 
@@ -352,11 +387,12 @@ class projetvet_form extends dynamic_form {
                     case 'tagselect':
                         // Load grouped options from field_data table.
                         $groupedoptions = field_data::get_grouped_options($field->id);
+                        $options = $configdata['options'] ?? [];
 
                         $mform->addElement('tagselect', $fieldname, $field->name, [], [
                             'groupedoptions' => $groupedoptions,
                             'rowname' => $field->name,
-                            'maxtags' => 0,
+                            'maxtags' => $configdata['maxtags'] ?? 0,
                         ]);
                         break;
 
@@ -441,7 +477,7 @@ class projetvet_form extends dynamic_form {
 
                     case 'button':
                         // Get button configuration.
-                        $buttontext = $configdata['text'] ?? $field->name;
+                        $buttontext = get_string($configdata['text'], 'projetvet');
                         $buttonicon = $configdata['icon'] ?? '';
                         $buttonstatus = $configdata['entrystatus'] ?? 0;
                         $buttonstyle = $configdata['style'] ?? 'secondary';
@@ -477,6 +513,21 @@ class projetvet_form extends dynamic_form {
                             'customclassoverride' => $customclass . ' projetvet-form-button',
                         ]);
                         break;
+
+                    case 'subset':
+                        // Get subset configuration.
+                        $subsetformsetidnumber = $configdata['formsetidnumber'] ?? '';
+                        $buttontext = $configdata['buttontext'] ?? 'Add entry';
+
+                        $mform->addElement('subset', $fieldname, $field->name, '', [
+                            'subsetformsetidnumber' => $subsetformsetidnumber,
+                            'parententryid' => $entryid,
+                            'studentid' => $studentid,
+                            'cmid' => $cmid,
+                            'projetvetid' => $projetvetid,
+                            'buttontext' => $buttontext,
+                        ]);
+                        break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
                 if ($isrequired && $canediffield && $field->type !== 'button') {
@@ -488,9 +539,12 @@ class projetvet_form extends dynamic_form {
                 }
 
                 // If user cannot edit this field, freeze it but preserve the value using setConstant.
-                // Exception: filemanager fields are shown as static HTML instead.
-                if (!$canediffield && $field->type !== 'filemanager') {
-                    $mform->freeze($fieldname);
+                // Exception: filemanager and hidden fields with static display are shown as static HTML instead.
+                if (!$canediffield && $field->type !== 'filemanager' && $field->type !== 'hidden') {
+                    // Only freeze if the element actually exists in the form.
+                    if ($mform->elementExists($fieldname)) {
+                        $mform->freeze($fieldname);
+                    }
                     // For frozen fields, we need to ensure the value is preserved on submission.
                     // We'll set it as constant in set_data_for_dynamic_submission instead.
                 }
@@ -499,6 +553,11 @@ class projetvet_form extends dynamic_form {
             if (!empty($buttonelements) && ($category->entrystatus == $currententrystatus) && $caneditcategory) {
                 $mform->addGroup($buttonelements, 'buttongroup', '', [' '], false);
             }
+        }
+        if (!$hasexpanded && !empty($structure)) {
+            // If no category was expanded, expand the first one by default.
+            $lastcategory = reset($structure);
+            $mform->setExpanded('category_' . $lastcategory->id);
         }
     }
 

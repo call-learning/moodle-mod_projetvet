@@ -66,6 +66,11 @@ class form_cat extends persistent {
                 'default' => 0,
                 'type' => PARAM_INT,
             ],
+            'statusmsg' => [
+                'null' => NULL_ALLOWED,
+                'default' => null,
+                'type' => PARAM_ALPHANUMEXT,
+            ],
             'sortorder' => [
                 'null' => NULL_ALLOWED,
                 'type' => PARAM_INT,

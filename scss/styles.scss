@@ -135,3 +135,39 @@
         vertical-align: top;
     }
 }
+
+// Fullscreen modal for activity forms
+@media (min-width: 992px) {
+    .modal-fullscreen-form {
+        &.modal-lg,
+        &.modal-xl {
+            max-width: calc(100% - 4rem);
+            .mform.full-width-labels {
+                max-width: 900px;
+                margin: 0 auto;
+                .fitem {
+                    margin-bottom: 1.5rem;
+                    label {
+                        font-weight: 600;
+                    }
+                }
+                .fitem.fitem_fnumber input {
+                    max-width: 150px;
+                }
+                .fdescription.required {
+                    display: none;
+                }
+                .col-form-label span,
+                .fstaticlabel,
+                .col-form-label p {
+                    font-weight: 600;
+                }
+                .form-control[readonly] {
+                    background-color: #f6f6f6;
+                    border: 0;
+                    border-radius: 0;
+                }
+            }
+        }
+    }
+}

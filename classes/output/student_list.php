@@ -54,6 +54,11 @@ class student_list implements renderable, templatable {
     protected $userid;
 
     /**
+     * @var int $currentgroup The current group.
+     */
+    protected $currentgroup;
+
+    /**
      * @var bool $ismanager Whether the user is a manager (can view all students).
      */
     protected $ismanager;
@@ -65,12 +70,14 @@ class student_list implements renderable, templatable {
      * @param object $cm The course module
      * @param object $context The context
      * @param int $userid The user ID viewing the list
+     * @param int $currentgroup The current group (0 = all groups)
      */
-    public function __construct($moduleinstance, $cm, $context, $userid) {
+    public function __construct($moduleinstance, $cm, $context, $userid, $currentgroup = 0) {
         $this->moduleinstance = $moduleinstance;
         $this->cm = $cm;
         $this->context = $context;
         $this->userid = $userid;
+        $this->currentgroup = $currentgroup;
         $this->ismanager = has_capability('mod/projetvet:viewallstudents', $context, $userid);
     }
 
@@ -82,12 +89,8 @@ class student_list implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         global $PAGE;
-        // Get students based on role - managers see all, teachers see their groups.
-        if ($this->ismanager) {
-            $students = $this->get_all_students();
-        } else {
-            $students = $this->get_students_in_teacher_groups();
-        }
+        // Get students - respects group mode and currentgroup parameter.
+        $students = $this->get_all_students();
 
         $data = [
             'hasstudents' => !empty($students),
@@ -133,43 +136,21 @@ class student_list implements renderable, templatable {
 
     /**
      * Get all students enrolled in the course with submit capability.
+     * Respects the currentgroup parameter for group filtering.
      *
      * @return array Array of student user objects
      */
     protected function get_all_students() {
-        $enrolled = get_enrolled_users($this->context, 'mod/projetvet:submit', 0, 'u.*', 'u.lastname ASC, u.firstname ASC');
+        // Use Moodle's get_enrolled_users with group parameter.
+        // This automatically handles group mode and accessallgroups capability.
+        $enrolled = get_enrolled_users(
+            $this->context,
+            'mod/projetvet:submit',
+            $this->currentgroup,
+            'u.*',
+            'u.lastname ASC, u.firstname ASC'
+        );
         return array_values($enrolled);
-    }
-
-    /**
-     * Get students in the same groups as the teacher.
-     *
-     * @return array Array of student user objects
-     */
-    protected function get_students_in_teacher_groups() {
-        $teachergroups = groups_get_user_groups($this->cm->course, $this->userid);
-
-        if (empty($teachergroups) || empty($teachergroups[0])) {
-            return [];
-        }
-
-        $students = [];
-        $seenstudents = [];
-
-        foreach ($teachergroups[0] as $groupid) {
-            $groupstudents = groups_get_members($groupid, 'u.*', 'u.lastname ASC, u.firstname ASC');
-            foreach ($groupstudents as $student) {
-                if (
-                    has_capability('mod/projetvet:submit', $this->context, $student->id) &&
-                    !isset($seenstudents[$student->id])
-                ) {
-                    $students[] = $student;
-                    $seenstudents[$student->id] = true;
-                }
-            }
-        }
-
-        return $students;
     }
 
     /**

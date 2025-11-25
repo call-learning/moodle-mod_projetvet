@@ -33,7 +33,10 @@ require_once($CFG->libdir . '/form/checkbox.php');
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class switch_element extends HTML_QuickForm_checkbox {
+class switch_element extends HTML_QuickForm_static {
+    /** @var string Help button */
+    public $_helpbutton = ''; // @codingStandardsIgnoreLine
+
     /**
      * Constructor
      *

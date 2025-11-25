@@ -6,6 +6,7 @@
       "description": "Informations générales",
       "capability": "submit",
       "entrystatus": 0,
+      "statusmsg": "draft",
       "fields": [
         {
           "idnumber": "activity_title",
@@ -44,6 +45,13 @@
               "3": "Année 3",
               "4": "Année 4",
               "5": "Année 5"
+            },
+            "optionstrings": {
+              "1": "year_one",
+              "2": "year_two",
+              "3": "year_three",
+              "4": "year_four",
+              "5": "year_five"
             }
           },
           "capability": "submit",
@@ -56,7 +64,8 @@
           "type": "tagselect",
           "description": "",
           "configdata": {
-            "required": true
+            "required": true,
+            "maxtags": 1
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -72,6 +81,11 @@
               "1": "A",
               "2": "B",
               "3": "C"
+            },
+            "optionstrings": {
+              "1": "rank_a",
+              "2": "rank_b",
+              "3": "rank_c"
             }
           },
           "capability": "submit",
@@ -93,7 +107,9 @@
           "name": "Compétence visée",
           "type": "tagselect",
           "description": "",
-          "configdata": {},
+          "configdata": {
+            "maxtags": 5
+          },
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
@@ -142,7 +158,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer et soumettre au tuteur",
+            "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 1,
             "style": "primary"
@@ -157,7 +173,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer comme brouillon",
+            "text": "btn_save_draft",
             "icon": "fa-download",
             "entrystatus": 0,
             "style": "secondary"
@@ -174,6 +190,7 @@
       "description": "Formulaire d'acceptation",
       "capability": "approve",
       "entrystatus": 1,
+      "statusmsg": "teacheraccept",
       "fields": [
         {
           "idnumber": "acceptance_comments",
@@ -206,7 +223,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Accepter",
+            "text": "btn_accept",
             "icon": "fa-check",
             "entrystatus": 2,
             "style": "primary"
@@ -221,7 +238,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Contacter l'étudiant pour en discuter",
+            "text": "btn_contact_student",
             "icon": "fa-envelope",
             "entrystatus": 1,
             "style": "secondary",
@@ -237,7 +254,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Retourner à l'étudiant",
+            "text": "btn_return_student",
             "icon": "fa-undo",
             "entrystatus": 0,
             "style": "warning"
@@ -250,13 +267,14 @@
     },
     {
       "name": "Compte rendu & validation",
-      "idnumber": "compte_rendu_validation",
+      "idnumber": "report_validation",
       "description": "Section rapport et validation",
       "capability": "submit",
       "entrystatus": 2,
+      "statusmsg": "studentadd",
       "fields": [
         {
-          "idnumber": "date_debut_realisation",
+          "idnumber": "start_date",
           "name": "Date de début de réalisation",
           "type": "date",
           "description": "Indiquez ici la période pendant laquelle s'est déroulée l'activité de CPP",
@@ -266,7 +284,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "date_fin_realisation",
+          "idnumber": "end_date",
           "name": "Date de fin de réalisation",
           "type": "date",
           "description": "",
@@ -276,7 +294,7 @@
           "listorder": 3
         },
         {
-          "idnumber": "resume_actions",
+          "idnumber": "actions_summary",
           "name": "Résumé des principales réalisations et actions menées pendant ce projet",
           "type": "textarea",
           "description": "Décrire ici de façon concrète ce que vous avez fait",
@@ -312,7 +330,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "progresses_sur",
+          "idnumber": "progress_on",
           "name": "Grâce à cette activité, j'ai progressé sur…",
           "type": "textarea",
           "description": "",
@@ -324,7 +342,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "doit_encore_progresser_sur",
+          "idnumber": "must_still_progress_on",
           "name": "Au cours de cette activité, j'ai réalisé que je devais encore progresser sur…",
           "type": "textarea",
           "description": "",
@@ -336,7 +354,20 @@
           "listorder": 0
         },
         {
-          "idnumber": "competences_pratiquees",
+          "idnumber": "carnet_cas",
+          "name": "Carnet de cas",
+          "type": "subset",
+          "description": "Ajoutez des cas cliniques à cette activité",
+          "configdata": {
+            "formsetidnumber": "carnet_cas",
+            "buttontext": "Ajouter un carnet de cas"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "practiced_competencies",
           "name": "Compétences réellement mises en pratique",
           "type": "tagconfirm",
           "description": "Parmi les compétences définies lors de la soumission du projet, indiquez celles que vous avez réellement mises en pratique. Vous pouvez également en ajouter.",
@@ -348,7 +379,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "nb_heures_realisees",
+          "idnumber": "hours_completed",
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
           "type": "number",
           "description": "",
@@ -358,7 +389,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "nb_ects_final",
+          "idnumber": "final_ects",
           "name": "Nombre d'ECTS final",
           "type": "number",
           "description": "",
@@ -386,7 +417,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer et soumettre au tuteur",
+            "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 3,
             "style": "primary"
@@ -401,7 +432,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Enregistrer comme brouillon",
+            "text": "btn_save_draft",
             "icon": "fa-download",
             "entrystatus": 2,
             "style": "secondary"
@@ -418,6 +449,7 @@
       "description": "Validation finale par le tuteur",
       "capability": "approve",
       "entrystatus": 3,
+      "statusmsg": "validated",
       "fields": [
         {
           "idnumber": "final_validation_comments",
@@ -442,6 +474,12 @@
               "bien": "Bien",
               "satisfaisant": "Satisfaisant",
               "insuffisant": "Insuffisant"
+            },
+            "optionstrings": {
+              "excellent": "excellent",
+              "bien": "good",
+              "satisfaisant": "satisfactory",
+              "insuffisant": "insufficient"
             }
           },
           "capability": "approve",
@@ -467,7 +505,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Valider définitivement",
+            "text": "btn_validate_final",
             "icon": "fa-check-circle",
             "entrystatus": 4,
             "style": "success"
@@ -482,7 +520,7 @@
           "type": "button",
           "description": "",
           "configdata": {
-            "text": "Retourner à l'étudiant pour révision",
+            "text": "btn_return_student_revision",
             "icon": "fa-undo",
             "entrystatus": 2,
             "style": "warning"

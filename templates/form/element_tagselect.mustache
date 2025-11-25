@@ -78,21 +78,31 @@
             </select>
 
             {{! Button to open the popup }}
+            {{^isfrozen}}
             <button type="button"
                     class="btn btn-secondary"
                     data-action="open-tagselect"
                     data-element-id="{{element.id}}"
+                    data-element-name="{{label}}"
                     {{#element.frozen}}disabled{{/element.frozen}}>
                 {{#pix}}i/edit, core{{/pix}}
                 {{#str}}selecttags, mod_projetvet{{/str}}
                 <span class="badge badge-primary ml-2" data-region="tag-count">{{element.selectedtags.length}}</span>
             </button>
+            {{/isfrozen}}
 
             {{! Display selected tags }}
             <div class="selected-tags-display mt-2" data-region="selected-tags-display">
+                {{^isfrozen}}
                 {{#element.selectedtags}}
                     {{> mod_projetvet/tagselect_badge}}
                 {{/element.selectedtags}}
+                {{/isfrozen}}
+                {{#isfrozen}}
+                {{#element.selectedtags}}
+                    <div>{{tagname}}</div>
+                {{/element.selectedtags}}
+                {{/isfrozen}}
             </div>
 
             {{! Popup container - initially hidden }}
