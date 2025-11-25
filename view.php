@@ -73,7 +73,17 @@ if ($canviewall && !$studentid) {
     // Display group selector if groups are enabled.
     groups_print_activity_menu($cm, $PAGE->url);
 
-    echo $renderer->render_student_list($moduleinstance, $cm, $context, $currentgroup);
+    // Use reportbuilder system report for student list.
+    $report = \core_reportbuilder\system_report_factory::create(
+        \mod_projetvet\reportbuilder\local\systemreports\students::class,
+        $context,
+        parameters: [
+            'cmid' => $cm->id,
+            'projetvetid' => $moduleinstance->id,
+            'currentgroup' => $currentgroup,
+        ]
+    );
+    echo $report->output();
 } else {
     // Student view or teacher/manager viewing a specific student.
     $viewingstudentid = $studentid ? $studentid : $USER->id;
