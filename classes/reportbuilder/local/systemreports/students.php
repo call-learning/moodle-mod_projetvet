@@ -32,7 +32,6 @@ use pix_icon;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class students extends system_report {
-
     /**
      * Initialise report
      */
@@ -69,7 +68,7 @@ class students extends system_report {
 
             // Only show students with submitted entries.
             $parampv = database::generate_param_name();
-            list($insql, $inparams) = $DB->get_in_or_equal($enrolleduserids, SQL_PARAMS_NAMED, database::generate_param_name());
+            [$insql, $inparams] = $DB->get_in_or_equal($enrolleduserids, SQL_PARAMS_NAMED, database::generate_param_name());
 
             $this->add_base_condition_sql("{$entityuseralias}.id $insql AND {$entityuseralias}.id IN (
                 SELECT DISTINCT studentid FROM {projetvet_form_entry}
@@ -82,6 +81,9 @@ class students extends system_report {
         $this->add_actions();
 
         $this->set_downloadable(false);
+
+        // Set pagination (default is 30, you can change this).
+        $this->set_default_per_page(30);
     }
 
     /**
@@ -131,7 +133,7 @@ class students extends system_report {
             ->add_field("{$entityuseralias}.id", 'userid')
             ->set_type(\core_reportbuilder\local\report\column::TYPE_INTEGER)
             ->set_is_sortable(true)
-            ->add_callback(static function($value, $row) use ($projetvetid): int {
+            ->add_callback(static function ($value, $row) use ($projetvetid): int {
                 global $DB;
                 // Get all form entries for this student in activities.
                 $entries = $DB->get_records_sql(
@@ -159,7 +161,7 @@ class students extends system_report {
             ->add_field("{$entityuseralias}.id", 'userid2')
             ->set_type(\core_reportbuilder\local\report\column::TYPE_INTEGER)
             ->set_is_sortable(true)
-            ->add_callback(static function($value, $row) use ($projetvetid): int {
+            ->add_callback(static function ($value, $row) use ($projetvetid): int {
                 global $DB;
                 // Get all form entries for this student in facetoface.
                 $entries = $DB->get_records_sql(

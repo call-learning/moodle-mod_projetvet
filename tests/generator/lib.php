@@ -243,4 +243,144 @@ class mod_projetvet_generator extends testing_module_generator {
             ORDER BY fc.sortorder, ff.sortorder
         ", [$formsetid]);
     }
+
+    /**
+     * Generate random activities entries for a student
+     *
+     * @param int $studentid User ID
+     * @param int $projetvetid ProjetVet instance ID
+     * @param int $count Number of entries to create
+     * @param int $status Entry status (default: 1 = submitted)
+     * @return array Array of created entries
+     */
+    public function generate_activities(int $studentid, int $projetvetid, int $count = 5, int $status = 1): array {
+        global $DB;
+
+        // Get the activities formset.
+        $formset = $this->get_formset_by_idnumber('activities');
+        if (!$formset) {
+            debugging('Activities formset not found', DEBUG_DEVELOPER);
+            return [];
+        }
+
+        $entries = [];
+        for ($i = 0; $i < $count; $i++) {
+            $entry = $this->create_form_entry([
+                'studentid' => $studentid,
+                'projetvetid' => $projetvetid,
+                'formsetid' => $formset->id,
+                'entrystatus' => $status,
+            ]);
+
+            // Get all fields for this formset and add random values.
+            $fields = $this->get_form_fields($formset->id);
+            foreach ($fields as $field) {
+                $value = $this->generate_random_field_value($field);
+                if ($value !== null) {
+                    $this->create_form_data([
+                        'entryid' => $entry->id,
+                        'fieldid' => $field->id,
+                        'charvalue' => is_string($value) && strlen($value) <= 255 ? $value : '',
+                        'textvalue' => is_string($value) && strlen($value) > 255 ? $value : '',
+                        'intvalue' => is_numeric($value) ? (int)$value : 0,
+                    ]);
+                }
+            }
+
+            $entries[] = $entry;
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Generate random facetoface entries for a student
+     *
+     * @param int $studentid User ID
+     * @param int $projetvetid ProjetVet instance ID
+     * @param int $count Number of entries to create
+     * @param int $status Entry status (default: 1 = submitted)
+     * @return array Array of created entries
+     */
+    public function generate_facetoface_sessions(int $studentid, int $projetvetid, int $count = 3, int $status = 1): array {
+        global $DB;
+
+        // Get the facetoface formset.
+        $formset = $this->get_formset_by_idnumber('facetoface');
+        if (!$formset) {
+            debugging('Facetoface formset not found', DEBUG_DEVELOPER);
+            return [];
+        }
+
+        $entries = [];
+        for ($i = 0; $i < $count; $i++) {
+            $entry = $this->create_form_entry([
+                'studentid' => $studentid,
+                'projetvetid' => $projetvetid,
+                'formsetid' => $formset->id,
+                'entrystatus' => $status,
+            ]);
+
+            // Get all fields for this formset and add random values.
+            $fields = $this->get_form_fields($formset->id);
+            foreach ($fields as $field) {
+                $value = $this->generate_random_field_value($field);
+                if ($value !== null) {
+                    $this->create_form_data([
+                        'entryid' => $entry->id,
+                        'fieldid' => $field->id,
+                        'charvalue' => is_string($value) && strlen($value) <= 255 ? $value : '',
+                        'textvalue' => is_string($value) && strlen($value) > 255 ? $value : '',
+                        'intvalue' => is_numeric($value) ? (int)$value : 0,
+                    ]);
+                }
+            }
+
+            $entries[] = $entry;
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Generate a random value for a field based on its type
+     *
+     * @param stdClass $field The field object
+     * @return string|int|null The generated value
+     */
+    protected function generate_random_field_value(stdClass $field) {
+        $configdata = json_decode($field->configdata ?? '{}', true);
+
+        switch ($field->type) {
+            case 'text':
+                return 'Test text ' . rand(1, 100);
+
+            case 'textarea':
+                return 'Test textarea content ' . rand(1, 100) . "\n\nMore content here.";
+
+            case 'number':
+                return rand(1, 100);
+
+            case 'date':
+                // Random date within last 30 days.
+                return time() - rand(0, 30 * 24 * 60 * 60);
+
+            case 'datetime':
+                // Random datetime within last 30 days.
+                return time() - rand(0, 30 * 24 * 60 * 60);
+
+            case 'select':
+                if (!empty($configdata['options'])) {
+                    $options = array_keys($configdata['options']);
+                    return $options[array_rand($options)];
+                }
+                return null;
+
+            case 'checkbox':
+                return rand(0, 1);
+
+            default:
+                return null;
+        }
+    }
 }
