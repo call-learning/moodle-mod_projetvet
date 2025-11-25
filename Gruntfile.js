@@ -28,14 +28,38 @@ module.exports = grunt => {
                         implementation: require('sass'),
                         includePaths: [path.join(originalCwd, "scss/")],
                         outputStyle: 'expanded',
-                        indentWidth: 4
+                        indentWidth: 4,
+                        linefeed: 'lf'
                     }
                 }
             }
         });
 
+        // Custom task to run stylelint
+        grunt.registerTask('stylelint:projetvet', 'Run stylelint on projetvet CSS', function() {
+            const done = this.async();
+            const { exec } = require('child_process');
+
+            exec('npx stylelint mod/projetvet/styles.css --fix', { cwd: moodleRoot }, (error, stdout, stderr) => {
+                if (stdout) {
+                    grunt.log.writeln(stdout);
+                }
+                if (stderr) {
+                    grunt.log.error(stderr);
+                }
+                if (error && error.code !== 0 && error.code !== 2) {
+                    // Code 2 means warnings were found but fixed
+                    grunt.log.error('Stylelint failed:', error);
+                    done(false);
+                } else {
+                    grunt.log.ok('Stylelint completed');
+                    done();
+                }
+            });
+        });
+
         // Créer une tâche qui utilise directement la configuration sass
-        grunt.registerTask('build:projetvet', ['sass:projetvet']);
+        grunt.registerTask('build:projetvet', ['sass:projetvet', 'stylelint:projetvet']);
 
     } catch (error) {
         grunt.log.error('Erreur lors du chargement du Gruntfile racine:', error.message);
@@ -54,7 +78,8 @@ module.exports = grunt => {
                         implementation: require('sass'),
                         includePaths: ["scss/"],
                         outputStyle: 'expanded',
-                        indentWidth: 4
+                        indentWidth: 4,
+                        linefeed: 'lf'
                     }
                 }
             }
