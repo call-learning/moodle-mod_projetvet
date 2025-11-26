@@ -353,10 +353,12 @@ class behat_mod_projetvet extends behat_base {
         foreach ($rows as $row) {
             if (stripos($row->getText(), $studentname) !== false) {
                 // Find the "View activities" link in this row.
-                $link = $row->find('css', 'a[data-action="view-student-activities"]');
+                $link = $row->find('css', 'a[data-toggle="dropdown"]');
                 if ($link) {
                     $link->click();
                     $this->wait_for_pending_js();
+                    $view = $row->find('css', 'a[aria-label="View Activities"]');
+                    $view->click();
                     $found = true;
                     break;
                 }
