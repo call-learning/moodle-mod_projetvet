@@ -62,7 +62,7 @@ Feature: Face-to-face session form operations in mod_projetvet
     And I should see "Draft" in the "20/03/25" "table_row"
 
     # Edit and submit
-    When I click on "20/03/25" "link"
+    When I click on row with text "20/03/25"
     And I wait "1" seconds
     And I set the following fields to these values:
       | Report                                                              | Updated meeting notes   |
@@ -88,7 +88,7 @@ Feature: Face-to-face session form operations in mod_projetvet
     # Teacher validates (entrystatus 1)
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
-    And I click on "25/03/25" "link"
+    And I click on row with text "25/03/25"
     And I wait "1" seconds
     And I click on form button "Save and confirm that the interview took place"
     And I wait until the page is ready
@@ -111,7 +111,7 @@ Feature: Face-to-face session form operations in mod_projetvet
 
     # Delete the session
     When I click on "Actions" "button" in the "10/04/25" "table_row"
-    And I click on "Delete" "button"
+    And I click on "Delete" "link"
     And I click on "Delete" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
 

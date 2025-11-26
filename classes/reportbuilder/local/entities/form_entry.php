@@ -33,7 +33,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class form_entry extends base {
-
     /**
      * Database tables that this entity uses
      *
@@ -108,7 +107,7 @@ class form_entry extends base {
             ->add_field("{$entryalias}.entrystatus")
             ->add_field("{$entryalias}.formsetid", 'formsetid_for_status')
             ->set_is_sortable(true)
-            ->add_callback(static function($value, $row): string {
+            ->add_callback(static function ($value, $row): string {
                 global $DB;
 
                 // Get the formset to determine status messages.
@@ -158,7 +157,7 @@ class form_entry extends base {
             ->set_type(column::TYPE_TIMESTAMP)
             ->add_field("{$entryalias}.timemodified")
             ->set_is_sortable(true)
-            ->add_callback(static function($value): string {
+            ->add_callback(static function ($value): string {
                 return userdate($value, get_string('strftimedatetimeshort', 'langconfig'));
             });
 

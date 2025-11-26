@@ -34,7 +34,6 @@ use pix_icon;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class entries extends system_report {
-
     /**
      * Initialise report
      */
@@ -195,7 +194,7 @@ class entries extends system_report {
             ->add_field("{$dataalias}.fieldid", $fieldalias . '_fieldid')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(true)
-            ->add_callback(static function($value, $row) use ($fieldpersistent, $fieldalias): string {
+            ->add_callback(static function ($value, $row) use ($fieldpersistent, $fieldalias): string {
                 // Use the persistent class display_value method.
                 if (empty($row->{$fieldalias . '_fieldid'})) {
                     return '';
