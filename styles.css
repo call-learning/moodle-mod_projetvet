@@ -141,3 +141,11 @@
         border-radius: 0;
     }
 }
+tr.projetvet-entry-row,
+tr.projetvet-student-row {
+    cursor: pointer;
+}
+tr.projetvet-entry-row:hover,
+tr.projetvet-student-row:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}

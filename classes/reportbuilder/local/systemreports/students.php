@@ -210,4 +210,14 @@ class students extends system_report {
             new lang_string('viewactivities', 'mod_projetvet'),
         )));
     }
+
+    /**
+     * Get CSS class for each row to make it clickable via JavaScript.
+     *
+     * @param \stdClass $row
+     * @return string
+     */
+    public function get_row_class(\stdClass $row): string {
+        return 'projetvet-student-row';
+    }
 }

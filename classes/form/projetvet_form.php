@@ -235,6 +235,7 @@ class projetvet_form extends dynamic_form {
         $entryid = $this->optional_param('entryid', 0, PARAM_INT);
         $parententryid = $this->optional_param('parententryid', 0, PARAM_INT);
         $formsetidnumber = $this->optional_param('formsetidnumber', 'activities', PARAM_ALPHANUMEXT);
+        $readonly = $this->optional_param('readonly', 0, PARAM_INT);
 
         // Get student email for contact button.
         $studentemail = '';
@@ -538,15 +539,15 @@ class projetvet_form extends dynamic_form {
                     $mform->addHelpButton($fieldname, $field->idnumber, 'mod_projetvet');
                 }
 
-                // If user cannot edit this field, freeze it but preserve the value using setConstant.
-                // Exception: filemanager and hidden fields with static display are shown as static HTML instead.
                 if (!$canediffield && $field->type !== 'filemanager' && $field->type !== 'hidden') {
-                    // Only freeze if the element actually exists in the form.
                     if ($mform->elementExists($fieldname)) {
                         $mform->freeze($fieldname);
                     }
-                    // For frozen fields, we need to ensure the value is preserved on submission.
-                    // We'll set it as constant in set_data_for_dynamic_submission instead.
+                }
+                if ($readonly && $field->type !== 'filemanager' && $field->type !== 'hidden') {
+                    if ($mform->elementExists($fieldname)) {
+                        $mform->freeze($fieldname);
+                    }
                 }
             }
             // Add all button elements as a group if any were found.
@@ -577,6 +578,7 @@ class projetvet_form extends dynamic_form {
             'studentid' => $this->optional_param('studentid', $USER->id, PARAM_INT),
             'entryid' => $this->optional_param('entryid', 0, PARAM_INT),
             'formsetidnumber' => $formsetidnumber,
+            'readonly' => $this->optional_param('readonly', 0, PARAM_INT),
             'entrystatus' => 0, // Default to draft for new entries.
         ];
 

@@ -73,6 +73,9 @@ if ($canviewall && !$studentid) {
     // Display group selector if groups are enabled.
     groups_print_activity_menu($cm, $PAGE->url);
 
+    // Load JavaScript for clickable rows.
+    $PAGE->requires->js_call_amd('mod_projetvet/clickable_rows', 'init');
+
     // Use reportbuilder system report for student list.
     $report = \core_reportbuilder\system_report_factory::create(
         \mod_projetvet\reportbuilder\local\systemreports\students::class,
@@ -131,13 +134,8 @@ if ($canviewall && !$studentid) {
         echo $renderer->render_student_info($moduleinstance, $cm, $context, $viewingstudentid);
     }
 
-    // Render activities list.
-    echo $OUTPUT->heading(get_string('activities', 'mod_projetvet'), 3);
-    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'activities', $currentgroup);
-
-    // Render face-to-face sessions list.
-    echo $OUTPUT->heading(get_string('facetofacesessions', 'mod_projetvet'), 3);
-    echo $renderer->render_entry_list($moduleinstance, $cm, $context, $viewingstudentid, 'facetoface', $currentgroup);
+    // Render the student view page (entry lists).
+    echo $renderer->render_student_view($moduleinstance, $cm, $context, $viewingstudentid, $isteacher);
 }
 
 echo $OUTPUT->footer();

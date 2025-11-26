@@ -171,3 +171,13 @@
         }
     }
 }
+
+// Clickable entry rows in reportbuilder tables
+tr.projetvet-entry-row,
+tr.projetvet-student-row {
+    cursor: pointer;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.025);
+    }
+}

@@ -405,4 +405,33 @@ class behat_mod_projetvet extends behat_base {
             );
         }
     }
+
+    /**
+     * Clicks on a table row containing specific text (for clickable rows in reportbuilder)
+     *
+     * @Given /^I click on row with text "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @param string $text The text to find in the row
+     * @throws ExpectationException
+     */
+    public function i_click_on_row_with_text($text) {
+        // Find all table rows.
+        $rows = $this->find_all('css', 'table tbody tr');
+
+        $found = false;
+        foreach ($rows as $row) {
+            if (stripos($row->getText(), $text) !== false) {
+                $row->click();
+                $this->wait_for_pending_js();
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            throw new ExpectationException(
+                'Row containing text "' . $text . '" not found',
+                $this->getSession()
+            );
+        }
+    }
 }

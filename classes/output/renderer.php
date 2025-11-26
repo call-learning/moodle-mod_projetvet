@@ -25,22 +25,6 @@ namespace mod_projetvet\output;
  */
 class renderer extends \plugin_renderer_base {
     /**
-     * Render the student list for teachers/managers
-     *
-     * @param \stdClass $moduleinstance The projetvet instance
-     * @param \stdClass $cm The course module
-     * @param \context_module $context The context
-     * @param int $currentgroup The current group (0 = all groups)
-     * @return string HTML to output
-     */
-    public function render_student_list($moduleinstance, $cm, $context, $currentgroup = 0) {
-        global $USER;
-
-        $studentlist = new student_list($moduleinstance, $cm, $context, $USER->id, $currentgroup);
-        return $this->render_from_template('mod_projetvet/student_list', $studentlist->export_for_template($this));
-    }
-
-    /**
      * Render the info section above the activity list
      *
      * @param \stdClass $moduleinstance The projetvet instance
@@ -55,31 +39,17 @@ class renderer extends \plugin_renderer_base {
     }
 
     /**
-     * Render the entry list for a specific student (student view or teacher/manager viewing student)
+     * Render the student view page
      *
      * @param \stdClass $moduleinstance The projetvet instance
      * @param \stdClass $cm The course module
      * @param \context_module $context The context
-     * @param int $studentid The student ID
-     * @param string $formsetidnumber The form set idnumber (default: 'activities')
-     * @param int $currentgroup The current group (0 = all groups)
+     * @param int $studentid The student ID being viewed
+     * @param bool $isteacher Whether the viewer is a teacher
      * @return string HTML to output
      */
-    public function render_entry_list(
-        $moduleinstance,
-        $cm,
-        $context,
-        $studentid,
-        $formsetidnumber = 'activities',
-        $currentgroup = 0
-    ) {
-        global $USER;
-
-        // Determine if viewer has elevated permissions.
-        $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
-        $isteacher = $canviewall && $studentid != $USER->id;
-
-        $entrylist = new entry_list($moduleinstance, $cm, $studentid, $isteacher, $formsetidnumber);
-        return $this->render_from_template('mod_projetvet/entry_list', $entrylist->export_for_template($this));
+    public function render_student_view($moduleinstance, $cm, $context, $studentid, $isteacher) {
+        $viewpage = new view_page($moduleinstance, $cm, $context, $studentid, $isteacher);
+        return $this->render_from_template('mod_projetvet/view_page', $viewpage->export_for_template($this));
     }
 }

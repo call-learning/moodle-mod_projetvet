@@ -86,7 +86,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     Then I should see "Draft Activity"
 
     # Edit the draft
-    When I click on "Draft Activity" "link"
+    When I click on row with text "Draft Activity"
     And I set the following fields to these values:
       | Activity title                                                      | Updated Activity        |
       | Summary description                                                 | Updated content         |
@@ -118,7 +118,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Teacher reviews and accepts
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
-    And I click on "Activity for Approval" "link"
+    And I click on row with text "Activity for Approval"
     And I wait "1" seconds
 
     # Add acceptance comments (entrystatus 1)
@@ -153,7 +153,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Teacher reviews and accepts
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
-    And I click on "Almost there" "link"
+    And I click on row with text "Almost there"
     And I wait "1" seconds
 
     # Add acceptance comments (entrystatus 1)
@@ -169,7 +169,7 @@ Feature: Activity form CRUD operations in mod_projetvet
 
     # Student adds completion report (entrystatus 2)
     When I am on the "My Activities" "projetvet activity" page logged in as "student1"
-    And I click on "Almost there" "link"
+    And I click on row with text "Almost there"
     And I set the following fields to these values:
       | Start date of completion                                            | ##1 January 2025##      |
       | End date of completion                                              | ##31 March 2025##       |
@@ -204,7 +204,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Teacher reviews and accepts (entrystatus 1)
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
-    And I click on "Final Validation Test" "link"
+    And I click on row with text "Final Validation Test"
     And I wait "1" seconds
 
     And I set the following fields to these values:
@@ -216,7 +216,7 @@ Feature: Activity form CRUD operations in mod_projetvet
 
     # Student adds completion report (entrystatus 2)
     When I am on the "My Activities" "projetvet activity" page logged in as "student1"
-    And I click on "Final Validation Test" "link"
+    And I click on row with text "Final Validation Test"
     And I set the following fields to these values:
       | Start date of completion                                            | ##1 February 2025##     |
       | End date of completion                                              | ##30 April 2025##       |
@@ -231,7 +231,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Teacher provides final validation (entrystatus 3)
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
-    And I click on "Final Validation Test" "link"
+    And I click on row with text "Final Validation Test"
     And I wait "1" seconds
 
     And I set the following fields to these values:
@@ -265,7 +265,8 @@ Feature: Activity form CRUD operations in mod_projetvet
 
     # First click on the row containing "Activity to Delete" to find the dropdown, then delete
     When I click on "Actions" "button" in the "Activity to Delete" "table_row"
-    And I click on "Delete" "button"
+    And I wait "1" seconds
+    And I click on "Delete" "link"
     And I click on "Delete" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
 

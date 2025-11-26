@@ -60,6 +60,42 @@ export const init = () => {
         modalForm.show();
     });
 
+    // Make entry table rows clickable - trigger the edit/view action when row is clicked.
+    document.addEventListener('click', (event) => {
+        const row = event.target.closest('tr.projetvet-entry-row');
+        if (!row) {
+            return;
+        }
+
+        // Don't trigger if clicking on an action button within the row.
+        if (event.target.closest('[data-action]') || event.target.closest('.action-menu')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // Find the edit button in this row to get the data attributes.
+        const editButton = row.querySelector('[data-action="activity-entry-form"][data-readonly="0"]');
+        if (!editButton) {
+            return;
+        }
+
+        const modalForm = new ModalForm({
+            moduleName: 'core/modal',
+            formClass: '\\mod_projetvet\\form\\projetvet_form',
+            args: {
+                ...editButton.dataset,
+            },
+        });
+
+        modalForm.addEventListener(modalForm.events.LOADED, () => {
+            modalForm.modal.getModal().addClass('modal-fullscreen-form');
+        });
+
+        modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
+        modalForm.show();
+    });
+
     // Handle subset entry form button clicks (forms within forms).
     document.addEventListener('click', (event) => {
         if (!event.target.closest('[data-action="subset-entry-form"]')) {
