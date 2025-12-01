@@ -83,16 +83,24 @@ class student_info implements renderable, templatable {
         $tutor = \mod_projetvet\utils::get_student_tutor($this->studentid, $this->cm->id);
         $tutorname = $tutor ? fullname($tutor) : get_string('notutorassigned', 'mod_projetvet');
 
+        // Get the student's promotion from custom profile field.
+        $promotion = \mod_projetvet\utils::get_user_profile_field($this->studentid, 'promotion');
+        $promoyear = $promotion ?: 'Not set';
+
+        // Get the student's cohort (year in course).
+        $cohort = \mod_projetvet\utils::get_user_cohort($this->studentid);
+        $yearincourse = $cohort ?: 'Not set';
+
         $data = [
             'infotable' => [
                 'rows' => [
                     [
                         'label' => get_string('promoyear', 'mod_projetvet'),
-                        'value' => $this->moduleinstance->promo ?? '-',
+                        'value' => $promoyear,
                     ],
                     [
                         'label' => get_string('yearincourse', 'mod_projetvet'),
-                        'value' => $this->moduleinstance->currentyear ?? '-',
+                        'value' => $yearincourse,
                     ],
                     [
                         'label' => get_string('tutor', 'mod_projetvet'),

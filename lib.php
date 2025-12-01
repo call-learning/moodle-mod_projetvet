@@ -64,8 +64,6 @@ function projetvet_add_instance($moduleinstance, $form = null) {
 
     $moduleinstance->timecreated = time();
     $moduleinstance->timemodified = time();
-    $moduleinstance->promo = $moduleinstance->promo ?? '';
-    $moduleinstance->currentyear = $moduleinstance->currentyear ?? '';
 
     $id = $DB->insert_record('projetvet', $moduleinstance);
     $completiontimeexpected = !empty($moduleinstance->completionexpected) ? $moduleinstance->completionexpected : null;
@@ -93,8 +91,6 @@ function projetvet_update_instance($moduleinstance, $form = null) {
 
     $moduleinstance->timemodified = time();
     $moduleinstance->id = $moduleinstance->instance;
-    $moduleinstance->promo = $moduleinstance->promo ?? '';
-    $moduleinstance->currentyear = $moduleinstance->currentyear ?? '';
 
     $DB->update_record('projetvet', $moduleinstance);
 

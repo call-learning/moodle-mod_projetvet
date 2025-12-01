@@ -71,5 +71,25 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025112000, 'projetvet');
     }
 
+    if ($oldversion < 2025120101) {
+        // Define fields promo and currentyear to be dropped from projetvet.
+        $table = new xmldb_table('projetvet');
+
+        // Conditionally drop field promo.
+        $field = new xmldb_field('promo');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Conditionally drop field currentyear.
+        $field = new xmldb_field('currentyear');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025120101, 'projetvet');
+    }
+
     return true;
 }

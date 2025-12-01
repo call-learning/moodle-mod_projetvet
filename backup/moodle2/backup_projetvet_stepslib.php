@@ -34,7 +34,7 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
         $projetvet = new backup_nested_element(
             'projetvet',
             ['id'],
-            ['name', 'intro', 'introformat', 'promo', 'currentyear', 'timemodified']
+            ['name', 'intro', 'introformat', 'timemodified']
         );
 
         // Form structure elements (configuration data - always backed up).

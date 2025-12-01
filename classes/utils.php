@@ -175,4 +175,48 @@ class utils {
 
         return $url->out();
     }
+
+    /**
+     * Get a custom user profile field value for a student.
+     *
+     * @param int $userid The user ID
+     * @param string $fieldshortname The shortname of the custom profile field (e.g., 'promotion')
+     * @return string The field value or empty string if not found
+     */
+    public static function get_user_profile_field(int $userid, string $fieldshortname): string {
+        global $CFG;
+        // Load the custom profile fields for the user.
+        require_once($CFG->dirroot . '/user/profile/lib.php');
+
+        $customfields = profile_user_record($userid, false);
+
+        if (isset($customfields->{$fieldshortname})) {
+            return $customfields->{$fieldshortname};
+        }
+
+        return '';
+    }
+
+    /**
+     * Get the first cohort name for a user.
+     *
+     * Returns the name of the first cohort the user belongs to.
+     * This is used to determine the year in course.
+     *
+     * @param int $userid The user ID
+     * @return string The cohort name or empty string if user is not in any cohort
+     */
+    public static function get_user_cohort(int $userid): string {
+        global $CFG;
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        $cohorts = cohort_get_user_cohorts($userid);
+
+        if (!empty($cohorts)) {
+            $firstcohort = reset($cohorts);
+            return $firstcohort->name;
+        }
+
+        return '';
+    }
 }
