@@ -175,7 +175,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | End date of completion                                              | ##31 March 2025##       |
       | Summary of main achievements and actions carried out during this project | I completed all tasks   |
       | Number of hours completed (modify if necessary)                     | 25                      |
-      | Final number of ECTS                                                | 2                       |
 
     And I click on "Save and submit to tutor" "button"
     And I wait until the page is ready
@@ -222,7 +221,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | End date of completion                                              | ##30 April 2025##       |
       | Summary of main achievements and actions carried out during this project | All objectives achieved |
       | Number of hours completed (modify if necessary)                     | 30                      |
-      | Final number of ECTS                                                | 3                       |
 
     And I click on "Save and submit to tutor" "button"
     And I wait until the page is ready
@@ -237,6 +235,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I set the following fields to these values:
       | Final comments    | Excellent work completed |
       | Final assessment  | Excellent                |
+      | Final number of ECTS | 3                     |
 
     And I click on form button "Validate definitively"
     And I wait until the page is ready

@@ -16,7 +16,7 @@
 
 namespace mod_projetvet\form;
 
-use HTML_QuickForm_static;
+use MoodleQuickForm_static;
 use renderer_base;
 use mod_projetvet\utils;
 
@@ -35,7 +35,7 @@ require_once($CFG->libdir . '/form/static.php');
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class html_element extends HTML_QuickForm_static {
+class html_element extends MoodleQuickForm_static {
     /** @var string The language string key for content */
     protected $stringkey = '';
 

@@ -11,8 +11,15 @@ Feature: Face-to-face session form operations in mod_projetvet
       | student1 | Student   | One      | student1@example.com |
     And the following "course enrolments" exist:
       | user     | course | role           |
-      | teacher1 | C1     | editingteacher |
+      | teacher1 | C1     | teacher |
       | student1 | C1     | student        |
+    And the following "groups" exist:
+      | name | description | course | idnumber |
+      | Group 1 | G1 description | C1 | G1 |
+    And the following "group members" exist:
+      | user | group |
+      | student1 | G1 |
+      | teacher1 | G1 |
     And the following "activities" exist:
       | activity  | name            | course | idnumber    | groupmode |
       | projetvet | My Activities   | C1     | projetvet1  | 1         |
@@ -22,13 +29,13 @@ Feature: Face-to-face session form operations in mod_projetvet
     And I click on "New Face-to-Face Session" "button"
     And I wait until the page is ready
     Then I should see "Interview date"
+    And I should see "Teacher One"
 
     # Fill in general information (entrystatus 0)
     When I set the following fields to these values:
       | Interview date                                                      | ##15 March 2025 10:00## |
       | Year of study in which the interview was conducted                  | Year 2                  |
       | Type of interview                                                   | Face-to-face            |
-      | Tutor                                                               | Teacher One             |
 
     # Fill in interview report (entrystatus 0)
     And I set the following fields to these values:
@@ -40,7 +47,6 @@ Feature: Face-to-face session form operations in mod_projetvet
 
     # Verify table row shows correct values
     Then I should see "15/03/25"
-    And I should see "Teacher One" in the "15/03/25" "table_row"
     And I should see "Year 2" in the "15/03/25" "table_row"
     And I should see "Face-to-face" in the "15/03/25" "table_row"
     And I should see "We discussed my progress" in the "15/03/25" "table_row"
