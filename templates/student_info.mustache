@@ -80,13 +80,35 @@
         <div class="d-flex justify-content-around">
             {{#charts}}
                 <div class="text-center">
+                    {{^isrank}}
                     <svg width="110" height="110" style="transform: rotate(-90deg);">
                         <circle cx="55" cy="55" r="{{radius}}" stroke="lightgray" stroke-width="10" fill="none"/>
                         <circle cx="55" cy="55" r="{{radius}}" stroke="#6f42c1" stroke-width="10" fill="none"
                                 stroke-dasharray="{{circumference}}" stroke-dashoffset="{{offset}}" stroke-linecap="round"/>
-                        <text x="55" y="60" text-anchor="middle" font-size="20" fill="#333"
-                              style="transform: rotate(90deg); transform-origin: 55px 55px;">{{percentage}}%</text>
+                        <text x="43" y="65" text-anchor="middle" font-size="24" font-weight="bold" fill="#333"
+                              style="transform: rotate(90deg); transform-origin: 55px 55px;">{{current}}</text>
+                        <text x="70" y="65" text-anchor="middle" font-size="14" fill="#666"
+                              style="transform: rotate(90deg); transform-origin: 55px 55px;">/ {{total}}</text>
                     </svg>
+                    {{/isrank}}
+                    {{#isrank}}
+                    <svg width="110" height="110" style="transform: rotate(-90deg);">
+                        <circle cx="55" cy="55" r="{{radius}}" stroke="lightgray" stroke-width="10" fill="none"/>
+                        <circle cx="55" cy="55" r="{{radius}}" stroke="#6f42c1" stroke-width="10" fill="none"
+                                stroke-dasharray="{{circumference}}" stroke-dashoffset="{{offset_a}}" stroke-linecap="round"/>
+                        <circle cx="55" cy="55" r="{{radius}}" stroke="#28a745" stroke-width="10" fill="none"
+                                stroke-dasharray="{{circumference}}" stroke-dashoffset="{{offset_b}}" stroke-linecap="round"
+                                style="transform: rotate(270deg); transform-origin: 55px 55px;"/>
+                        <text x="55" y="48" text-anchor="middle" font-size="10" fill="#333"
+                              style="transform: rotate(90deg); transform-origin: 55px 55px;">
+                            <tspan fill="#6f42c1">●</tspan> A: {{rank_a}} / {{target_rank_a}}%
+                        </text>
+                        <text x="55" y="62" text-anchor="middle" font-size="10" fill="#333"
+                              style="transform: rotate(90deg); transform-origin: 55px 55px;">
+                            <tspan fill="#28a745">●</tspan> B: {{rank_b}} / {{target_rank_b}}%
+                        </text>
+                    </svg>
+                    {{/isrank}}
                     <div class="mt-2 small">{{label}}</div>
                 </div>
             {{/charts}}

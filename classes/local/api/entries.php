@@ -239,6 +239,36 @@ class entries {
     }
 
     /**
+     * Check if user can view a specific field based on capability
+     *
+     * @param object $field The field object with capability property
+     * @param int $studentid The student ID who owns the entry
+     * @param \context $context The module context
+     * @return bool
+     */
+    public static function can_view_field(object $field, int $studentid, \context $context): bool {
+        global $USER;
+
+        // If no specific capability is set on the field, everyone can view it.
+        if (empty($field->capability)) {
+            return true;
+        }
+
+        // Check if the field has the 'viewown' capability.
+        if ($field->capability === 'viewown') {
+            // User must have the viewown capability.
+            if (!has_capability('mod/projetvet:viewown', $context)) {
+                return false;
+            }
+            // Additionally, for viewown, the user must be the student who owns the entry.
+            return $USER->id == $studentid;
+        }
+
+        // For now all else goes.
+        return true;
+    }
+
+    /**
      * Update an activity entry
      *
      * @param int $entryid The entry id

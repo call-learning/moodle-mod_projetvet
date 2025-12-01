@@ -27,7 +27,58 @@ import Notification from 'core/notification';
 import Repository from 'mod_projetvet/repository';
 import Templates from 'core/templates';
 
-export const init = () => {
+/**
+ * Get the hours per ECTS setting from the page config
+ * @returns {number}
+ */
+const getHoursPerEcts = () => {
+    // The value is set via $PAGE->requires->data_for_js() in view.php.
+    if (typeof M !== 'undefined' && M.cfg && M.cfg.hoursPerEcts) {
+        return parseInt(M.cfg.hoursPerEcts) || 30;
+    }
+    return 30;
+};
+
+/**
+ * Initialize ECTS suggestion listeners
+ * @param {number} hoursPerEcts - The hours per ECTS credit ratio
+ */
+const initEctsSuggestion = (hoursPerEcts) => {
+    // Find all number inputs with data-action="suggestedects".
+    const inputs = document.querySelectorAll('input[type="number"][data-action="suggestedects"]');
+
+    inputs.forEach(input => {
+        const suggestionDiv = document.getElementById(input.id + '_suggestion');
+        if (!suggestionDiv) {
+            return;
+        }
+
+        // Update suggestion when user types.
+        const updateSuggestion = async() => {
+            const hours = parseFloat(input.value);
+            if (isNaN(hours) || hours <= 0) {
+                suggestionDiv.textContent = '';
+                return;
+            }
+
+            const suggestedEcts = (hours / hoursPerEcts).toFixed(2);
+            const message = await getString('suggested_credits', 'mod_projetvet', suggestedEcts);
+            suggestionDiv.textContent = message;
+        };
+
+        // Listen for input changes.
+        input.addEventListener('input', updateSuggestion);
+
+        // Update immediately if there's already a value.
+        if (input.value) {
+            updateSuggestion();
+        }
+    });
+};
+
+export const init = async() => {
+    // Get the hours per ECTS setting once on init.
+    const hoursPerEcts = getHoursPerEcts();
 
     const submitEventHandler = () => {
         window.location.reload();
@@ -52,6 +103,10 @@ export const init = () => {
         // Add custom class to modal after it's loaded.
         modalForm.addEventListener(modalForm.events.LOADED, () => {
             modalForm.modal.getModal().addClass('modal-fullscreen-form');
+            modalForm.modal.getRoot().on('modal:bodyRendered', () => {
+                // Initialize ECTS suggestion listeners.
+                initEctsSuggestion(hoursPerEcts);
+            });
         });
 
         // Intercept form submission to show dialog only if switch is not checked.
@@ -90,6 +145,8 @@ export const init = () => {
 
         modalForm.addEventListener(modalForm.events.LOADED, () => {
             modalForm.modal.getModal().addClass('modal-fullscreen-form');
+            // Initialize ECTS suggestion listeners.
+            initEctsSuggestion(hoursPerEcts);
         });
 
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
@@ -110,6 +167,11 @@ export const init = () => {
             args: {
                 ...button.dataset,
             },
+        });
+
+        // Initialize ECTS suggestion listeners after modal loads.
+        modalForm.addEventListener(modalForm.events.LOADED, () => {
+            initEctsSuggestion(hoursPerEcts);
         });
 
         // After form submission, reload the subset entries list via AJAX.

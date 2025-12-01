@@ -36,7 +36,7 @@ class form_field extends persistent {
     /**
      * @var array FIELD_TYPES
      */
-    const FIELD_TYPES = [
+    const ALLOWED_TYPES = [
         'text',
         'number',
         'textarea',
@@ -51,6 +51,7 @@ class form_field extends persistent {
         'filemanager',
         'hidden',
         'subset',
+        'html',
     ];
 
     /**
@@ -126,7 +127,7 @@ class form_field extends persistent {
      * @return bool
      */
     protected function validate_type($type) {
-        if (!in_array($type, self::FIELD_TYPES)) {
+        if (!in_array($type, self::ALLOWED_TYPES)) {
             return false;
         }
         return true;
@@ -252,6 +253,9 @@ class form_field extends persistent {
             case 'subset':
                 // Subset fields don't store values directly, they reference sub-entries.
                 return '';
+            case 'html':
+                // HTML fields are display-only and don't store values.
+                return '';
         }
         return '';
     }
@@ -298,6 +302,9 @@ class form_field extends persistent {
                 return intval($value);
             case 'subset':
                 // Subset fields don't store values.
+                return 0;
+            case 'html':
+                // HTML fields are display-only and don't store values.
                 return 0;
         }
     }

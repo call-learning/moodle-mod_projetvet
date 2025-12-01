@@ -228,6 +228,11 @@ class projetvet_form extends dynamic_form {
             "$CFG->dirroot/mod/projetvet/classes/form/subset_element.php",
             'mod_projetvet\form\subset_element'
         );
+        \MoodleQuickForm::registerElementType(
+            'html',
+            "$CFG->dirroot/mod/projetvet/classes/form/html_element.php",
+            'mod_projetvet\form\html_element'
+        );
 
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
         $projetvetid = $this->optional_param('projetvetid', null, PARAM_INT);
@@ -305,6 +310,13 @@ class projetvet_form extends dynamic_form {
             foreach ($category->fields as $field) {
                 $fieldname = 'field_' . $field->id;
 
+                // Check if user can view this field.
+                $canviewfield = entries::can_view_field($field, $studentid, $context);
+                if (!$canviewfield) {
+                    // Skip this field if user cannot view it.
+                    continue;
+                }
+
                 // Use category-level edit permission for all fields in the category.
                 $canediffield = $caneditcategory;
 
@@ -354,7 +366,14 @@ class projetvet_form extends dynamic_form {
                         break;
 
                     case 'number':
-                        $mform->addElement('number', $fieldname, $field->name);
+                        $attributes = [];
+
+                        // Add data-action attribute if present in configdata.
+                        if (!empty($configdata['data-action'])) {
+                            $attributes['data-action'] = $configdata['data-action'];
+                        }
+
+                        $mform->addElement('number', $fieldname, $field->name, $attributes);
                         $mform->setType($fieldname, PARAM_FLOAT);
                         break;
 
@@ -529,6 +548,17 @@ class projetvet_form extends dynamic_form {
                             'buttontext' => $buttontext,
                         ]);
                         break;
+
+                    case 'html':
+                        // Get HTML configuration.
+                        $stringkey = $configdata['string'] ?? '';
+
+                        $mform->addElement('html', $fieldname, $field->name, '', [
+                            'stringkey' => $stringkey,
+                            'studentid' => $studentid,
+                            'cmid' => $cmid,
+                        ]);
+                        break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
                 if ($isrequired && $canediffield && $field->type !== 'button') {
@@ -600,6 +630,13 @@ class projetvet_form extends dynamic_form {
                     $fieldobj = $this->get_field_by_id($structure, $field->id);
 
                     if (!$fieldobj) {
+                        continue;
+                    }
+
+                    // Check if user can view this field.
+                    $canviewfield = entries::can_view_field($fieldobj, $entry->studentid, $context);
+                    if (!$canviewfield) {
+                        // Skip this field if user cannot view it.
                         continue;
                     }
 

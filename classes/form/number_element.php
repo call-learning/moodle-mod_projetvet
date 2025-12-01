@@ -87,12 +87,13 @@ class number_element extends MoodleQuickForm_text {
             'min' => $this->getAttribute('min'),
             'max' => $this->getAttribute('max'),
             'step' => $this->getAttribute('step'),
+            'action' => $this->getAttribute('data-action'),
         ];
 
         // Add any additional attributes.
         $extraattributes = [];
         foreach ($this->_attributes as $name => $value) {
-            if (!in_array($name, ['type', 'name', 'id', 'value', 'min', 'max', 'step', 'class'])) {
+            if (!in_array($name, ['type', 'name', 'id', 'value', 'min', 'max', 'step', 'class', 'data-action'])) {
                 $extraattributes[] = $name . '="' . s($value) . '"';
             }
         }

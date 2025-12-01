@@ -164,6 +164,30 @@ function mod_projetvet_check_updates_since(cm_info $cm, $from, $filter = []) {
  * @return bool false if the file not found, just send the file otherwise and do not return anything
  */
 function projetvet_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    // Handle ECTS guide PDF from admin settings (system context).
+    if ($filearea === 'ectsguide') {
+        $syscontext = context_system::instance();
+        if ($context->id != $syscontext->id) {
+            return false;
+        }
+
+        require_login();
+
+        $itemid = array_shift($args);
+        $filename = array_pop($args);
+        $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
+
+        $fs = get_file_storage();
+        $file = $fs->get_file($syscontext->id, 'mod_projetvet', $filearea, $itemid, $filepath, $filename);
+        if (!$file) {
+            return false;
+        }
+
+        send_stored_file($file, 86400, 0, $forcedownload, $options);
+        return;
+    }
+
+    // Handle entry files (module context).
     if ($context->contextlevel != CONTEXT_MODULE) {
         return false;
     }

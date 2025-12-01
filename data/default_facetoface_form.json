@@ -49,10 +49,12 @@
         {
           "idnumber": "tuteur",
           "name": "Tuteur",
-          "type": "text",
+          "type": "html",
           "description": "Nom du tuteur",
           "configdata": {
-            "readonly": true
+            "readonly": true,
+            "string": "tutor_name",
+            "filter": "gettutor"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -90,10 +92,23 @@
       "statusmsg": "draft",
       "fields": [
         {
+          "idnumber": "compte_rendu_intro",
+          "name": "Compte-rendu de l'entretien",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "compte_rendu_intro_value"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 2
+        },
+        {
           "idnumber": "compte_rendu",
           "name": "Compte-rendu",
           "type": "textarea",
-          "description": "Saisissez le compte-rendu de l'entretien avec votre tuteur. Ce texte est visible par le tuteur et le DEVE.",
+          "description": "",
           "configdata": {
             "rows": 6
           },
@@ -102,14 +117,27 @@
           "listorder": 5
         },
         {
+          "idnumber": "personal_notes_intro",
+          "name": "Notes personnelles",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "personal_notes_intro_value"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 2
+        },
+        {
           "idnumber": "personal_notes",
           "name": "Notes personnelles",
           "type": "textarea",
-          "description": "Notes visibles uniquement par l'étudiant.",
+          "description": "",
           "configdata": {
             "rows": 6
           },
-          "capability": "submit",
+          "capability": "viewown",
           "entrystatus": 0,
           "listorder": 0
         },
@@ -166,6 +194,18 @@
       "entrystatus": 1,
       "statusmsg": "teacheraccept",
       "fields": [
+        {
+          "idnumber": "entretien_validation_comments",
+          "name": "Commentaires finaux",
+          "type": "textarea",
+          "description": "Commentaires finaux sur le compte rendu et la réalisation de l'activité",
+          "configdata": {
+            "rows": 6
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
         {
           "idnumber": "statusf2f1_date",
           "name": "Date de validation",

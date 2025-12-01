@@ -79,13 +79,11 @@
           "configdata": {
             "options": {
               "1": "A",
-              "2": "B",
-              "3": "C"
+              "2": "B"
             },
             "optionstrings": {
               "1": "rank_a",
-              "2": "rank_b",
-              "3": "rank_c"
+              "2": "rank_b"
             }
           },
           "capability": "submit",
@@ -115,12 +113,27 @@
           "listorder": 0
         },
         {
+          "idnumber": "hours_completed_intro",
+          "name": "Prévision de crédits ECTS associés",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "hours_completed_intro_value",
+            "filter": "getsuggestedectsfile"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "hours",
           "name": "Volume horaire prévu (approximativement)",
           "type": "number",
           "description": "",
           "configdata": {
-            "required": true
+            "required": true,
+            "data-action": "suggestedects"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -137,7 +150,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 7
+          "listorder": 0
         },
         {
           "idnumber": "statusact_date",
@@ -375,22 +388,12 @@
             "tagselect": "competency"
           },
           "capability": "submit",
-          "entrystatus": 2,
+          "entrystatus": 0,
           "listorder": 0
         },
         {
           "idnumber": "hours_completed",
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
-          "type": "number",
-          "description": "",
-          "configdata": {},
-          "capability": "submit",
-          "entrystatus": 2,
-          "listorder": 0
-        },
-        {
-          "idnumber": "final_ects",
-          "name": "Nombre d'ECTS final",
           "type": "number",
           "description": "",
           "configdata": {},
@@ -451,6 +454,16 @@
       "entrystatus": 3,
       "statusmsg": "validated",
       "fields": [
+        {
+          "idnumber": "final_ects",
+          "name": "Nombre d'ECTS final",
+          "type": "number",
+          "description": "",
+          "configdata": {},
+          "capability": "submit",
+          "entrystatus": 2,
+          "listorder": 7
+        },
         {
           "idnumber": "final_validation_comments",
           "name": "Commentaires finaux",
