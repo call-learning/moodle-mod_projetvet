@@ -53,8 +53,6 @@ final class backup_restore_test extends advanced_testcase {
         $module = $this->getDataGenerator()->create_module('projetvet', [
             'course' => $course->id,
             'name' => 'Test ProjetVet Activity',
-            'promo' => '2025',
-            'currentyear' => 'M1',
         ]);
 
         // Create a student and enroll them.
@@ -100,8 +98,6 @@ final class backup_restore_test extends advanced_testcase {
         $restoredprojetvet = $DB->get_record('projetvet', ['course' => $newcourseid]);
         $this->assertNotEmpty($restoredprojetvet);
         $this->assertEquals('Test ProjetVet Activity', $restoredprojetvet->name);
-        $this->assertEquals('2025', $restoredprojetvet->promo);
-        $this->assertEquals('M1', $restoredprojetvet->currentyear);
     }
 
     /**
@@ -121,8 +117,6 @@ final class backup_restore_test extends advanced_testcase {
         $projetvet = $generator->create_module('projetvet', [
             'course' => $course->id,
             'name' => 'ProjetVet with User Data',
-            'promo' => '2025',
-            'currentyear' => 'M2',
         ]);
 
         $student1 = $generator->create_user();
