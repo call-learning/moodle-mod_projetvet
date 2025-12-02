@@ -135,31 +135,6 @@ if (!empty($formsets)) {
     echo "! No form sets found - skipping form entry creation\n";
 }
 
-// Create thesis data.
-$thesis = $projetvetgenerator->create_thesis([
-    'projetvetid' => $projetvet->id,
-    'userid' => $student1->id,
-    'thesis' => 'Test thesis for backup/restore validation: Impact of veterinary education on student outcomes',
-    'otherdata' => 'Additional thesis data for testing purposes',
-]);
-
-if ($thesis) {
-    echo "✓ Created thesis for {$student1->username}\n";
-}
-
-// Create mobility data.
-$mobility = $projetvetgenerator->create_mobility([
-    'projetvetid' => $projetvet->id,
-    'userid' => $student2->id,
-    'title' => 'Test mobility program for backup/restore validation',
-    'erasmus' => 1,
-    'fmp' => 0,
-]);
-
-if ($mobility) {
-    echo "✓ Created mobility for {$student2->username}\n";
-}
-
 echo "\n" . str_repeat("=", 60) . "\n";
 echo "SUCCESS: Test course created with sample data!\n";
 echo str_repeat("=", 60) . "\n\n";

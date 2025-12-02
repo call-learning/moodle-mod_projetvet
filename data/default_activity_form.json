@@ -483,16 +483,16 @@
           "description": "",
           "configdata": {
             "options": {
-              "excellent": "Excellent",
-              "bien": "Bien",
-              "satisfaisant": "Satisfaisant",
-              "insuffisant": "Insuffisant"
+              "1": "Excellent",
+              "2": "Bien",
+              "3": "Satisfaisant",
+              "4": "Insuffisant"
             },
             "optionstrings": {
-              "excellent": "excellent",
-              "bien": "good",
-              "satisfaisant": "satisfactory",
-              "insuffisant": "insufficient"
+              "1": "excellent",
+              "2": "good",
+              "3": "satisfactory",
+              "4": "insufficient"
             }
           },
           "capability": "approve",

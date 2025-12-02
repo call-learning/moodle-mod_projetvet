@@ -154,21 +154,6 @@ final class backup_restore_test extends advanced_testcase {
             }
         }
 
-        // Create thesis data.
-        $projetvetgenerator->create_thesis([
-            'projetvetid' => $projetvet->id,
-            'userid' => $student1->id,
-            'thesis' => 'Test thesis for backup/restore validation',
-        ]);
-
-        // Create mobility data.
-        $projetvetgenerator->create_mobility([
-            'projetvetid' => $projetvet->id,
-            'userid' => $student2->id,
-            'title' => 'Test mobility program for backup/restore',
-            'erasmus' => 1,
-        ]);
-
         // Backup with user data.
         $backupid = $this->backup_course($course, true);
 
@@ -184,14 +169,6 @@ final class backup_restore_test extends advanced_testcase {
         // Verify that user data was restored correctly.
         $newprojetvet = $DB->get_record('projetvet', ['course' => $newcourseid]);
         $this->assertNotEmpty($newprojetvet);
-
-        // Check if thesis data was restored.
-        $thesiscount = $DB->count_records('projetvet_thesis', ['projetvetid' => $newprojetvet->id]);
-        $this->assertEquals(1, $thesiscount, 'Thesis data should be restored');
-
-        // Check if mobility data was restored.
-        $mobilitycount = $DB->count_records('projetvet_mobility', ['projetvetid' => $newprojetvet->id]);
-        $this->assertEquals(1, $mobilitycount, 'Mobility data should be restored');
 
         // Check if form entries were restored (if formsets exist).
         $formentrycount = $DB->count_records('projetvet_form_entry', ['projetvetid' => $newprojetvet->id]);

@@ -1,0 +1,63 @@
+{
+  "categories": [
+    {
+      "name": "Mobility Information",
+      "idnumber": "mobility_info",
+      "description": "International mobility information",
+      "capability": "submit",
+      "entrystatus": 0,
+      "statusmsg": "draft",
+      "fields": [
+        {
+          "idnumber": "mobilitytitle",
+          "name": "Mobility Title",
+          "type": "text",
+          "description": "",
+          "configdata": {},
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "mobilityerasmus",
+          "name": "ERASMUS Program",
+          "type": "checkbox",
+          "description": "",
+          "configdata": {
+            "label": "I completed my mobility through a long-term mobility program (ERASMUS type)"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 1
+        },
+        {
+          "idnumber": "mobilityfmp",
+          "name": "FMP Mobility",
+          "type": "checkbox",
+          "description": "",
+          "configdata": {
+            "label": "I completed my international mobility during the FMP of A% (UC0526)"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 2
+        },
+        {
+          "idnumber": "save_mobility",
+          "name": "Save",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "save",
+            "icon": "fa-save",
+            "entrystatus": 0,
+            "style": "primary"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 3
+        }
+      ]
+    }
+  ]
+}

@@ -53,8 +53,6 @@ class restore_projetvet_activity_structure_step extends restore_activity_structu
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('formentry', '/activity/projetvet/formentries/formentry');
             $paths[] = new restore_path_element('formdata', '/activity/projetvet/formentries/formentry/formdatas/formdata');
-            $paths[] = new restore_path_element('thesis', '/activity/projetvet/theses/thesis');
-            $paths[] = new restore_path_element('mobility', '/activity/projetvet/mobilities/mobility');
         }
 
         // Return the paths wrapped into standard activity structure.
@@ -217,42 +215,6 @@ class restore_projetvet_activity_structure_step extends restore_activity_structu
 
         // Insert the form data record.
         $DB->insert_record('projetvet_form_data', $data);
-    }
-
-    /**
-     * Process thesis data
-     *
-     * @param array $data
-     * @return void
-     */
-    protected function process_thesis($data) {
-        global $DB;
-
-        $data = (object)$data;
-        $data->projetvetid = $this->get_new_parentid('projetvet');
-        $data->userid = $this->get_mappingid('user', $data->userid);
-        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
-
-        // Insert the thesis record.
-        $DB->insert_record('projetvet_thesis', $data);
-    }
-
-    /**
-     * Process mobility data
-     *
-     * @param array $data
-     * @return void
-     */
-    protected function process_mobility($data) {
-        global $DB;
-
-        $data = (object)$data;
-        $data->projetvetid = $this->get_new_parentid('projetvet');
-        $data->userid = $this->get_mappingid('user', $data->userid);
-        $data->usermodified = $this->get_mappingid('user', $data->usermodified);
-
-        // Insert the mobility record.
-        $DB->insert_record('projetvet_mobility', $data);
     }
 
     /**

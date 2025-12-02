@@ -16,8 +16,9 @@
 
 namespace mod_projetvet\output;
 
-use mod_projetvet\local\persistent\thesis;
-use mod_projetvet\local\persistent\mobility;
+use mod_projetvet\local\persistent\form_set;
+use mod_projetvet\local\persistent\form_entry;
+use mod_projetvet\local\api\entries;
 use renderer_base;
 use renderable;
 use templatable;
@@ -65,9 +66,6 @@ class student_info implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
-        $thesisrecord = thesis::get_record(['projetvetid' => $this->moduleinstance->id, 'userid' => $this->studentid]);
-        $mobilityrecord = mobility::get_record(['projetvetid' => $this->moduleinstance->id, 'userid' => $this->studentid]);
-
         // Get chart data using the chart_data class.
         $totalects = chart_data::get_total_ects($this->moduleinstance->id, $this->studentid);
         $targetects = get_config('mod_projetvet', 'target_ects') ?: 20;
@@ -105,8 +103,6 @@ class student_info implements renderable, templatable {
                     [
                         'label' => get_string('tutor', 'mod_projetvet'),
                         'value' => $tutorname,
-                        'haslink' => true,
-                        'linktext' => get_string('moreinfo', 'mod_projetvet'),
                     ],
                 ],
             ],
@@ -119,28 +115,65 @@ class student_info implements renderable, templatable {
 
         // Thesis subject row.
         $thesisrow = ['label' => get_string('thesissubject', 'mod_projetvet')];
-        if ($thesisrecord) {
-            $thesisrow['value'] = format_text($thesisrecord->get('thesis'), FORMAT_PLAIN);
-        }
         $thesisrow['hasbutton'] = true;
         $thesisrow['buttontext'] = get_string('setsubject', 'mod_projetvet');
-        $thesisrow['buttonaction'] = 'thesis-form';
+        $thesisrow['buttonaction'] = 'activity-entry-form';
         $thesisrow['cmid'] = $this->cm->id;
         $thesisrow['projetvetid'] = $this->moduleinstance->id;
-        $thesisrow['userid'] = $this->studentid;
+        $thesisrow['studentid'] = $this->studentid;
+        $thesisrow['formsetidnumber'] = 'thesis';
+
+        // Get the thesis entry if it exists.
+        $thesisformset = form_set::get_record(['idnumber' => 'thesis']);
+        if ($thesisformset) {
+            $thesisentry = form_entry::get_record([
+                'projetvetid' => $this->moduleinstance->id,
+                'studentid' => $this->studentid,
+                'formsetid' => $thesisformset->get('id'),
+            ]);
+            if ($thesisentry) {
+                $thesisrow['entryid'] = $thesisentry->get('id');
+
+                // Get the thesis subject field value.
+                $entrycontent = entries::get_entry($thesisentry->get('id'));
+                $thesissubject = $this->get_field_value($entrycontent, 'thesissubject_field');
+                if ($thesissubject) {
+                    $thesisrow['value'] = format_text($thesissubject, FORMAT_PLAIN);
+                }
+            }
+        }
+
         $data['infotable']['rows'][] = $thesisrow;
 
         // Mobility row.
         $mobilityrow = ['label' => get_string('internationalmobility', 'mod_projetvet')];
-        if ($mobilityrecord && $mobilityrecord->get('title')) {
-            $mobilityrow['value'] = $mobilityrecord->get('title');
-        }
         $mobilityrow['hasbutton'] = true;
         $mobilityrow['buttontext'] = get_string('settitle', 'mod_projetvet');
-        $mobilityrow['buttonaction'] = 'mobility-form';
+        $mobilityrow['buttonaction'] = 'activity-entry-form';
         $mobilityrow['cmid'] = $this->cm->id;
         $mobilityrow['projetvetid'] = $this->moduleinstance->id;
-        $mobilityrow['userid'] = $this->studentid;
+        $mobilityrow['studentid'] = $this->studentid;
+        $mobilityrow['formsetidnumber'] = 'mobility';
+
+        // Get the mobility entry if it exists.
+        $mobilityformset = form_set::get_record(['idnumber' => 'mobility']);
+        if ($mobilityformset) {
+            $mobilityentry = form_entry::get_record([
+                'projetvetid' => $this->moduleinstance->id,
+                'studentid' => $this->studentid,
+                'formsetid' => $mobilityformset->get('id'),
+            ]);
+            if ($mobilityentry) {
+                $mobilityrow['entryid'] = $mobilityentry->get('id');
+
+                // Get the mobility title field value.
+                $entrycontent = entries::get_entry($mobilityentry->get('id'));
+                $mobilitytitle = $this->get_field_value($entrycontent, 'mobilitytitle');
+                if ($mobilitytitle) {
+                    $mobilityrow['value'] = $mobilitytitle;
+                }
+            }
+        }
 
         $data['infotable']['rows'][] = $mobilityrow;
 
@@ -217,5 +250,23 @@ class student_info implements renderable, templatable {
             'offset_a' => $offseta,
             'offset_b' => $offsetb,
         ];
+    }
+
+    /**
+     * Get a field value from entry content by field idnumber.
+     *
+     * @param \stdClass $entrycontent The entry content from entries::get_entry()
+     * @param string $fieldidnumber The field idnumber to search for
+     * @return mixed|null The field value or null if not found
+     */
+    protected function get_field_value($entrycontent, $fieldidnumber) {
+        foreach ($entrycontent->categories as $category) {
+            foreach ($category->fields as $field) {
+                if ($field->idnumber === $fieldidnumber) {
+                    return $field->value;
+                }
+            }
+        }
+        return null;
     }
 }

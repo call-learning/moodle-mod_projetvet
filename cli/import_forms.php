@@ -67,6 +67,9 @@ php import_forms.php --formset=activities
 
 # Import only facetoface form set
 php import_forms.php --formset=facetoface
+
+# Import only thesis form set
+php import_forms.php --formset=thesis
 ";
     exit(0);
 }
@@ -90,6 +93,18 @@ $formsets = [
         'description' => 'Carnet de cas cliniques',
         'sortorder' => 2,
         'jsonfile' => 'default_carnet_cas_form.json',
+    ],
+    'thesis' => [
+        'name' => 'Thesis',
+        'description' => 'Thesis subject form',
+        'sortorder' => 3,
+        'jsonfile' => 'default_thesis_form.json',
+    ],
+    'mobility' => [
+        'name' => 'International Mobility',
+        'description' => 'International mobility form',
+        'sortorder' => 4,
+        'jsonfile' => 'default_mobility_form.json',
     ],
 ];
 

@@ -72,16 +72,6 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
             'timecreated', 'timemodified', 'usermodified',
         ]);
 
-        $theses = new backup_nested_element('theses');
-        $thesis = new backup_nested_element('thesis', ['id'], [
-            'projetvetid', 'userid', 'thesis', 'otherdata', 'timecreated', 'timemodified', 'usermodified',
-        ]);
-
-        $mobilities = new backup_nested_element('mobilities');
-        $mobility = new backup_nested_element('mobility', ['id'], [
-            'projetvetid', 'userid', 'title', 'erasmus', 'fmp', 'timecreated', 'timemodified', 'usermodified',
-        ]);
-
         // Build the tree.
         // Configuration data hierarchy.
         $projetvet->add_child($formsets);
@@ -103,12 +93,6 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
         $formentry->add_child($formdatas);
         $formdatas->add_child($formdata);
 
-        $projetvet->add_child($theses);
-        $theses->add_child($thesis);
-
-        $projetvet->add_child($mobilities);
-        $mobilities->add_child($mobility);
-
         // Define sources.
         $projetvet->set_source_table('projetvet', ['id' => backup::VAR_ACTIVITYID]);
 
@@ -122,8 +106,6 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
         if ($userinfo) {
             $formentry->set_source_table('projetvet_form_entry', ['projetvetid' => backup::VAR_ACTIVITYID]);
             $formdata->set_source_table('projetvet_form_data', ['entryid' => backup::VAR_PARENTID]);
-            $thesis->set_source_table('projetvet_thesis', ['projetvetid' => backup::VAR_ACTIVITYID]);
-            $mobility->set_source_table('projetvet_mobility', ['projetvetid' => backup::VAR_ACTIVITYID]);
         }
 
         // Define id annotations.
@@ -142,13 +124,9 @@ class backup_projetvet_activity_structure_step extends backup_activity_structure
             $formdata->annotate_ids('user', 'usermodified');
             $formdata->annotate_ids('formfield', 'fieldid');
             $formdata->annotate_ids('formentry', 'entryid');
-            $thesis->annotate_ids('user', 'userid');
-            $thesis->annotate_ids('user', 'usermodified');
-            $mobility->annotate_ids('user', 'userid');
-            $mobility->annotate_ids('user', 'usermodified');
         }
 
-        // Define file annotations.
+        // Define files.
         $projetvet->annotate_files('mod_projetvet', 'intro', null);
 
         // Return the root element (projetvet), wrapped into standard activity structure.

@@ -91,5 +91,22 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025120101, 'projetvet');
     }
 
+    if ($oldversion < 2025120200) {
+        // Drop projetvet_thesis table - migrated to flexible form system.
+        $table = new xmldb_table('projetvet_thesis');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Drop projetvet_mobility table - migrated to flexible form system.
+        $table = new xmldb_table('projetvet_mobility');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2025120200, 'projetvet');
+    }
+
     return true;
 }
