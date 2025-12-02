@@ -120,36 +120,56 @@ class students extends system_report {
         // Fullname with picture.
         $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
 
-        // Email.
-        $this->add_column($entityuser->get_column('email'));
-
-        // Activities count - create custom column.
-        $activitiescolumn = (new \core_reportbuilder\local\report\column(
-            'activitiescount',
-            new lang_string('activitiescount', 'mod_projetvet'),
+        // Promotion (custom profile field) - column 2.
+        $promotioncolumn = (new \core_reportbuilder\local\report\column(
+            'promotion',
+            new lang_string('promoyear', 'mod_projetvet'),
             $entityuser->get_entity_name()
         ))
             ->add_joins($entityuser->get_joins())
-            ->add_field("{$entityuseralias}.id", 'userid')
+            ->add_field("{$entityuseralias}.id", 'userid_promotion')
+            ->set_type(\core_reportbuilder\local\report\column::TYPE_TEXT)
+            ->set_is_sortable(true)
+            ->add_callback(static function ($value, $row): string {
+                return \mod_projetvet\utils::get_user_profile_field($row->userid_promotion, 'promotion');
+            });
+
+        $this->add_column($promotioncolumn);
+
+        // Cohort (year in course) - column 3.
+        $cohortcolumn = (new \core_reportbuilder\local\report\column(
+            'cohort',
+            new lang_string('year', 'mod_projetvet'),
+            $entityuser->get_entity_name()
+        ))
+            ->add_joins($entityuser->get_joins())
+            ->add_field("{$entityuseralias}.id", 'userid_cohort')
+            ->set_type(\core_reportbuilder\local\report\column::TYPE_TEXT)
+            ->set_is_sortable(true)
+            ->add_callback(static function ($value, $row): string {
+                return \mod_projetvet\utils::get_user_cohort($row->userid_cohort);
+            });
+
+        $this->add_column($cohortcolumn);
+
+        // Email.
+        $this->add_column($entityuser->get_column('email'));
+
+        // Total ECTS - create custom column.
+        $totalectscolumn = (new \core_reportbuilder\local\report\column(
+            'totalects',
+            new lang_string('totalcredits', 'mod_projetvet'),
+            $entityuser->get_entity_name()
+        ))
+            ->add_joins($entityuser->get_joins())
+            ->add_field("{$entityuseralias}.id", 'userid_ects')
             ->set_type(\core_reportbuilder\local\report\column::TYPE_INTEGER)
             ->set_is_sortable(true)
             ->add_callback(static function ($value, $row) use ($projetvetid): int {
-                global $DB;
-                // Get all form entries for this student in activities.
-                $entries = $DB->get_records_sql(
-                    "SELECT pfe.id
-                     FROM {projetvet_form_entry} pfe
-                     JOIN {projetvet_form_set} pfs ON pfe.formsetid = pfs.id
-                     WHERE pfe.studentid = :studentid
-                     AND pfe.projetvetid = :projetvetid
-                     AND pfs.idnumber = :idnumber
-                     AND pfe.entrystatus > 0",
-                    ['studentid' => $row->userid, 'projetvetid' => $projetvetid, 'idnumber' => 'activities']
-                );
-                return count($entries);
+                return \mod_projetvet\utils::get_student_total_ects($projetvetid, $row->userid_ects);
             });
 
-        $this->add_column($activitiescolumn);
+        $this->add_column($totalectscolumn);
 
         // Face-to-face count - create custom column.
         $facetofacecolumn = (new \core_reportbuilder\local\report\column(

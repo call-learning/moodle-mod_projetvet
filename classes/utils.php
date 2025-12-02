@@ -219,4 +219,43 @@ class utils {
 
         return '';
     }
+
+    /**
+     * Get total ECTS credits for a student.
+     *
+     * Sums the final_ects field values across all form entries for a student.
+     * This is a performant method using a single SQL query.
+     *
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $studentid The student ID
+     * @return int Total ECTS credits
+     */
+    public static function get_student_total_ects(int $projetvetid, int $studentid): int {
+        global $DB;
+
+        // Get the field ID for 'final_ects' once.
+        $field = $DB->get_record('projetvet_form_field', ['idnumber' => 'final_ects'], 'id');
+        if (!$field) {
+            return 0;
+        }
+
+        // Single optimized query to sum all final_ects values for this student.
+        $sql = "SELECT COALESCE(SUM(fd.intvalue), 0) as total
+                  FROM {projetvet_form_data} fd
+                  JOIN {projetvet_form_entry} fe ON fe.id = fd.entryid
+                 WHERE fe.projetvetid = :projetvetid
+                   AND fe.studentid = :studentid
+                   AND fd.fieldid = :fieldid
+                   AND fd.intvalue IS NOT NULL";
+
+        $params = [
+            'projetvetid' => $projetvetid,
+            'studentid' => $studentid,
+            'fieldid' => $field->id,
+        ];
+
+        $result = $DB->get_record_sql($sql, $params);
+
+        return $result ? (int)$result->total : 0;
+    }
 }

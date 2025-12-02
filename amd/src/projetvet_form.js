@@ -61,7 +61,7 @@ const initEctsSuggestion = (hoursPerEcts) => {
                 return;
             }
 
-            const suggestedEcts = (hours / hoursPerEcts).toFixed(2);
+            const suggestedEcts = (hours / hoursPerEcts).toFixed(0);
             const message = await getString('suggested_credits', 'mod_projetvet', suggestedEcts);
             suggestionDiv.textContent = message;
         };

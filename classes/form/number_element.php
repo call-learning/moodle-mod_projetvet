@@ -86,7 +86,7 @@ class number_element extends MoodleQuickForm_text {
             'frozen' => $this->_flagFrozen,
             'min' => $this->getAttribute('min'),
             'max' => $this->getAttribute('max'),
-            'step' => $this->getAttribute('step'),
+            'step' => $this->getAttribute('step') ?: '1', // Default to 1 for whole numbers.
             'action' => $this->getAttribute('data-action'),
         ];
 
@@ -100,5 +100,47 @@ class number_element extends MoodleQuickForm_text {
         $context['extraattributes'] = implode(' ', $extraattributes);
 
         return $context;
+    }
+
+    /**
+     * Validate the submitted value.
+     *
+     * Only accepts whole numbers (integers).
+     *
+     * @param array $submitvalues Submitted values
+     * @param array $files Uploaded files
+     * @return string|null Error message or null if valid
+     */
+    public function validate($submitvalues, $files) {
+        $value = $this->_findValue($submitvalues);
+
+        // Allow empty values if not required.
+        if ($value === '' || $value === null) {
+            return null;
+        }
+
+        // Check if the value is numeric.
+        if (!is_numeric($value)) {
+            return get_string('err_numeric', 'form');
+        }
+
+        // Check if the value is a whole number (no decimals).
+        if (floor($value) != $value) {
+            return get_string('err_numeric', 'form');
+        }
+
+        // Validate min/max constraints.
+        $min = $this->getAttribute('min');
+        $max = $this->getAttribute('max');
+
+        if ($min !== null && $value < $min) {
+            return get_string('err_numeric', 'form');
+        }
+
+        if ($max !== null && $value > $max) {
+            return get_string('err_numeric', 'form');
+        }
+
+        return null;
     }
 }

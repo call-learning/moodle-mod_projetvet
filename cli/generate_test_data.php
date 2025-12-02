@@ -91,21 +91,72 @@ class projetvet_cli_generator {
     }
 
     /**
-     * Get form fields for a formset
+     * Get form fields for a formset up to a specific entry status
      *
      * @param int $formsetid
+     * @param int|null $entrystatus Only include fields from categories with entrystatus <= this value
      * @return array
      */
-    public function get_form_fields(int $formsetid): array {
+    public function get_form_fields(int $formsetid, ?int $entrystatus = null): array {
         global $DB;
 
+        if ($entrystatus === null) {
+            // Get all fields if no status specified.
+            return $DB->get_records_sql("
+                SELECT ff.*
+                FROM {projetvet_form_field} ff
+                JOIN {projetvet_form_cat} fc ON ff.categoryid = fc.id
+                WHERE fc.formsetid = ?
+                ORDER BY fc.sortorder, ff.sortorder
+            ", [$formsetid]);
+        }
+
+        // Get fields only from categories up to the specified entry status.
         return $DB->get_records_sql("
             SELECT ff.*
             FROM {projetvet_form_field} ff
             JOIN {projetvet_form_cat} fc ON ff.categoryid = fc.id
-            WHERE fc.formsetid = ?
+            WHERE fc.formsetid = ? AND fc.entrystatus <= ?
             ORDER BY fc.sortorder, ff.sortorder
+        ", [$formsetid, $entrystatus]);
+    }
+
+    /**
+     * Get available entry statuses for a formset from its categories
+     *
+     * @param int $formsetid
+     * @return array Array of entry status values
+     */
+    public function get_available_entry_statuses(int $formsetid): array {
+        global $DB;
+
+        $statuses = $DB->get_fieldset_sql("
+            SELECT DISTINCT entrystatus
+            FROM {projetvet_form_cat}
+            WHERE formsetid = ?
+            ORDER BY entrystatus
         ", [$formsetid]);
+
+        if (empty($statuses)) {
+            return [0];
+        }
+
+        // Add the final status (highest + 1).
+        $maxstatus = max($statuses);
+        $statuses[] = $maxstatus + 1;
+
+        return $statuses;
+    }
+
+    /**
+     * Get a random valid entry status for a formset
+     *
+     * @param int $formsetid
+     * @return int Random entry status
+     */
+    public function get_random_entry_status(int $formsetid): int {
+        $statuses = $this->get_available_entry_statuses($formsetid);
+        return $statuses[array_rand($statuses)];
     }
 
     /**
@@ -124,17 +175,26 @@ class projetvet_cli_generator {
 
         $entries = [];
         for ($i = 0; $i < $count; $i++) {
+            $entrystatus = $this->get_random_entry_status($formset->id);
             $entry = $this->create_entry([
                 'studentid' => $studentid,
                 'projetvetid' => $projetvetid,
                 'formsetid' => $formset->id,
-                'entrystatus' => 1,
+                'entrystatus' => $entrystatus,
             ]);
 
-            // Get all fields for this formset and add random values.
-            $fields = $this->get_form_fields($formset->id);
+            // Get fields only up to the current entry status.
+            $fields = $this->get_form_fields($formset->id, $entrystatus);
+            $entrydata = new stdClass();
+
             foreach ($fields as $field) {
-                $value = $this->generate_random_field_value($field);
+                $value = $this->generate_random_field_value($field, $entrydata);
+
+                // Store value for cross-field dependencies.
+                if ($field->idnumber) {
+                    $entrydata->{$field->idnumber} = $value;
+                }
+
                 if ($value !== null) {
                     $this->create_form_data([
                         'entryid' => $entry->id,
@@ -168,17 +228,26 @@ class projetvet_cli_generator {
 
         $entries = [];
         for ($i = 0; $i < $count; $i++) {
+            $entrystatus = $this->get_random_entry_status($formset->id);
             $entry = $this->create_entry([
                 'studentid' => $studentid,
                 'projetvetid' => $projetvetid,
                 'formsetid' => $formset->id,
-                'entrystatus' => 1,
+                'entrystatus' => $entrystatus,
             ]);
 
-            // Get all fields for this formset and add random values.
-            $fields = $this->get_form_fields($formset->id);
+            // Get fields only up to the current entry status.
+            $fields = $this->get_form_fields($formset->id, $entrystatus);
+            $entrydata = new stdClass();
+
             foreach ($fields as $field) {
-                $value = $this->generate_random_field_value($field);
+                $value = $this->generate_random_field_value($field, $entrydata);
+
+                // Store value for cross-field dependencies.
+                if ($field->idnumber) {
+                    $entrydata->{$field->idnumber} = $value;
+                }
+
                 if ($value !== null) {
                     $this->create_form_data([
                         'entryid' => $entry->id,
@@ -200,10 +269,28 @@ class projetvet_cli_generator {
      * Generate a random value for a field based on its type
      *
      * @param stdClass $field The field object
+     * @param stdClass|null $entry The entry being created (for cross-field dependencies)
      * @return string|int|null The generated value
      */
-    protected function generate_random_field_value(stdClass $field) {
+    protected function generate_random_field_value(stdClass $field, ?stdClass $entry = null) {
         $configdata = json_decode($field->configdata ?? '{}', true);
+
+        // Special handling for specific field idnumbers.
+        if ($field->idnumber === 'hours') {
+            // Hours must be 40 or multiples of 40 (40, 80, 120, 160, 200).
+            $multiplier = rand(1, 5);
+            return $multiplier * 40;
+        }
+
+        if ($field->idnumber === 'final_ects') {
+            // Credits = hours / 30.
+            // We need to get the hours value from the current entry.
+            if ($entry && isset($entry->hours)) {
+                return (int)($entry->hours / 30);
+            }
+            // Fallback if hours not set yet.
+            return rand(1, 5);
+        }
 
         switch ($field->type) {
             case 'text':
@@ -297,6 +384,9 @@ if (!$projetvet) {
 }
 
 $cm = get_coursemodule_from_instance('projetvet', $projetvetid);
+if (!$cm) {
+    cli_error("Course module not found for ProjetVet instance with ID {$projetvetid}.");
+}
 $context = context_module::instance($cm->id);
 
 cli_heading("Generating test data for ProjetVet: {$projetvet->name}");
