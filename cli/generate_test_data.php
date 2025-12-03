@@ -29,6 +29,10 @@ require_once($CFG->libdir . '/clilib.php');
 
 /**
  * Simple data generator for CLI (not using testing framework)
+ *
+ * @package    mod_projetvet
+ * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class projetvet_cli_generator {
     /**
