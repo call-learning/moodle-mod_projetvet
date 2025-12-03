@@ -453,8 +453,7 @@ class entries {
         foreach ($entries->activities as $activity) {
             // Get status message from language file with formatted date.
             $statusmsgkey = $statusmsgs[$activity->entrystatus] ?? '';
-            $dateformatted = userdate($activity->timemodified, get_string('strftimedatetimeshort', 'langconfig'));
-            $statustext = $statusmsgkey ? get_string('statusmsg_' . $statusmsgkey, 'mod_projetvet', $dateformatted) : '';
+            $statustext = $statusmsgkey ? get_string('statusmsg_' . $statusmsgkey, 'mod_projetvet') : '';
 
             $activitydata = [
                 'id' => $activity->id,
@@ -550,5 +549,37 @@ class entries {
             }
         }
         return null;
+    }
+
+    /**
+     * Get all possible entry statuses with their status messages for a formset
+     *
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @return array Array of entrystatus => status message
+     */
+    public static function get_all_status_messages(string $formsetidnumber = 'activities'): array {
+        $structure = self::get_form_structure($formsetidnumber);
+        $statusmessages = [];
+
+        foreach ($structure as $category) {
+            if (!isset($statusmessages[$category->entrystatus]) && !empty($category->statusmsg)) {
+                $statusmessages[$category->entrystatus] = get_string('statusmsg_' . $category->statusmsg, 'mod_projetvet');
+            }
+        }
+
+        ksort($statusmessages);
+        return $statusmessages;
+    }
+
+    /**
+     * Get the status message for a given entry status and formset
+     *
+     * @param int $entrystatus The entry status
+     * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @return string The translated status message or empty string if not found
+     */
+    public static function get_status_message(int $entrystatus, string $formsetidnumber = 'activities'): string {
+        $statusmessages = self::get_all_status_messages($formsetidnumber);
+        return $statusmessages[$entrystatus] ?? '';
     }
 }

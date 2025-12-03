@@ -110,23 +110,14 @@ class form_entry extends base {
             ->add_callback(static function ($value, $row): string {
                 global $DB;
 
-                // Get the formset to determine status messages.
-                $formset = $DB->get_record('projetvet_form_set', ['id' => $row->formsetid_for_status]);
+                // Get the formset idnumber to determine status messages.
+                $formset = $DB->get_record('projetvet_form_set', ['id' => $row->formsetid_for_status], 'idnumber');
                 if (!$formset) {
                     return '';
                 }
 
-                // Get categories to find status message for this entry status.
-                $categories = $DB->get_records('projetvet_form_cat', ['formsetid' => $formset->id]);
-                $statusmsgs = [];
-                foreach ($categories as $category) {
-                    if (!empty($category->statusmsg)) {
-                        $statusmsgs[$category->entrystatus] = $category->statusmsg;
-                    }
-                }
-
-                $statusmsgkey = $statusmsgs[$value] ?? '';
-                return $statusmsgkey ? get_string('statusmsg_' . $statusmsgkey, 'mod_projetvet') : '';
+                // Use the API method to get the status message.
+                return \mod_projetvet\local\api\entries::get_status_message($value, $formset->idnumber);
             });
 
         // Time created column.
@@ -177,11 +168,7 @@ class form_entry extends base {
             "{$entryalias}.entrystatus"
         ))
             ->add_joins($this->get_joins())
-            ->set_options([
-                0 => get_string('status_draft', 'mod_projetvet'),
-                1 => get_string('status_submitted', 'mod_projetvet'),
-                2 => get_string('status_validated', 'mod_projetvet'),
-            ]);
+            ->set_options(\mod_projetvet\local\api\entries::get_all_status_messages());
 
         // Time created filter.
         $filters[] = (new filter(

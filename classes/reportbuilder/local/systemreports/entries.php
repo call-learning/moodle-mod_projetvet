@@ -23,7 +23,7 @@ use core_reportbuilder\system_report;
 use lang_string;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\reportbuilder\local\entities\form_entry;
-use moodle_url;
+use core\url as moodle_url;
 use pix_icon;
 
 /**
