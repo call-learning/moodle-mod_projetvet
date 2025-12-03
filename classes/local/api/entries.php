@@ -37,54 +37,108 @@ class entries {
      * Get the form structure for a form set.
      *
      * @param string $formsetidnumber The form set idnumber (default: 'activities')
+     * @param int|null $entrystatus The current entry status (optional, for permission hydration)
+     * @param \context|null $context The module context (optional, for permission hydration)
      * @return array
      */
-    public static function get_form_structure(string $formsetidnumber = 'activities'): array {
+    public static function get_form_structure(
+        string $formsetidnumber = 'activities',
+        ?int $entrystatus = null,
+        ?\context $context = null
+    ): array {
         $actstructure = cache::make('mod_projetvet', 'activitystructures');
         // Include current language in cache key since field names are translated.
         $cachekey = 'activitystructure_' . $formsetidnumber . '_' . current_language();
         if ($actstructure->get($cachekey)) {
-            return $actstructure->get($cachekey);
-        }
+            $structure = $actstructure->get($cachekey);
+        } else {
+            // Get the form set.
+            $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
+            if (!$formset) {
+                return [];
+            }
 
-        // Get the form set.
-        $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
-        if (!$formset) {
-            return [];
-        }
-
-        $categories = form_cat::get_records(['formsetid' => $formset->get('id')], 'sortorder');
-        $fields = form_field::get_records([], 'sortorder');
-        $data = [];
-        foreach ($categories as $category) {
-            $data[$category->get('id')] = (object) [
-                'id' => $category->get('id'),
-                'name' => get_string('category_' . $category->get('idnumber'), 'mod_projetvet'),
-                'description' => $category->get('description'),
-                'capability' => $category->get('capability'),
-                'entrystatus' => $category->get('entrystatus'),
-                'statusmsg' => $category->get('statusmsg'),
-                'fields' => [],
-            ];
-        }
-        foreach ($fields as $field) {
-            // Only include fields for categories in this form set.
-            if (isset($data[$field->get('categoryid')])) {
-                $data[$field->get('categoryid')]->fields[] = (object) [
-                    'id' => $field->get('id'),
-                    'idnumber' => $field->get('idnumber'),
-                    'name' => get_string('field_' . $field->get('idnumber'), 'mod_projetvet'),
-                    'type' => $field->get('type'),
-                    'description' => $field->get('description'),
-                    'configdata' => $field->get('configdata'),
-                    'capability' => $field->get('capability'),
-                    'entrystatus' => $field->get('entrystatus'),
-                    'listorder' => $field->get('listorder'),
+            $categories = form_cat::get_records(['formsetid' => $formset->get('id')], 'sortorder');
+            $fields = form_field::get_records([], 'sortorder');
+            $data = [];
+            foreach ($categories as $category) {
+                $data[$category->get('id')] = (object) [
+                    'id' => $category->get('id'),
+                    'name' => get_string('category_' . $category->get('idnumber'), 'mod_projetvet'),
+                    'description' => $category->get('description'),
+                    'capability' => $category->get('capability'),
+                    'entrystatus' => $category->get('entrystatus'),
+                    'statusmsg' => $category->get('statusmsg'),
+                    'fields' => [],
                 ];
             }
+            foreach ($fields as $field) {
+                // Only include fields for categories in this form set.
+                if (isset($data[$field->get('categoryid')])) {
+                    $data[$field->get('categoryid')]->fields[] = (object) [
+                        'id' => $field->get('id'),
+                        'idnumber' => $field->get('idnumber'),
+                        'name' => get_string('field_' . $field->get('idnumber'), 'mod_projetvet'),
+                        'type' => $field->get('type'),
+                        'description' => $field->get('description'),
+                        'configdata' => $field->get('configdata'),
+                        'capability' => $field->get('capability'),
+                        'entrystatus' => $field->get('entrystatus'),
+                        'listorder' => $field->get('listorder'),
+                    ];
+                }
+            }
+            $structure = array_values($data);
+            $actstructure->set($cachekey, $structure);
         }
-        $actstructure->set($cachekey, array_values($data));
-        return array_values($data);
+
+        // Hydrate canview and canedit properties if entrystatus and context are provided.
+        if ($entrystatus !== null && $context !== null) {
+            $structure = self::hydrate_permissions($structure, $entrystatus, $context);
+        }
+
+        return $structure;
+    }
+
+    /**
+     * Hydrate canview and canedit properties for each category in the structure.
+     *
+     * Rules:
+     * - All users cannot view categories where entrystatus > current entrystatus
+     * - Users with mod/projetvet:approve can edit approve and submit categories (unless they have unlock)
+     * - Users with mod/projetvet:submit can only edit submit categories
+     * - Users with mod/projetvet:unlock can only edit unlock categories
+     *
+     * @param array $structure The form structure
+     * @param int $entrystatus The current entry status
+     * @param \context $context The module context
+     * @return array The structure with hydrated permissions
+     */
+    private static function hydrate_permissions(array $structure, int $entrystatus, \context $context): array {
+        $hasunlock = has_capability('mod/projetvet:unlock', $context);
+        $hasapprove = has_capability('mod/projetvet:approve', $context);
+        $hassubmit = has_capability('mod/projetvet:submit', $context);
+
+        foreach ($structure as $category) {
+            // Determine canview: cannot view if category entrystatus is greater than current entrystatus.
+            $category->canview = $category->entrystatus <= $entrystatus;
+
+            // Determine canedit based on capability rules.
+            $category->canedit = false;
+
+            if ($hasunlock) {
+                // Users with unlock can only edit unlock categories.
+                $category->canedit = ($category->capability === 'unlock');
+            } else if ($hasapprove && $category->entrystatus == $entrystatus) {
+                // Users with approve (but not unlock) can edit approve and submit categories.
+                $category->canedit = ($category->capability === 'approve');
+            } else if ($hassubmit && $category->entrystatus == $entrystatus) {
+                // Users with only submit can only edit submit categories.
+                $category->canedit = ($category->capability === 'submit');
+            }
+        }
+
+        return $structure;
     }
 
     /**
@@ -289,12 +343,10 @@ class entries {
         $cm = get_coursemodule_from_instance('projetvet', $entry->get('projetvetid'));
         $context = \context_module::instance($cm->id);
 
-        // Get the form structure to validate field permissions.
+        // Get the form structure with hydrated permissions to validate field permissions.
         $formset = form_set::get_record(['id' => $entry->get('formsetid')]);
-        $structure = self::get_form_structure($formset->get('idnumber'));
-
-        // Get current entry status (before update).
         $currententrystatus = $entry->get('entrystatus');
+        $structure = self::get_form_structure($formset->get('idnumber'), $currententrystatus, $context);
 
         // Build a map of fieldid => category for permission checking.
         $fieldcategorymap = [];
@@ -310,7 +362,7 @@ class entries {
                 continue; // Skip unknown fields.
             }
             $category = $fieldcategorymap[$fieldid];
-            if (!self::can_edit_category($category, $currententrystatus, $context)) {
+            if (!$category->canedit) {
                 throw new \moodle_exception('cannoteditfield', 'projetvet', '', $fieldid);
             }
         }
@@ -396,11 +448,6 @@ class entries {
             }
         }
         ksort($listfields);
-        // Always add a final statusmsg 'final' with highest entrystatus + 1.
-        if (!empty($statusmsgs)) {
-            $maxentrystatus = max(array_keys($statusmsgs));
-            $statusmsgs[$maxentrystatus + 1] = 'final';
-        }
 
         $activitylist = [];
         foreach ($entries->activities as $activity) {

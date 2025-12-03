@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_projetvet\output;
+use core\output\plugin_renderer_base;
 
 /**
  * Renderer for mod_projetvet
@@ -23,7 +24,7 @@ namespace mod_projetvet\output;
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class renderer extends \plugin_renderer_base {
+class renderer extends plugin_renderer_base {
     /**
      * Render the info section above the activity list
      *
@@ -31,10 +32,11 @@ class renderer extends \plugin_renderer_base {
      * @param \stdClass $cm The course module
      * @param \context_module $context The context
      * @param int $studentid The student ID
+     * @param bool $isteacher Whether the user is a teacher
      * @return string HTML to output
      */
-    public function render_student_info($moduleinstance, $cm, $context, $studentid) {
-        $studentinfo = new student_info($moduleinstance, $cm, $studentid);
+    public function render_student_info($moduleinstance, $cm, $context, $studentid, $isteacher) {
+        $studentinfo = new student_info($moduleinstance, $cm, $studentid, $isteacher);
         return $this->render_from_template('mod_projetvet/student_info', $studentinfo->export_for_template($this));
     }
 

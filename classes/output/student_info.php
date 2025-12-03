@@ -19,6 +19,7 @@ namespace mod_projetvet\output;
 use mod_projetvet\local\persistent\form_set;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\api\entries;
+use core\url as moodle_url;
 use renderer_base;
 use renderable;
 use templatable;
@@ -47,16 +48,23 @@ class student_info implements renderable, templatable {
     protected $studentid;
 
     /**
+     * @var bool $isteacher Whether the user is a teacher.
+     */
+    protected $isteacher;
+
+    /**
      * Constructor.
      *
      * @param object $moduleinstance The module instance
      * @param object $cm The course module
      * @param int $studentid The student ID
+     * @param bool $isteacher Whether the user is a teacher
      */
-    public function __construct($moduleinstance, $cm, $studentid) {
+    public function __construct($moduleinstance, $cm, $studentid, $isteacher) {
         $this->moduleinstance = $moduleinstance;
         $this->cm = $cm;
         $this->studentid = $studentid;
+        $this->isteacher = $isteacher;
     }
 
     /**
@@ -92,6 +100,10 @@ class student_info implements renderable, templatable {
         $data = [
             'infotable' => [
                 'rows' => [
+                    [
+                        'label' => get_string('studentname', 'mod_projetvet'),
+                        'value' => fullname(\core_user::get_user($this->studentid)),
+                    ],
                     [
                         'label' => get_string('promoyear', 'mod_projetvet'),
                         'value' => $promoyear,
@@ -176,6 +188,11 @@ class student_info implements renderable, templatable {
         }
 
         $data['infotable']['rows'][] = $mobilityrow;
+                // Show back link for teachers viewing a student.
+        if ($this->isteacher) {
+            $data['showbacklink'] = true;
+            $data['backurl'] = new moodle_url('/mod/projetvet/view.php', ['id' => $this->cm->id]);
+        }
 
         return $data;
     }

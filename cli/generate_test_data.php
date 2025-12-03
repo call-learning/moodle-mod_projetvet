@@ -141,10 +141,6 @@ class projetvet_cli_generator {
             return [0];
         }
 
-        // Add the final status (highest + 1).
-        $maxstatus = max($statuses);
-        $statuses[] = $maxstatus + 1;
-
         return $statuses;
     }
 

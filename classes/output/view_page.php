@@ -86,14 +86,6 @@ class view_page implements renderable, templatable {
             'studentid' => $this->studentid,
         ];
 
-        // Show back link for teachers viewing a student.
-        if ($this->isteacher) {
-            $data['showbacklink'] = true;
-            $data['backurl'] = new \moodle_url('/mod/projetvet/view.php', ['id' => $this->cm->id]);
-            $student = \core_user::get_user($this->studentid);
-            $data['studentname'] = fullname($student);
-        }
-
         // Activities section.
         $data['activitiesheading'] = get_string('activities', 'mod_projetvet');
         if (!$this->isteacher) {

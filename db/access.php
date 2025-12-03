@@ -87,6 +87,13 @@ $capabilities = [
             'editingteacher' => CAP_ALLOW,
         ],
     ],
+    'mod/projetvet:unlock' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
     'mod/projetvet:viewallstudents' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

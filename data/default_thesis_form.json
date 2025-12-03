@@ -1,0 +1,64 @@
+{
+  "categories": [
+    {
+      "name": "Thesis Information",
+      "idnumber": "thesis_info",
+      "description": "Thesis subject information",
+      "capability": "submit",
+      "entrystatus": 0,
+      "statusmsg": "draft",
+      "fields": [
+        {
+          "idnumber": "thesissubject_field",
+          "name": "Thesis Subject",
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4,
+            "required": true
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "thesisdepositdate",
+          "name": "Deposit Date",
+          "type": "date",
+          "description": "",
+          "configdata": {
+            "optional": true
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 1
+        },
+        {
+          "idnumber": "thesisdirector",
+          "name": "Thesis Director",
+          "type": "text",
+          "description": "",
+          "configdata": {},
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 2
+        },
+        {
+          "idnumber": "save_thesis",
+          "name": "Save",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "save",
+            "icon": "fa-save",
+            "entrystatus": 0,
+            "style": "primary"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 3
+        }
+      ]
+    }
+  ]
+}

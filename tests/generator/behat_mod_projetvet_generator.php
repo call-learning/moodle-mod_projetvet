@@ -41,18 +41,6 @@ class behat_mod_projetvet_generator extends behat_generator_base {
                 'required' => ['field', 'entry'],
                 'switchids' => ['field' => 'fieldid', 'entry' => 'entryid'],
             ],
-            'theses' => [
-                'singular' => 'thesis',
-                'datagenerator' => 'thesis',
-                'required' => ['projetvet', 'user'],
-                'switchids' => ['projetvet' => 'projetvetid', 'user' => 'userid'],
-            ],
-            'mobilities' => [
-                'singular' => 'mobility',
-                'datagenerator' => 'mobility',
-                'required' => ['projetvet', 'user'],
-                'switchids' => ['projetvet' => 'projetvetid', 'user' => 'userid'],
-            ],
         ];
     }
 

@@ -203,7 +203,7 @@
             "rows": 6
           },
           "capability": "approve",
-          "entrystatus": 3,
+          "entrystatus": 1,
           "listorder": 0
         },
         {
@@ -232,6 +232,31 @@
           },
           "capability": "approve",
           "entrystatus": 1,
+          "listorder": 0
+        }
+      ]
+    },
+    {
+      "name": "Locked",
+      "idnumber": "locked_facetoface",
+      "description": "Activité verrouillée",
+      "capability": "unlock",
+      "entrystatus": 2,
+      "statusmsg": "locked",
+      "fields": [
+        {
+          "idnumber": "facetoface_locked",
+          "name": "Retourner à l'enseignant pour révision",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "btn_return_teacher_revision",
+            "icon": "fa-undo",
+            "entrystatus": 1,
+            "style": "warning"
+          },
+          "capability": "unlock",
+          "entrystatus": 2,
           "listorder": 0
         }
       ]

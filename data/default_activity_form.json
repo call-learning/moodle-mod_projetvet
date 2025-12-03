@@ -543,6 +543,31 @@
           "listorder": 0
         }
       ]
+    },
+    {
+      "name": "Locked",
+      "idnumber": "locked",
+      "description": "Activité verrouillée",
+      "capability": "unlock",
+      "entrystatus": 4,
+      "statusmsg": "locked",
+      "fields": [
+        {
+          "idnumber": "return_to_teacher_locked",
+          "name": "Retourner à l'enseignant pour révision",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "btn_return_teacher_revision",
+            "icon": "fa-undo",
+            "entrystatus": 3,
+            "style": "warning"
+          },
+          "capability": "unlock",
+          "entrystatus": 4,
+          "listorder": 0
+        }
+      ]
     }
   ]
 }

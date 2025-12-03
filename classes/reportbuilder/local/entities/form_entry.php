@@ -125,12 +125,6 @@ class form_entry extends base {
                     }
                 }
 
-                // Add final status message.
-                if (!empty($statusmsgs)) {
-                    $maxentrystatus = max(array_keys($statusmsgs));
-                    $statusmsgs[$maxentrystatus + 1] = 'final';
-                }
-
                 $statusmsgkey = $statusmsgs[$value] ?? '';
                 return $statusmsgkey ? get_string('statusmsg_' . $statusmsgkey, 'mod_projetvet') : '';
             });

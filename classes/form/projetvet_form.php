@@ -67,14 +67,12 @@ class projetvet_form extends dynamic_form {
         // Extract field values from form data - only for categories user can edit.
         $fields = [];
         $formsetidnumber = $data->formsetidnumber ?? 'activities';
-        $structure = entries::get_form_structure($formsetidnumber);
         $context = $this->get_context_for_dynamic_submission();
+        $structure = entries::get_form_structure($formsetidnumber, $currententrystatus, $context);
 
         foreach ($structure as $category) {
-            // Check if user can edit this category.
-            $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
-
-            if ($caneditcategory) {
+            // Check if user can edit this category using the hydrated property.
+            if ($category->canedit) {
                 // Only collect fields from categories the user can edit.
                 foreach ($category->fields as $field) {
                     $fieldname = 'field_' . $field->id;
@@ -87,10 +85,8 @@ class projetvet_form extends dynamic_form {
 
         // Save files for filemanager fields - only for editable categories.
         foreach ($structure as $category) {
-            // Check if user can edit this category.
-            $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
-
-            if ($caneditcategory) {
+            // Check if user can edit this category using the hydrated property.
+            if ($category->canedit) {
                 foreach ($category->fields as $field) {
                     if ($field->type === 'filemanager' && !empty($data->entryid)) {
                         $fieldname = 'field_' . $field->id;
@@ -276,19 +272,16 @@ class projetvet_form extends dynamic_form {
             $currententrystatus = $entry->entrystatus;
         }
 
-        // Get the activity structure and add fields.
-        $structure = entries::get_form_structure($formsetidnumber);
+        // Get the activity structure with hydrated permissions and add fields.
+        $structure = entries::get_form_structure($formsetidnumber, $currententrystatus, $context);
         $hasexpanded = false;
         foreach ($structure as $category) {
-            if ($category->entrystatus > $currententrystatus) {
-                // Skip this category as its entrystatus is higher than current entry status.
+            if (!$category->canview) {
+                // Skip this category as user cannot view it.
                 continue;
             }
 
-            // Use the API function to determine if user can edit this category.
-            $caneditcategory = entries::can_edit_category($category, $currententrystatus, $context);
-
-            if ($category->entrystatus == $currententrystatus && !$caneditcategory) {
+            if ($category->entrystatus == $currententrystatus && !$category->canedit) {
                 // Skip this category as user cannot edit it in current status.
                 continue;
             }
@@ -318,7 +311,7 @@ class projetvet_form extends dynamic_form {
                 }
 
                 // Use category-level edit permission for all fields in the category.
-                $canediffield = $caneditcategory;
+                $caneditfield = $category->canedit;
 
                 // Decode configdata - it may be a string or already decoded.
                 if (is_string($field->configdata)) {
@@ -466,7 +459,7 @@ class projetvet_form extends dynamic_form {
                         ];
 
                         // If field cannot be edited, show files as static HTML instead of frozen filemanager.
-                        if (!$canediffield) {
+                        if (!$caneditfield) {
                             $mform->addElement('static', $fieldname . '_static', $field->name, '');
                         } else {
                             $mform->addElement('filemanager', $fieldname, $field->name, null, $filemanageroptions);
@@ -479,7 +472,7 @@ class projetvet_form extends dynamic_form {
 
                         if ($action === 'setcurrentdate') {
                             // Only add this hidden field if category entrystatus matches current entry status.
-                            if ($category->entrystatus == $currententrystatus && $caneditcategory) {
+                            if ($category->entrystatus == $currententrystatus && $category->canedit) {
                                 $mform->addElement('hidden', $fieldname);
                                 $mform->setType($fieldname, PARAM_INT);
                                 $mform->setDefault($fieldname, time());
@@ -561,7 +554,7 @@ class projetvet_form extends dynamic_form {
                         break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
-                if ($isrequired && $canediffield && $field->type !== 'button') {
+                if ($isrequired && $caneditfield && $field->type !== 'button') {
                     $mform->addRule($fieldname, null, 'required', null, 'client');
                 }
 
@@ -569,7 +562,7 @@ class projetvet_form extends dynamic_form {
                     $mform->addHelpButton($fieldname, $field->idnumber, 'mod_projetvet');
                 }
 
-                if (!$canediffield && $field->type !== 'filemanager' && $field->type !== 'hidden') {
+                if (!$caneditfield && $field->type !== 'filemanager' && $field->type !== 'hidden') {
                     if ($mform->elementExists($fieldname)) {
                         $mform->freeze($fieldname);
                     }
@@ -581,7 +574,7 @@ class projetvet_form extends dynamic_form {
                 }
             }
             // Add all button elements as a group if any were found.
-            if (!empty($buttonelements) && ($category->entrystatus == $currententrystatus) && $caneditcategory) {
+            if (!empty($buttonelements) && ($category->entrystatus == $currententrystatus) && $category->canedit) {
                 $mform->addGroup($buttonelements, 'buttongroup', '', [' '], false);
             }
         }
@@ -617,9 +610,9 @@ class projetvet_form extends dynamic_form {
             $entry = entries::get_entry($data['entryid']);
             // Set the entry status switch from the entry.
             $data['entrystatus'] = $entry->entrystatus;
-            $structure = entries::get_form_structure($formsetidnumber);
             $context = $this->get_context_for_dynamic_submission();
             $currententrystatus = $entry->entrystatus;
+            $structure = entries::get_form_structure($formsetidnumber, $currententrystatus, $context);
 
             foreach ($entry->categories as $category) {
                 // Get the category object from structure to check permissions.
@@ -689,10 +682,10 @@ class projetvet_form extends dynamic_form {
                         $fieldvalue = is_array($decoded) ? $decoded : [];
                     } else if ($fieldobj->type === 'filemanager') {
                         // Check if user can edit this field using the category object from structure.
-                        $canediffield = $categoryobj ? entries::can_edit_category($categoryobj, $currententrystatus, $context) :
+                        $caneditfield = $categoryobj ? entries::can_edit_category($categoryobj, $currententrystatus, $context) :
                             true;
 
-                        if (!$canediffield && !empty($field->value)) {
+                        if (!$caneditfield && !empty($field->value)) {
                             // For frozen filemanager, show list of files as static HTML.
                             $data[$fieldname . '_static'] = $this->get_filemanager_display_html($context, $field->value);
                             // Don't set fieldvalue - we don't need the filemanager element.

@@ -134,7 +134,7 @@ if ($canviewall && !$studentid) {
     $isteacher = $canviewall && $viewingstudentid != $USER->id;
 
 
-    echo $renderer->render_student_info($moduleinstance, $cm, $context, $viewingstudentid);
+    echo $renderer->render_student_info($moduleinstance, $cm, $context, $viewingstudentid, $isteacher);
 
     // Render the student view page (entry lists).
     echo $renderer->render_student_view($moduleinstance, $cm, $context, $viewingstudentid, $isteacher);

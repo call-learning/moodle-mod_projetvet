@@ -227,6 +227,16 @@ foreach ($formsets as $idnumber => $config) {
 // Import field lookup data.
 $fielddata = import_field_data();
 
+// Purge caches to ensure changes take effect.
+echo "\n=== Purging Caches ===\n";
+$cache = cache::make('mod_projetvet', 'activitystructures');
+$cache->purge();
+echo "Cleared activity structures cache\n";
+
+// Also purge language cache as form structures include translated strings.
+purge_all_caches();
+echo "Purged all caches\n";
+
 // Display summary.
 echo "\n=== Import Summary ===\n";
 echo "Form sets processed: " . count($formsets) . "\n";
