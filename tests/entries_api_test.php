@@ -181,6 +181,9 @@ final class entries_api_test extends advanced_testcase {
      * Test that structure is hydrated with correct canview permissions.
      *
      * @dataProvider canview_provider
+     * @param int $entrystatus The entry status
+     * @param int $userid The user ID
+     * @param array $expectedcanview The expected canview values
      */
     public function test_canview_permissions(int $entrystatus, int $userid, array $expectedcanview): void {
         $this->setUser($userid);

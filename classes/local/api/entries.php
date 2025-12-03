@@ -438,9 +438,7 @@ class entries {
 
         // Get fields with listorder > 0, sorted by listorder.
         $listfields = [];
-        $statusmsgs = [];
         foreach ($structure as $category) {
-            $statusmsgs[$category->entrystatus] = $category->statusmsg ?? '';
             foreach ($category->fields as $field) {
                 if ($field->listorder > 0) {
                     $listfields[$field->listorder] = $field;
@@ -451,9 +449,8 @@ class entries {
 
         $activitylist = [];
         foreach ($entries->activities as $activity) {
-            // Get status message from language file with formatted date.
-            $statusmsgkey = $statusmsgs[$activity->entrystatus] ?? '';
-            $statustext = $statusmsgkey ? get_string('statusmsg_' . $statusmsgkey, 'mod_projetvet') : '';
+            // Get status message using the API method.
+            $statustext = self::get_status_message($activity->entrystatus, $formsetidnumber);
 
             $activitydata = [
                 'id' => $activity->id,
