@@ -392,6 +392,20 @@
           "listorder": 0
         },
         {
+          "idnumber": "hours_completed_additional",
+          "name": "Prévision de crédits ECTS associés",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "hours_completed_additional_value",
+            "filter": "getsuggestedectsfile"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "hours_completed",
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
           "type": "number",

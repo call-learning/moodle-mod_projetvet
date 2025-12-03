@@ -48,7 +48,6 @@
 }}
 <div class="tagconfirm-wrapper" data-element-id="{{elementid}}">
     <div class="tagconfirm-element" id="{{elementid}}_container" data-region="tagconfirm-table">
-        {{#hasgroups}}
         <table class="table table-striped table-sm">
             <thead>
                 <tr>
@@ -77,12 +76,13 @@
                 </tr>
                 {{/items}}
                 {{/groups}}
+                {{^hasgroups}}
+                <tr>
+                    <td colspan="2" class="text-muted">{{#str}}nocompetenciesselected, mod_projetvet{{/str}}</td>
+                </tr>
+                {{/hasgroups}}
             </tbody>
         </table>
-        {{/hasgroups}}
-        {{^hasgroups}}
-        <p class="text-muted">{{#str}}nocompetenciesselected, mod_projetvet{{/str}}</p>
-        {{/hasgroups}}
     </div>
 
     {{^frozen}}
