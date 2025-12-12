@@ -1,0 +1,36 @@
+<div>
+    <img src="{{>mod_projetvet/emails/logo}}" alt="Logo" style="max-width: 200px; margin-bottom: 20px;">
+
+    {{#istutor}}
+        <p>{{#str}}notification_intro_tutor, mod_projetvet, {{studentname}}{{/str}}</p>
+    {{/istutor}}
+    {{#isstudent}}
+        <p>{{#str}}notification_intro_student, mod_projetvet{{/str}}</p>
+    {{/isstudent}}
+
+    <p><strong>
+        {{#istutor}}
+            {{#str}}notification_action_tutor, mod_projetvet{{/str}}
+        {{/istutor}}
+        {{#isstudent}}
+            {{#str}}notification_action_student, mod_projetvet{{/str}}
+        {{/isstudent}}
+    </strong></p>
+
+    <table role="presentation">
+        <tbody>
+            <tr>
+                <th scope="row" style="text-align: left; padding-right: 10px;">{{#str}}entry, mod_projetvet{{/str}}</th>
+                <td>{{entrytitle}}</td>
+            </tr>
+            <tr>
+                <th scope="row" style="text-align: left; padding-right: 10px;">{{#str}}status, mod_projetvet{{/str}}</th>
+                <td>{{{statustext}}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><a href="{{linkurl}}">{{#str}}openprojetvet, mod_projetvet{{/str}}</a></p>
+
+    <p>{{#str}}notification_footer, mod_projetvet{{/str}}</p>
+</div>

@@ -23,6 +23,7 @@ use mod_projetvet\local\persistent\form_data;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\form_set;
+use mod_projetvet\local\notifications;
 use stdClass;
 
 /**
@@ -258,6 +259,14 @@ class entries {
             $data->create();
             $data->save();
         }
+
+        // If an entry is created directly in a non-draft status, notify the next actor.
+        if ($entrystatus > 0) {
+            $cm = get_coursemodule_from_instance('projetvet', $projetvetid);
+            if ($cm) {
+                notifications::queue_entry_action_required($entry->get('id'), (int)$cm->id, 0, $entrystatus);
+            }
+        }
         return $entry->get('id');
     }
 
@@ -387,6 +396,11 @@ class entries {
                 $data->create();
             }
             $data->save();
+        }
+
+        // Queue notification only when the status actually changes.
+        if ($entrystatus !== null && $entrystatus !== (int)$currententrystatus) {
+            notifications::queue_entry_action_required($entryid, (int)$cm->id, (int)$currententrystatus, (int)$entrystatus);
         }
     }
 

@@ -52,6 +52,21 @@ class renderer extends plugin_renderer_base {
      */
     public function render_student_view($moduleinstance, $cm, $context, $studentid, $isteacher) {
         $viewpage = new view_page($moduleinstance, $cm, $context, $studentid, $isteacher);
+
         return $this->render_from_template('mod_projetvet/view_page', $viewpage->export_for_template($this));
+    }
+
+    /**
+     * Render the "action required" notification (email + Moodle message).
+     *
+     * @param entry_action_required_message $message
+     * @return string HTML to output
+     */
+    public function render_entry_action_required_message(entry_action_required_message $message): string {
+
+        return $this->render_from_template(
+            'mod_projetvet/notification_entry_action_required',
+            $message->export_for_template($this)
+        );
     }
 }

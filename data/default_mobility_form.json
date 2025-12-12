@@ -24,7 +24,8 @@
           "type": "checkbox",
           "description": "",
           "configdata": {
-            "label": "I completed my mobility through a long-term mobility program (ERASMUS type)"
+            "label": "I completed my mobility through a long-term mobility program (ERASMUS type)",
+            "labelstring": "mobilityerasmus"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -36,7 +37,8 @@
           "type": "checkbox",
           "description": "",
           "configdata": {
-            "label": "I completed my international mobility during the FMP of A% (UC0526)"
+            "label": "I completed my international mobility during the FMP of A% (UC0526)",
+            "labelstring": "mobilityfmp"
           },
           "capability": "submit",
           "entrystatus": 0,
