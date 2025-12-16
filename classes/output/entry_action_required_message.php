@@ -16,8 +16,6 @@
 
 namespace mod_projetvet\output;
 
-defined('MOODLE_INTERNAL') || die();
-
 use renderer_base;
 use renderable;
 use templatable;
@@ -46,6 +44,8 @@ class entry_action_required_message implements renderable, templatable {
     private $linkurl;
 
     /**
+     * Constructor.
+     *
      * @param bool $istutor Whether the recipient is a tutor
      * @param string $studentname Student full name (for tutor notifications)
      * @param string $entrytitle Entry title

@@ -16,8 +16,6 @@
 
 namespace mod_projetvet\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 use mod_projetvet\local\notifications;
 

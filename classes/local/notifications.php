@@ -16,8 +16,6 @@
 
 namespace mod_projetvet\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core_user;
 use context_system;
 use moodle_page;
@@ -36,7 +34,6 @@ use mod_projetvet\utils;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class notifications {
-
     /**
      * Queue an adhoc task to notify the next actor.
      *

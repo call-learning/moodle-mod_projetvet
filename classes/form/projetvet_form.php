@@ -446,7 +446,8 @@ class projetvet_form extends dynamic_form {
                             try {
                                 $checkboxlabel = get_string('checkbox_' . $labelstring, 'mod_projetvet');
                             } catch (moodle_exception $e) {
-                                // Fall back to config label when string is missing.
+                                // String not found, fall back to configured label.
+                                unset($e);
                             }
                         }
                         $mform->addElement('advcheckbox', $fieldname, $field->name, $checkboxlabel, null, [0, 1]);
