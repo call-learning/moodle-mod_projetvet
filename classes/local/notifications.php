@@ -65,7 +65,12 @@ class notifications {
      * @param int|null $newstatus New status (optional)
      * @return void
      */
-    public static function send_entry_action_required(int $entryid, int $cmid, ?int $oldstatus = null, ?int $newstatus = null): void {
+    public static function send_entry_action_required(
+        int $entryid,
+        int $cmid,
+        ?int $oldstatus = null,
+        ?int $newstatus = null
+    ): void {
         $entryrecord = form_entry::get_record(['id' => $entryid]);
         if (!$entryrecord) {
             return;
@@ -217,7 +222,14 @@ class notifications {
      * @param int $studentid Student id (for display)
      * @return void
      */
-    private static function send_to_user(\stdClass $recipient, string $actor, string $entrytitle, string $statustext, string $url, int $studentid): void {
+    private static function send_to_user(
+        \stdClass $recipient,
+        string $actor,
+        string $entrytitle,
+        string $statustext,
+        string $url,
+        int $studentid
+    ): void {
         $student = core_user::get_user($studentid);
         $studentname = $student ? fullname($student) : '';
 
