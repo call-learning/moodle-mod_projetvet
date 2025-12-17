@@ -55,6 +55,18 @@ class setup {
                 'sortorder' => 2,
                 'jsonfile' => 'default_carnet_cas_form.json',
             ],
+            'thesis' => [
+                'name' => 'Thesis',
+                'description' => 'Thesis subject form',
+                'sortorder' => 3,
+                'jsonfile' => 'default_thesis_form.json',
+            ],
+            'mobility' => [
+                'name' => 'International Mobility',
+                'description' => 'International mobility form',
+                'sortorder' => 4,
+                'jsonfile' => 'default_mobility_form.json',
+            ],
         ];
 
         // Import each form set.
