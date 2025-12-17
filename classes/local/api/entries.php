@@ -24,6 +24,7 @@ use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\form_set;
 use mod_projetvet\local\notifications;
+use moodle_exception;
 use stdClass;
 
 /**
@@ -151,7 +152,7 @@ class entries {
     public static function get_entry(int $entryid): stdClass {
         $actentry = form_entry::get_record(['id' => $entryid]);
         if (empty($actentry)) {
-            throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
+            throw new moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
 
         // Get the form set from the entry to load the correct structure.
@@ -237,7 +238,7 @@ class entries {
         // Get the form set.
         $formset = form_set::get_record(['idnumber' => $formsetidnumber]);
         if (!$formset) {
-            throw new \moodle_exception('formsetnotfound', 'projetvet', '', $formsetidnumber);
+            throw new moodle_exception('formsetnotfound', 'projetvet', '', $formsetidnumber);
         }
 
         // Create the activity entry.
@@ -345,7 +346,7 @@ class entries {
         // Get the entry.
         $entry = form_entry::get_record(['id' => $entryid]);
         if (empty($entry)) {
-            throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
+            throw new moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
 
         // Get context for permission checks.
@@ -372,7 +373,7 @@ class entries {
             }
             $category = $fieldcategorymap[$fieldid];
             if (!$category->canedit) {
-                throw new \moodle_exception('cannoteditfield', 'projetvet', '', $fieldid);
+                throw new moodle_exception('cannoteditfield', 'projetvet', '', $fieldid);
             }
         }
 
@@ -399,8 +400,8 @@ class entries {
         }
 
         // Queue notification only when the status actually changes.
-        if ($entrystatus !== null && $entrystatus !== (int)$currententrystatus) {
-            notifications::queue_entry_action_required($entryid, (int)$cm->id, (int)$currententrystatus, (int)$entrystatus);
+        if ($entrystatus !== null && $entrystatus !== $currententrystatus) {
+            notifications::queue_entry_action_required($entryid, (int)$cm->id, $currententrystatus, $entrystatus);
         }
     }
 
@@ -413,10 +414,10 @@ class entries {
     public static function delete_entry(int $entryid): bool {
         $entry = new form_entry($entryid);
         if (empty($entry)) {
-            throw new \moodle_exception('entry_not_found', 'projetvet', '', $entryid);
+            throw new moodle_exception('entry_not_found', 'projetvet', '', $entryid);
         }
         if (!$entry->can_delete()) {
-            throw new \moodle_exception('cannotdeleteactivity', 'projetvet');
+            throw new moodle_exception('cannotdeleteactivity', 'projetvet');
         }
         try {
             // Delete all associated data first.
@@ -427,7 +428,7 @@ class entries {
             // Then delete the entry.
             $entry->delete();
         } catch (invalid_persistent_exception $e) {
-            throw new \moodle_exception('cannotdeleteactivity', 'projetvet', '', $e->getMessage());
+            throw new moodle_exception('cannotdeleteactivity', 'projetvet', '', $e->getMessage());
         }
         return true;
     }

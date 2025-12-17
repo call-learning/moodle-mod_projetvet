@@ -60,9 +60,6 @@ const showThesisForm = (button) => {
             projetvetid: projetvetid,
             userid: userid,
         },
-        modalConfig: {
-            title: 'Thesis Subject',
-        },
         returnFocus: button,
     });
 
@@ -89,9 +86,6 @@ const showMobilityForm = (button) => {
             cmid: cmid,
             projetvetid: projetvetid,
             userid: userid,
-        },
-        modalConfig: {
-            title: 'International Mobility',
         },
         returnFocus: button,
     });

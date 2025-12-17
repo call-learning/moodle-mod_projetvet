@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_projetvet;
+namespace mod_projetvet\local\api;
 
 use advanced_testcase;
 use context_module;
-use mod_projetvet\local\api\entries;
 
 /**
- * Test entries API with different entry statuses and user capabilities.
+ * Test entries API permissions with different entry statuses and user capabilities.
  *
  * @package    mod_projetvet
  * @category   test
@@ -29,7 +28,7 @@ use mod_projetvet\local\api\entries;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_projetvet\local\api\entries
  */
-final class entries_api_test extends advanced_testcase {
+final class entries_permissions_test extends advanced_testcase {
     /** @var \stdClass Course object */
     private $course;
 
