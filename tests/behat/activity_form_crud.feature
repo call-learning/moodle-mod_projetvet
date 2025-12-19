@@ -51,7 +51,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Year of study in which the project will be completed                | Year 2                  |
       | Rank                                                                | A                       |
       | Expected workload (approximately)                                   | 40                      |
-      | Number of credits suggested after discussion with tutor             | 3                       |
 
     # Select category using tagselect
     And I open tagselect for "Category"
@@ -73,7 +72,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Activity title                                                      | Draft Activity          |
       | Summary description                                                 | Initial draft content   |
       | Expected workload (approximately)                                   | 20                      |
-      | Number of credits suggested after discussion with tutor             | 2                       |
 
     # Select category using tagselect
     And I open tagselect for "Category"
@@ -104,7 +102,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Activity title                                                      | Activity for Approval   |
       | Summary description                                                 | Please review           |
       | Expected workload (approximately)                                   | 30                      |
-      | Number of credits suggested after discussion with tutor             | 2                       |
 
     # Select category using tagselect
     And I open tagselect for "Category"
@@ -139,7 +136,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Activity title                                                      | Almost there         |
       | Summary description                                                 | To be completed         |
       | Expected workload (approximately)                                   | 25                      |
-      | Number of credits suggested after discussion with tutor             | 2                       |
 
     # Select category using tagselect
     And I open tagselect for "Category"
@@ -189,7 +185,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Activity title                                                      | Final Validation Test   |
       | Summary description                                                 | Ready for validation    |
       | Expected workload (approximately)                                   | 30                      |
-      | Number of credits suggested after discussion with tutor             | 3                       |
 
     # Select category using tagselect
     And I open tagselect for "Category"
@@ -250,7 +245,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Activity title                                                      | Activity to Delete      |
       | Summary description                                                 | Will be deleted         |
       | Expected workload (approximately)                                   | 10                      |
-      | Number of credits suggested after discussion with tutor             | 1                       |
 
     # Select category using tagselect
     And I open tagselect for "Category"
