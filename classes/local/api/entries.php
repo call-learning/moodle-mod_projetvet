@@ -134,6 +134,13 @@ class entries {
             } else if ($hasapprove && $category->entrystatus == $entrystatus) {
                 // Users with approve (but not unlock) can edit approve and submit categories.
                 $category->canedit = ($category->capability === 'approve');
+            } else if (
+                $hasapprove && $category->capability === 'submit' &&
+                get_config('mod_projetvet', 'allow_edit_previous_status') &&
+                $category->entrystatus == ($entrystatus - 1)
+            ) {
+                // Users with approve can edit submit categories from previous status if setting is enabled.
+                $category->canedit = true;
             } else if ($hassubmit && $category->entrystatus == $entrystatus) {
                 // Users with only submit can only edit submit categories.
                 $category->canedit = ($category->capability === 'submit');
@@ -326,6 +333,16 @@ class entries {
             }
             // Additionally, for viewown, the user must be the student who owns the entry.
             return $USER->id == $studentid;
+        }
+
+        // Check if the field has the 'viewteacher' capability.
+        if ($field->capability === 'viewteacher') {
+            // User must have the viewteacher capability.
+            if (!has_capability('mod/projetvet:approve', $context)) {
+                return false;
+            }
+            // Additionally, for viewteacher, the user must not be the student who owns the entry.
+            return $USER->id !== $studentid;
         }
 
         // For now all else goes.

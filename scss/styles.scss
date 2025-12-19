@@ -181,3 +181,10 @@ tr.projetvet-student-row {
         background-color: rgba(0, 0, 0, 0.025);
     }
 }
+
+// Highlighted row styling
+tr.row-highlight {
+    td {
+        background-color: #d1ecf1;
+    }
+}

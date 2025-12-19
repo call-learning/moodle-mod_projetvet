@@ -9,11 +9,14 @@
       "statusmsg": "draft",
       "fields": [
         {
-          "idnumber": "mobilitytitle",
-          "name": "Mobility Title",
-          "type": "text",
+          "idnumber": "mobilityinfo",
+          "name": "Mobility Info",
+          "type": "html",
           "description": "",
-          "configdata": {},
+          "configdata": {
+            "readonly": true,
+            "string": "mobilityinfo_value"
+          },
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
@@ -43,6 +46,16 @@
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 2
+        },
+        {
+          "idnumber": "mobilitylocation",
+          "name": "Mobility Location",
+          "type": "text",
+          "description": "",
+          "configdata": {},
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
         },
         {
           "idnumber": "save_mobility",

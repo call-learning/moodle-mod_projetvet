@@ -149,3 +149,7 @@ tr.projetvet-entry-row:hover,
 tr.projetvet-student-row:hover {
     background-color: rgba(0, 0, 0, 0.025);
 }
+
+tr.row-highlight td {
+    background-color: #d1ecf1;
+}

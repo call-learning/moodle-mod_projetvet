@@ -291,10 +291,10 @@ class projetvet_form extends dynamic_form {
 
             // Expand header if category entrystatus matches current entry status.
             if ($category->entrystatus == $currententrystatus) {
-                $mform->setExpanded('category_' . $category->id);
+                $mform->setExpanded('category_' . $category->id, true, true);
                 $hasexpanded = true;
             } else {
-                $mform->setExpanded('category_' . $category->id, false);
+                $mform->setExpanded('category_' . $category->id, false, true);
             }
 
             // Array to collect button elements for grouping.
@@ -564,6 +564,7 @@ class projetvet_form extends dynamic_form {
                         break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
+
                 if ($isrequired && $caneditfield && $field->type !== 'button') {
                     $mform->addRule($fieldname, null, 'required', null, 'client');
                 }

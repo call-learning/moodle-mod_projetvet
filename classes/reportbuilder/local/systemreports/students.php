@@ -66,14 +66,10 @@ class students extends system_report {
         } else {
             $enrolleduserids = array_keys($enrolledusers);
 
-            // Only show students with submitted entries.
-            $parampv = database::generate_param_name();
+            // Show all enrolled students with submit capability.
             [$insql, $inparams] = $DB->get_in_or_equal($enrolleduserids, SQL_PARAMS_NAMED, database::generate_param_name());
 
-            $this->add_base_condition_sql("{$entityuseralias}.id $insql AND {$entityuseralias}.id IN (
-                SELECT DISTINCT studentid FROM {projetvet_form_entry}
-                WHERE projetvetid = :{$parampv} AND entrystatus > 0
-            )", array_merge($inparams, [$parampv => $projetvetid]));
+            $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
         }
 
         $this->add_columns();
@@ -198,6 +194,32 @@ class students extends system_report {
             });
 
         $this->add_column($facetofacecolumn);
+
+        // Action required column - shows icon if there are entries needing teacher action.
+        $actionrequiredcolumn = (new \core_reportbuilder\local\report\column(
+            'actionrequired',
+            new lang_string('actionrequired', 'mod_projetvet'),
+            $entityuser->get_entity_name()
+        ))
+            ->add_joins($entityuser->get_joins())
+            ->add_field("{$entityuseralias}.id", 'userid_action')
+            ->set_type(\core_reportbuilder\local\report\column::TYPE_TEXT)
+            ->set_is_sortable(false)
+            ->add_callback(static function ($value, $row) use ($projetvetid): string {
+                if (\mod_projetvet\utils::student_has_pending_teacher_action($projetvetid, $row->userid_action)) {
+                    return \html_writer::tag(
+                        'i',
+                        '',
+                        [
+                            'class' => 'icon fa fa-exclamation-circle text-info',
+                            'title' => get_string('actionrequired', 'mod_projetvet'),
+                        ]
+                    );
+                }
+                return '';
+            });
+
+        $this->add_column($actionrequiredcolumn);
 
         $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
     }

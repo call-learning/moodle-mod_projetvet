@@ -105,6 +105,10 @@ class utils {
             case 'getsuggestedectsfile':
                 return self::get_ects_guide_url();
 
+            case 'hoursects':
+                $hoursperects = get_config('mod_projetvet', 'hours_per_ects');
+                return $hoursperects ?: '30';
+
             default:
                 return '';
         }
@@ -257,5 +261,48 @@ class utils {
         $result = $DB->get_record_sql($sql, $params);
 
         return $result ? (int)$result->total : 0;
+    }
+
+    /**
+     * Check if student has entries requiring teacher action.
+     *
+     * Returns true if the student has any entries at an entrystatus where
+     * the statusmsg is 'teacheraccept' or 'validated'.
+     * - For activities: checks entrystatus 1 (teacheraccept) or 3 (validated)
+     * - For facetoface: checks entrystatus 1 (teacheraccept) only
+     *
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $studentid The student ID
+     * @return bool True if there are entries requiring teacher action
+     */
+    public static function student_has_pending_teacher_action(int $projetvetid, int $studentid): bool {
+        global $DB;
+
+        // Check for activities at entrystatus 1 or 3, or facetoface at entrystatus 1.
+        // Using a single optimized query to minimize database calls.
+        $sql = "SELECT COUNT(fe.id)
+                  FROM {projetvet_form_entry} fe
+                  JOIN {projetvet_form_set} fs ON fe.formsetid = fs.id
+                 WHERE fe.projetvetid = :projetvetid
+                   AND fe.studentid = :studentid
+                   AND (
+                       (fs.idnumber = :activities AND fe.entrystatus IN (:status1, :status3))
+                       OR
+                       (fs.idnumber = :facetoface AND fe.entrystatus = :status1_f2f)
+                   )";
+
+        $params = [
+            'projetvetid' => $projetvetid,
+            'studentid' => $studentid,
+            'activities' => 'activities',
+            'status1' => 1,
+            'status3' => 3,
+            'facetoface' => 'facetoface',
+            'status1_f2f' => 1,
+        ];
+
+        $count = $DB->count_records_sql($sql, $params);
+
+        return $count > 0;
     }
 }

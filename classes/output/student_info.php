@@ -127,7 +127,7 @@ class student_info implements renderable, templatable {
 
         // Thesis subject row.
         $thesisrow = ['label' => get_string('thesissubject', 'mod_projetvet')];
-        $thesisrow['hasbutton'] = true;
+        $thesisrow['hasbutton'] = !$this->isteacher;
         $thesisrow['buttontext'] = get_string('setsubject', 'mod_projetvet');
         $thesisrow['buttonaction'] = 'activity-entry-form';
         $thesisrow['cmid'] = $this->cm->id;
@@ -152,6 +152,8 @@ class student_info implements renderable, templatable {
                 if ($thesissubject) {
                     $thesisrow['value'] = format_text($thesissubject, FORMAT_PLAIN);
                 }
+            } else {
+                $thesisrow['value'] = get_string('nothesissubjectset', 'mod_projetvet');
             }
         }
 
@@ -159,7 +161,7 @@ class student_info implements renderable, templatable {
 
         // Mobility row.
         $mobilityrow = ['label' => get_string('internationalmobility', 'mod_projetvet')];
-        $mobilityrow['hasbutton'] = true;
+        $mobilityrow['hasbutton'] = !$this->isteacher;
         $mobilityrow['buttontext'] = get_string('settitle', 'mod_projetvet');
         $mobilityrow['buttonaction'] = 'activity-entry-form';
         $mobilityrow['cmid'] = $this->cm->id;
@@ -180,10 +182,15 @@ class student_info implements renderable, templatable {
 
                 // Get the mobility title field value.
                 $entrycontent = entries::get_entry($mobilityentry->get('id'));
-                $mobilitytitle = $this->get_field_value($entrycontent, 'mobilitytitle');
-                if ($mobilitytitle) {
-                    $mobilityrow['value'] = $mobilitytitle;
+                $mobilityerasmus = $this->get_field_value($entrycontent, 'mobilityerasmus');
+                $mobilityfmp = $this->get_field_value($entrycontent, 'mobilityfmp');
+                if ($mobilityerasmus || $mobilityfmp) {
+                    $mobilityrow['value'] = get_string('mobilityrealized', 'mod_projetvet');
+                } else {
+                    $mobilityrow['value'] = get_string('mobilitynotrealizedyet', 'mod_projetvet');
                 }
+            } else {
+                $mobilityrow['value'] = get_string('mobilitynotrealizedyet', 'mod_projetvet');
             }
         }
 

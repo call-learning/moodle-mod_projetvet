@@ -113,6 +113,20 @@
           "listorder": 0
         },
         {
+          "idnumber": "hours_student_intro",
+          "name": "Nombres d'heures consacrées et ECTS",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "hours_student_intro_value",
+            "filter": "hoursects"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "hours_completed_intro",
           "name": "Prévision de crédits ECTS associés",
           "type": "html",
@@ -122,7 +136,7 @@
             "string": "hours_completed_intro_value",
             "filter": "getsuggestedectsfile"
           },
-          "capability": "submit",
+          "capability": "viewteacher",
           "entrystatus": 0,
           "listorder": 0
         },
@@ -140,6 +154,20 @@
           "listorder": 6
         },
         {
+          "idnumber": "facetoface_message",
+          "name": "Nombres d'heures consacrées et ECTS",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "facetoface_message_value",
+            "filter": "hoursects"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "credits",
           "name": "Nombre de crédits suggéré après discussion avec le tuteur",
           "type": "number",
@@ -148,7 +176,7 @@
             "max": 5,
             "required": true
           },
-          "capability": "submit",
+          "capability": "viewteacher",
           "entrystatus": 0,
           "listorder": 0
         },

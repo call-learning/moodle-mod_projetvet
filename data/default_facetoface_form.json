@@ -207,6 +207,31 @@
           "listorder": 0
         },
         {
+          "idnumber": "teacher_personal_notes_intro",
+          "name": "Notes personnelles de l'enseignant",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "teacher_personal_notes_intro_value"
+          },
+          "capability": "viewteacher",
+          "entrystatus": 1,
+          "listorder": 2
+        },
+        {
+          "idnumber": "teacher_personal_notes",
+          "name": "Notes personnelles de l'enseignant",
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 6
+          },
+          "capability": "viewteacher",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
           "idnumber": "statusf2f1_date",
           "name": "Date de validation",
           "type": "hidden",

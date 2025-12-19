@@ -9,6 +9,19 @@
       "statusmsg": "draft",
       "fields": [
         {
+          "idnumber": "thesis_intro",
+          "name": "Thesis Intro",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "these_intro_value"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "thesissubject_field",
           "name": "Thesis Subject",
           "type": "textarea",

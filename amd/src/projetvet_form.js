@@ -57,13 +57,13 @@ const initEctsSuggestion = (hoursPerEcts) => {
         const updateSuggestion = async() => {
             const hours = parseFloat(input.value);
             if (isNaN(hours) || hours <= 0) {
-                suggestionDiv.textContent = '';
+                suggestionDiv.innerHTML = '';
                 return;
             }
 
             const suggestedEcts = (hours / hoursPerEcts).toFixed(0);
             const message = await getString('suggested_credits', 'mod_projetvet', suggestedEcts);
-            suggestionDiv.textContent = message;
+            suggestionDiv.innerHTML = message;
         };
 
         // Listen for input changes.
@@ -128,6 +128,10 @@ export const init = async() => {
         }
 
         event.preventDefault();
+
+        // Remove highlight from all rows, then add to clicked row.
+        document.querySelectorAll('tr.row-highlight').forEach(r => r.classList.remove('row-highlight'));
+        row.classList.add('row-highlight');
 
         // Find the edit button in this row to get the data attributes.
         const editButton = row.querySelector('[data-action="activity-entry-form"][data-readonly="0"]');
