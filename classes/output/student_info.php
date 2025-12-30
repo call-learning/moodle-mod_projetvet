@@ -112,10 +112,6 @@ class student_info implements renderable, templatable {
                         'label' => get_string('yearincourse', 'mod_projetvet'),
                         'value' => $yearincourse,
                     ],
-                    [
-                        'label' => get_string('tutor', 'mod_projetvet'),
-                        'value' => $tutorname,
-                    ],
                 ],
             ],
             'charts' => [
@@ -124,6 +120,31 @@ class student_info implements renderable, templatable {
                 $this->get_chart_data($completedinterviews, $targetinterviews, get_string('tutorinterview', 'mod_projetvet')),
             ],
         ];
+
+        // Teacher row.
+        $teacherrow = ['label' => get_string('tutor', 'mod_projetvet')];
+        $teacherrow['value'] = $tutorname;
+        $teacherrow['hasbutton'] = $this->isteacher;
+        $teacherrow['buttontext'] = get_string('practicalinfo', 'mod_projetvet');
+        $teacherrow['buttonaction'] = 'activity-entry-form';
+        $teacherrow['cmid'] = $this->cm->id;
+        $teacherrow['projetvetid'] = $this->moduleinstance->id;
+        $teacherrow['studentid'] = $this->studentid;
+        $teacherrow['formsetidnumber'] = 'teacherinfo';
+
+        $teacherformset = form_set::get_record(['idnumber' => 'teacherinfo']);
+        if ($teacherformset) {
+            $teacherentry = form_entry::get_record([
+                'projetvetid' => $this->moduleinstance->id,
+                'studentid' => $this->studentid,
+                'formsetid' => $teacherformset->get('id'),
+            ]);
+            if ($teacherentry) {
+                $teacherrow['entryid'] = $teacherentry->get('id');
+            }
+        }
+
+        $data['infotable']['rows'][] = $teacherrow;
 
         // Thesis subject row.
         $thesisrow = ['label' => get_string('thesissubject', 'mod_projetvet')];

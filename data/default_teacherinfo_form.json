@@ -1,0 +1,55 @@
+{
+  "categories": [
+    {
+      "name": "Teacher Information",
+      "idnumber": "teacher_info",
+      "description": "Teacher practical information",
+      "capability": "approve",
+      "entrystatus": 0,
+      "statusmsg": "draft",
+      "fields": [
+        {
+          "idnumber": "teacher_intro",
+          "name": "Teacher Intro",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "teacher_intro_value"
+          },
+          "capability": "viewteacher",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "teacher_info",
+          "name": "Teacher Information",
+          "type": "textarea",
+          "description": "",
+          "configdata": {
+            "rows": 4,
+            "required": true
+          },
+          "capability": "approve",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
+          "idnumber": "save_teacher_info",
+          "name": "Save",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "save",
+            "icon": "fa-save",
+            "entrystatus": 0,
+            "style": "primary"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        }
+      ]
+    }
+  ]
+}

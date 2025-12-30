@@ -106,6 +106,12 @@ $formsets = [
         'sortorder' => 4,
         'jsonfile' => 'default_mobility_form.json',
     ],
+    'teacherinfo' => [
+        'name' => 'Teacher Information',
+        'description' => 'Teacher practical information form',
+        'sortorder' => 5,
+        'jsonfile' => 'default_teacherinfo_form.json',
+    ],
 ];
 
 // Filter by requested form set if specified.
