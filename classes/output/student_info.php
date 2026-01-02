@@ -157,6 +157,7 @@ class student_info implements renderable, templatable {
         $thesisrow['formsetidnumber'] = 'thesis';
 
         // Get the thesis entry if it exists.
+        $checkedicon = '<i class="fa fa-sm text-success fa-check-square"></i>';
         $thesisformset = form_set::get_record(['idnumber' => 'thesis']);
         if ($thesisformset) {
             $thesisentry = form_entry::get_record([
@@ -171,7 +172,7 @@ class student_info implements renderable, templatable {
                 $entrycontent = entries::get_entry($thesisentry->get('id'));
                 $thesissubject = $this->get_field_value($entrycontent, 'thesissubject_field');
                 if ($thesissubject) {
-                    $thesisrow['value'] = format_text($thesissubject, FORMAT_PLAIN);
+                    $thesisrow['value'] = $checkedicon . ' ' . format_text($thesissubject, FORMAT_PLAIN);
                 }
             } else {
                 $thesisrow['value'] = get_string('nothesissubjectset', 'mod_projetvet');
@@ -206,7 +207,7 @@ class student_info implements renderable, templatable {
                 $mobilityerasmus = $this->get_field_value($entrycontent, 'mobilityerasmus');
                 $mobilityfmp = $this->get_field_value($entrycontent, 'mobilityfmp');
                 if ($mobilityerasmus || $mobilityfmp) {
-                    $mobilityrow['value'] = get_string('mobilityrealized', 'mod_projetvet');
+                    $mobilityrow['value'] = $checkedicon . ' ' . get_string('mobilityrealized', 'mod_projetvet');
                 } else {
                     $mobilityrow['value'] = get_string('mobilitynotrealizedyet', 'mod_projetvet');
                 }
