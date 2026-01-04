@@ -187,7 +187,7 @@ class entries extends system_report {
         // Create column.
         $column = (new column(
             'field_' . $field->idnumber,
-            new lang_string('field_' . $field->idnumber, 'mod_projetvet'),
+            new lang_string('field_' . $field->idnumber . '_column', 'mod_projetvet'),
             'form_entry'
         ))
             ->add_field("{$dataalias}.{$datacolumn}", $fieldalias)

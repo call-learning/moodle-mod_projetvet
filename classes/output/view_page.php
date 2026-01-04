@@ -93,6 +93,8 @@ class view_page implements renderable, templatable {
             $data['activitiesbuttonlabel'] = get_string('newactivities', 'mod_projetvet');
         }
 
+        $data['activitiesinfobox'] = get_string('activitiesinfobox', 'mod_projetvet');
+
         // Create activities report.
         $activitiesreport = \core_reportbuilder\system_report_factory::create(
             \mod_projetvet\reportbuilder\local\systemreports\entries::class,

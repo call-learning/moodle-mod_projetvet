@@ -151,7 +151,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 6
+          "listorder": 0
         },
         {
           "idnumber": "facetoface_message",
@@ -441,7 +441,7 @@
           "configdata": {},
           "capability": "submit",
           "entrystatus": 2,
-          "listorder": 0
+          "listorder": 6
         },
         {
           "idnumber": "status2_date",
