@@ -187,5 +187,19 @@
     "parent": 500,
     "name": "Standardiste / régulateur",
     "sortorder": 2
+  },
+  {
+    "uniqueid": 600,
+    "type": "heading",
+    "parent": 0,
+    "name": "Autre",
+    "sortorder": 6
+  },
+  {
+    "uniqueid": 601,
+    "type": "item",
+    "parent": 600,
+    "name": "Autre",
+    "sortorder": 1
   }
 ]

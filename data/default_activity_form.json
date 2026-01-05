@@ -9,6 +9,19 @@
       "statusmsg": "draft",
       "fields": [
         {
+          "idnumber": "first_forminfo",
+          "name": "Ce projet doit être validé par votre enseignant..",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "first_forminfo_value"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "activity_title",
           "name": "Intitulé de l'activité",
           "type": "text",
@@ -84,7 +97,8 @@
             "optionstrings": {
               "1": "rank_a",
               "2": "rank_b"
-            }
+            },
+            "helpbutton": "true"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -106,7 +120,9 @@
           "type": "tagselect",
           "description": "",
           "configdata": {
-            "maxtags": 5
+            "required": true,
+            "maxtags": 500,
+            "helptext": true
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -169,7 +185,7 @@
         },
         {
           "idnumber": "credits",
-          "name": "Nombre de crédits suggéré après discussion avec le tuteur",
+          "name": "",
           "type": "number",
           "description": "",
           "configdata": {

@@ -400,12 +400,16 @@ class projetvet_form extends dynamic_form {
                     case 'tagselect':
                         // Load grouped options from field_data table.
                         $groupedoptions = field_data::get_grouped_options($field->id);
-                        $options = $configdata['options'] ?? [];
+                        $helptext = '';
+                        if (!empty($configdata['helptext'])) {
+                            $helptext = get_string('field_' . $field->idnumber . '_help', 'mod_projetvet');
+                        }
 
                         $mform->addElement('tagselect', $fieldname, $field->name, [], [
                             'groupedoptions' => $groupedoptions,
                             'rowname' => $field->name,
                             'maxtags' => $configdata['maxtags'] ?? 0,
+                            'helptext' => $helptext,
                         ]);
                         break;
 
@@ -564,6 +568,11 @@ class projetvet_form extends dynamic_form {
                         break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
+
+                $hashelp = !empty($configdata['helpbutton']);
+                if ($hashelp) {
+                    $mform->addHelpButton($fieldname, 'field_' . $field->idnumber, 'mod_projetvet');
+                }
 
                 if ($isrequired && $caneditfield && $field->type !== 'button') {
                     $mform->addRule($fieldname, null, 'required', null, 'client');
