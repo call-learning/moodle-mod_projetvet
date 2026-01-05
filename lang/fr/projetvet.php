@@ -186,8 +186,14 @@ $string['hours_student_intro_value'] = '<p>En fonction du <strong>volume horaire
 $string['insufficient'] = 'Insuffisant';
 $string['internationalmobility'] = 'Mobilité internationale';
 $string['invaliddata'] = 'Données invalides pour {$a}';
+$string['max_ects'] = 'ECTS maximum par activité';
+$string['max_ects_desc'] = 'Le nombre maximum de crédits ECTS qu\'une activité peut attribuer (par défaut : 10)';
+$string['max_ects_warning'] = 'Une activité, quel que soit son volume, ne peut pas excéder {$a} ECTS afin de favoriser la diversité des projets';
 $string['maxselections'] = 'Maximum de {$a} sélections autorisées';
 $string['messageprovider:entry_action_required'] = 'Action requise sur une entrée';
+$string['min_hours'] = 'Heures minimum par activité';
+$string['min_hours_desc'] = 'Le nombre minimum d\'heures qu\'une activité doit représenter pour être éligible (par défaut : 20)';
+$string['min_hours_error'] = 'Pour être éligible au CPP, une activité doit représenter un volume minimal de {$a}h pour pouvoir être convertie en ECTS';
 $string['mobilityformtitle'] = 'Mobilité internationale';
 $string['mobilityinfo_value'] = 'Le critère internationale sera automatiquement validé lorsque un projet contenant l\'option "Mobilité internationale" sera validé par votre tuteur. <br><br>Si vous avez réalisé votre mobilité par le biais d\'une mobilité longue (type ERASMUS) hors CCP ou lors de la FMP de A5, merci de cocher l\'une des cases ci-dessous et de préciser le lieu de cette mobilité.';
 $string['mobilitynotrealizedyet'] = '<i class="fa fa-sm text-warning fa-exclamation-triangle"></i> Non réalisé';

@@ -71,7 +71,27 @@ if ($hassiteconfig) {
                 'mod_projetvet/hours_per_ects',
                 get_string('hours_per_ects', 'mod_projetvet'),
                 get_string('hours_per_ects_desc', 'mod_projetvet'),
-                '30',
+                '27.5',
+                PARAM_INT
+            )
+        );
+
+        $settings->add(
+            new admin_setting_configtext(
+                'mod_projetvet/max_ects',
+                get_string('max_ects', 'mod_projetvet'),
+                get_string('max_ects_desc', 'mod_projetvet'),
+                '10',
+                PARAM_INT
+            )
+        );
+
+        $settings->add(
+            new admin_setting_configtext(
+                'mod_projetvet/min_hours',
+                get_string('min_hours', 'mod_projetvet'),
+                get_string('min_hours_desc', 'mod_projetvet'),
+                '20',
                 PARAM_INT
             )
         );

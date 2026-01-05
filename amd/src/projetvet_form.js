@@ -40,10 +40,35 @@ const getHoursPerEcts = () => {
 };
 
 /**
+ * Get the max ECTS setting from the page config
+ * @returns {number}
+ */
+const getMaxEcts = () => {
+    if (typeof M !== 'undefined' && M.cfg && M.cfg.maxEcts) {
+        return parseInt(M.cfg.maxEcts) || 10;
+    }
+    return 10;
+};
+
+/**
+ * Get the min hours setting from the page config
+ * @returns {number}
+ */
+const getMinHours = () => {
+    if (typeof M !== 'undefined' && M.cfg && M.cfg.minHours) {
+        return parseInt(M.cfg.minHours) || 20;
+    }
+    return 20;
+};
+
+/**
  * Initialize ECTS suggestion listeners
  * @param {number} hoursPerEcts - The hours per ECTS credit ratio
  */
 const initEctsSuggestion = (hoursPerEcts) => {
+    const maxEcts = getMaxEcts();
+    const minHours = getMinHours();
+
     // Find all number inputs with data-action="suggestedects".
     const inputs = document.querySelectorAll('input[type="number"][data-action="suggestedects"]');
 
@@ -53,6 +78,9 @@ const initEctsSuggestion = (hoursPerEcts) => {
             return;
         }
 
+        // Find the rang select element.
+        const rangSelect = document.querySelector('select.custom-select[name="field_6"]');
+
         // Update suggestion when user types.
         const updateSuggestion = async() => {
             const hours = parseFloat(input.value);
@@ -61,13 +89,55 @@ const initEctsSuggestion = (hoursPerEcts) => {
                 return;
             }
 
-            const suggestedEcts = Math.ceil(hours / hoursPerEcts);
+            // Check minimum hours requirement.
+            if (hours < minHours) {
+                const errorMessage = await getString('min_hours_error', 'mod_projetvet', minHours);
+                suggestionDiv.innerHTML = `<div class="alert alert-warning" role="alert">${errorMessage}</div>`;
+                return;
+            }
+
+            // Get the selected rang value.
+            const rangValue = rangSelect ? rangSelect.value : null;
+            let suggestedEcts = 0;
+            let warningMessage = '';
+
+            if (rangValue === '2') {
+                // Rang B: flat rate of 1 ECTS.
+                suggestedEcts = 1;
+            } else if (rangValue === '1') {
+                // Rang A: calculate based on hours.
+                suggestedEcts = Math.ceil(hours / hoursPerEcts);
+
+                // Apply maximum ECTS cap.
+                if (suggestedEcts > maxEcts) {
+                    warningMessage = await getString('max_ects_warning', 'mod_projetvet', maxEcts);
+                    suggestedEcts = maxEcts;
+                }
+            } else {
+                // No rang selected yet, use default calculation.
+                suggestedEcts = Math.ceil(hours / hoursPerEcts);
+                if (suggestedEcts > maxEcts) {
+                    suggestedEcts = maxEcts;
+                }
+            }
+
             const message = await getString('suggested_credits', 'mod_projetvet', suggestedEcts);
-            suggestionDiv.innerHTML = message;
+            let html = message;
+
+            if (warningMessage) {
+                html += `<div class="alert alert-warning mt-2" role="alert">${warningMessage}</div>`;
+            }
+
+            suggestionDiv.innerHTML = html;
         };
 
         // Listen for input changes.
         input.addEventListener('input', updateSuggestion);
+
+        // Listen for rang select changes.
+        if (rangSelect) {
+            rangSelect.addEventListener('change', updateSuggestion);
+        }
 
         // Update immediately if there's already a value.
         if (input.value) {

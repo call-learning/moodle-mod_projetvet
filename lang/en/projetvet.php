@@ -192,8 +192,14 @@ $string['hours_student_intro_value'] = '<p>Based on the <strong>estimated worklo
 $string['insufficient'] = 'Insufficient';
 $string['internationalmobility'] = 'International mobility';
 $string['invaliddata'] = 'Invalid data for {$a}';
+$string['max_ects'] = 'Maximum ECTS per activity';
+$string['max_ects_desc'] = 'The maximum number of ECTS credits an activity can award (default: 10)';
+$string['max_ects_warning'] = 'An activity, regardless of its volume, cannot exceed {$a} ECTS in order to promote diversity of projects';
 $string['maxselections'] = 'Maximum of {$a} selections allowed';
 $string['messageprovider:entry_action_required'] = 'Action required on an entry';
+$string['min_hours'] = 'Minimum hours per activity';
+$string['min_hours_desc'] = 'The minimum number of hours an activity must represent to be eligible (default: 20)';
+$string['min_hours_error'] = 'To be eligible for CPP, an activity must represent a minimum workload of {$a} hours to be converted to ECTS';
 $string['mobilityformtitle'] = 'International Mobility';
 $string['mobilityinfo_value'] = 'The international criterion will be automatically validated when a project containing the "International Mobility" option is validated by your tutor. <br><br>If you completed your mobility through a long-term mobility program (ERASMUS type) outside CCP or during the FMP of A5, please check one of the boxes below and specify the location of this mobility.';
 $string['mobilitynotrealizedyet'] = '<i class="fa fa-sm text-warning fa-exclamation-triangle"></i> Not realized yet';
