@@ -114,47 +114,6 @@ class notifications {
     }
 
     /**
-     * Get the required actor for a given status.
-     *
-     * @param string $formsetidnumber Formset idnumber
-     * @param int $status Entry status
-     * @return string 'student'|'tutor'|'none'
-     */
-    private static function get_required_actor_for_status(string $formsetidnumber, int $status): string {
-        $structure = entries::get_form_structure($formsetidnumber);
-        if (empty($structure)) {
-            return 'none';
-        }
-
-        $maxstatus = 0;
-        foreach ($structure as $category) {
-            $maxstatus = max($maxstatus, (int)$category->entrystatus);
-        }
-
-        // The highest status is considered terminal; no action required.
-        if ($status >= $maxstatus) {
-            return 'none';
-        }
-
-        $caps = [];
-        foreach ($structure as $category) {
-            if ((int)$category->entrystatus === $status) {
-                $caps[] = (string)($category->capability ?? '');
-            }
-        }
-
-        // Prefer tutor-side actions first.
-        if (in_array('approve', $caps, true) || in_array('unlock', $caps, true)) {
-            return 'tutor';
-        }
-        if (in_array('submit', $caps, true)) {
-            return 'student';
-        }
-
-        return 'none';
-    }
-
-    /**
      * Resolve recipients for the actor.
      *
      * @param string $actor 'student'|'tutor'

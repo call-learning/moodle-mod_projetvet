@@ -268,13 +268,6 @@ class entries {
             $data->save();
         }
 
-        // If an entry is created directly in a non-draft status, notify the next actor.
-        if ($entrystatus > 0) {
-            $cm = get_coursemodule_from_instance('projetvet', $projetvetid);
-            if ($cm) {
-                notifications::queue_entry_action_required($entry->get('id'), (int)$cm->id, 0, $entrystatus);
-            }
-        }
         return $entry->get('id');
     }
 
@@ -358,7 +351,6 @@ class entries {
      * @return void
      */
     public static function update_entry(int $entryid, array $fields, ?int $entrystatus = null): void {
-        global $DB;
 
         // Get the entry.
         $entry = form_entry::get_record(['id' => $entryid]);
@@ -414,11 +406,6 @@ class entries {
                 $data->create();
             }
             $data->save();
-        }
-
-        // Queue notification only when the status actually changes.
-        if ($entrystatus !== null && $entrystatus !== $currententrystatus) {
-            notifications::queue_entry_action_required($entryid, (int)$cm->id, $currententrystatus, $entrystatus);
         }
     }
 

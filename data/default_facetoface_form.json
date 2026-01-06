@@ -44,7 +44,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 3
+          "listorder": 5
         },
         {
           "idnumber": "tuteur",
@@ -54,7 +54,8 @@
           "configdata": {
             "readonly": true,
             "string": "tutor_name",
-            "filter": "gettutor"
+            "filter": "gettutor",
+            "columnfilter": "gettutor"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -79,7 +80,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 4
+          "listorder": 6
         }
       ]
     },
@@ -102,7 +103,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 2
+          "listorder": 0
         },
         {
           "idnumber": "compte_rendu",
@@ -110,11 +111,12 @@
           "type": "textarea",
           "description": "",
           "configdata": {
-            "rows": 6
+            "rows": 6,
+            "tickondataentry": true
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 5
+          "listorder": 3
         },
         {
           "idnumber": "personal_notes_intro",
@@ -127,7 +129,7 @@
           },
           "capability": "viewown",
           "entrystatus": 0,
-          "listorder": 2
+          "listorder": 0
         },
         {
           "idnumber": "personal_notes",
@@ -135,11 +137,12 @@
           "type": "textarea",
           "description": "",
           "configdata": {
-            "rows": 6
+            "rows": 6,
+            "tickondataentry": true
           },
           "capability": "viewown",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 4
         },
         {
           "idnumber": "statusf2f0_date_compte_rendu",
@@ -217,7 +220,7 @@
           },
           "capability": "viewteacher",
           "entrystatus": 1,
-          "listorder": 2
+          "listorder": 0
         },
         {
           "idnumber": "teacher_personal_notes",
