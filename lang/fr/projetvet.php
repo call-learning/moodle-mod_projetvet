@@ -224,6 +224,9 @@ $string['notification_action_tutor'] = 'Merci de consulter et de valider l\'entr
 $string['notification_footer'] = 'Vous pouvez modifier vos préférences de notification dans les paramètres de votre profil Moodle.';
 $string['notification_intro_student'] = 'Une entrée Projetvet nécessite votre saisie.';
 $string['notification_intro_tutor'] = 'Une entrée Projetvet de {$a} nécessite votre saisie.';
+$string['notification_intro_tutor'] = 'Action requise pour le projet de {$a}';
+$string['notification_smallmessage'] = '{$a->studentname} a soumis un projet pour validation';
+$string['notification_subject'] = 'ProjetVet - Action requise';
 $string['notification_subject_actionrequired'] = 'Action requise : {$a}';
 $string['notutorassigned'] = 'Aucun tuteur assigné';
 $string['openprojetvet'] = 'Ouvrir Projetvet';
@@ -291,6 +294,7 @@ $string['statusmsg_teacheraccept'] = 'Projet soumis – en attente d’éligibil
 $string['statusmsg_validated'] = 'Bilan soumis – en attente de validation';
 $string['studentactivities'] = 'Activités de {$a}';
 $string['studentname'] = 'Nom de l\'étudiant';
+$string['studentsubmittedactivity'] = '<p><strong>Objet : Soumission du bilan de projet personnel – validation finale et attribution des ECTS</strong></p><p>Bonjour,</p><p><strong>{$a->studentname}</strong>, étudiant(e) que vous tutorez, a soumis le bilan de son projet personnel sur la plateforme <strong>ProjetVet</strong>, à l\'issue de la réalisation de l\'activité.</p><p>Nous vous invitons à examiner les éléments renseignés (bilan, justificatifs, volume horaire réellement effectué) afin de :</p><ul><li><strong>échanger</strong> avec l\'étudiant·e sur le déroulement de l\'activité et les compétences mobilisées ;</li><li><strong>valider</strong> le bilan du projet ;</li><li><strong>attribuer</strong> le nombre définitif de crédits <strong>ECTS</strong>, conformément au cadre des crédits de projet personnel (<strong>CPP</strong>).</li></ul><p>L\'ensemble de ces démarches peut être réalisé directement sur la plateforme <strong>ProjetVet</strong>, via le lien ci-dessous :</p><p><a href="{$a->link}">Accéder au projet sur ProjetVet</a></p><p>Nous vous recommandons vivement de <strong>prendre contact avec l\'étudiant·e</strong> (en présentiel ou à distance) afin d\'échanger sur le bilan, en complément de la validation en ligne.</p><p>Cordialement,<br><i>L\'équipe ProjetVet</i></p>';
 $string['submitandnotify'] = 'Soumettre au tuteur';
 $string['submitted'] = 'Soumis';
 $string['submittotutor'] = 'Soumettre au tuteur';

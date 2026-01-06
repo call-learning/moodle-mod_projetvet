@@ -371,6 +371,19 @@ export const init = async() => {
                 popupField.value = submitpopup;
             }
 
+            // Add teachermessage value if present.
+            const teachermessage = button.dataset.teachermessage;
+            if (teachermessage) {
+                let messageField = form.querySelector('input[name="button_teachermessage"]');
+                if (!messageField) {
+                    messageField = document.createElement('input');
+                    messageField.type = 'hidden';
+                    messageField.name = 'button_teachermessage';
+                    form.appendChild(messageField);
+                }
+                messageField.value = teachermessage;
+            }
+
             // Submit the form.
             form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
         }

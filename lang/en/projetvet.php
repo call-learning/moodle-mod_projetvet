@@ -229,6 +229,8 @@ $string['notification_action_tutor'] = 'Please review and validate the entry.';
 $string['notification_footer'] = 'You can change your notification preferences in your Moodle profile settings.';
 $string['notification_intro_student'] = 'You have a Projetvet entry that requires your input.';
 $string['notification_intro_tutor'] = 'A Projetvet entry from {$a} requires your input.';
+$string['notification_smallmessage'] = '{$a->studentname} has submitted a project for validation';
+$string['notification_subject'] = 'ProjetVet - Action required';
 $string['notification_subject_actionrequired'] = 'Action required: {$a}';
 $string['notutorassigned'] = 'No tutor assigned';
 $string['openprojetvet'] = 'Open Projetvet';
@@ -295,6 +297,7 @@ $string['statusmsg_teacheraccept'] = 'Project submitted – awaiting eligibility
 $string['statusmsg_validated'] = 'Report submitted – awaiting validation';
 $string['studentactivities'] = '{$a}\'s Activities';
 $string['studentname'] = 'Student Name';
+$string['studentsubmittedactivity'] = '<p><strong>Subject: Personal project report submission – final validation and ECTS allocation</strong></p><p>Hello,</p><p><strong>{$a->studentname}</strong>, a student you are tutoring, has submitted their personal project report on the <strong>ProjetVet</strong> platform, following completion of the activity.</p><p>We invite you to review the provided information (report, supporting documents, actual hours spent) in order to:</p><ul><li><strong>discuss</strong> with the student about the activity progress and the competencies mobilized;</li><li><strong>validate</strong> the project report;</li><li><strong>assign</strong> the final number of <strong>ECTS</strong> credits, in accordance with the personal project credits (<strong>CPP</strong>) framework.</li></ul><p>All these steps can be completed directly on the <strong>ProjetVet</strong> platform, via the link below:</p><p><a href="{$a->link}">Access the project on ProjetVet</a></p><p>We strongly recommend that you <strong>contact the student</strong> (in person or remotely) to discuss the report, in addition to the online validation.</p><p>Best regards,<br><i>The ProjetVet team</i></p>';
 $string['submitandnotify'] = 'Submit to teacher';
 $string['submitted'] = 'Submitted';
 $string['submittotutor'] = 'Submit to teacher';

@@ -209,7 +209,6 @@ class entries extends system_report {
                 if (empty($row->{$fieldalias . '_fieldid'})) {
                     return '';
                 }
-
                 // Check if field has tickondataentry configuration.
                 if (!empty($configdata['tickondataentry'])) {
                     // Display a tick if there's any data.

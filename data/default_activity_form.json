@@ -219,7 +219,8 @@
             "icon": "fa-users",
             "entrystatus": 1,
             "style": "primary",
-            "submitpopup": "confirmsubmittotutor"
+            "submitpopup": "confirmsubmittotutor",
+            "teachermessage": "studentsubmittedactivity"
           },
           "capability": "submit",
           "entrystatus": 0,

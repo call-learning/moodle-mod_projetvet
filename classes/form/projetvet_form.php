@@ -144,6 +144,21 @@ class projetvet_form extends dynamic_form {
             $result['submitpopup'] = $data->button_submitpopup;
         }
 
+        // Send notification if teachermessage is configured.
+        if (isset($data->button_teachermessage) && !empty($data->button_teachermessage)) {
+            $studentid = $data->studentid ?? $USER->id;
+            $cmid = $data->cmid;
+            $messagekey = $data->button_teachermessage;
+
+            // Send notification to tutor.
+            \mod_projetvet\local\notifications::send_tutor_notification(
+                $entryid,
+                $studentid,
+                $cmid,
+                $messagekey
+            );
+        }
+
         return $result;
     }
 
@@ -270,6 +285,8 @@ class projetvet_form extends dynamic_form {
         $mform->setType('button_entrystatus', PARAM_INT);
         $mform->addElement('hidden', 'button_submitpopup');
         $mform->setType('button_submitpopup', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'button_teachermessage');
+        $mform->setType('button_teachermessage', PARAM_ALPHANUMEXT);
 
         // Get the context for capability checking.
         $context = context_module::instance($cmid);
@@ -542,6 +559,10 @@ class projetvet_form extends dynamic_form {
 
                         if (!empty($configdata['submitpopup'])) {
                             $buttonattributes['data-submitpopup'] = $configdata['submitpopup'];
+                        }
+
+                        if (!empty($configdata['teachermessage'])) {
+                            $buttonattributes['data-teachermessage'] = $configdata['teachermessage'];
                         }
 
                         // Determine button styling based on style configuration.

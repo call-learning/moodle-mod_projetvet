@@ -23,7 +23,6 @@ use mod_projetvet\local\persistent\form_data;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\form_set;
-use mod_projetvet\local\notifications;
 use moodle_exception;
 use stdClass;
 
