@@ -150,7 +150,29 @@ export const init = async() => {
     // Get the hours per ECTS setting once on init.
     const hoursPerEcts = getHoursPerEcts();
 
-    const submitEventHandler = () => {
+    // Check if there's a stored submitpopup message to display after page reload.
+    const storedPopup = sessionStorage.getItem('projetvet_submitpopup');
+    if (storedPopup) {
+        sessionStorage.removeItem('projetvet_submitpopup');
+        try {
+            const message = await getString(storedPopup, 'mod_projetvet');
+            const closeLabel = await getString('ok', 'core');
+            await Notification.alert('', message, closeLabel);
+        } catch (error) {
+            // Silently fail if there's an error getting the string.
+        }
+    }
+
+    const submitEventHandler = async(event) => {
+        // Check if there's a submitpopup message to display.
+        const submitpopup = event.detail?.submitpopup || null;
+
+        if (submitpopup) {
+            // Store the popup message in sessionStorage to display after reload.
+            sessionStorage.setItem('projetvet_submitpopup', submitpopup);
+        }
+
+        // Reload the page.
         window.location.reload();
     };
 
@@ -335,6 +357,19 @@ export const init = async() => {
                 form.appendChild(buttonField);
             }
             buttonField.value = entrystatus;
+
+            // Add submitpopup value if present.
+            const submitpopup = button.dataset.submitpopup;
+            if (submitpopup) {
+                let popupField = form.querySelector('input[name="button_submitpopup"]');
+                if (!popupField) {
+                    popupField = document.createElement('input');
+                    popupField.type = 'hidden';
+                    popupField.name = 'button_submitpopup';
+                    form.appendChild(popupField);
+                }
+                popupField.value = submitpopup;
+            }
 
             // Submit the form.
             form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));

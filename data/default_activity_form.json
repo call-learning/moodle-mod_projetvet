@@ -218,7 +218,8 @@
             "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 1,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "confirmsubmittotutor"
           },
           "capability": "submit",
           "entrystatus": 0,

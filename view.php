@@ -59,6 +59,12 @@ $PAGE->set_context($context);
 $hoursperects = get_config('mod_projetvet', 'hours_per_ects') ?: 30;
 $PAGE->requires->data_for_js('hoursPerEcts', $hoursperects, true);
 
+// Get max ECTS and min hours settings for JavaScript.
+$maxects = get_config('mod_projetvet', 'max_ects') ?: 10;
+$PAGE->requires->data_for_js('maxEcts', $maxects, true);
+$minhours = get_config('mod_projetvet', 'min_hours') ?: 20;
+$PAGE->requires->data_for_js('minHours', $minhours, true);
+
 // Determine if user can view all activities (teacher or manager).
 $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
 

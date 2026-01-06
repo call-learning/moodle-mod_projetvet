@@ -134,10 +134,17 @@ class projetvet_form extends dynamic_form {
             );
         }
 
-        return [
+        $result = [
             'result' => true,
             'entryid' => $entryid,
         ];
+
+        // Include submitpopup if it was set.
+        if (isset($data->button_submitpopup)) {
+            $result['submitpopup'] = $data->button_submitpopup;
+        }
+
+        return $result;
     }
 
     /**
@@ -261,6 +268,8 @@ class projetvet_form extends dynamic_form {
         $mform->setType('entrystatus', PARAM_INT);
         $mform->addElement('hidden', 'button_entrystatus');
         $mform->setType('button_entrystatus', PARAM_INT);
+        $mform->addElement('hidden', 'button_submitpopup');
+        $mform->setType('button_submitpopup', PARAM_ALPHANUMEXT);
 
         // Get the context for capability checking.
         $context = context_module::instance($cmid);
@@ -529,6 +538,10 @@ class projetvet_form extends dynamic_form {
 
                         if (!empty($buttonaction)) {
                             $buttonattributes['data-action-type'] = $buttonaction;
+                        }
+
+                        if (!empty($configdata['submitpopup'])) {
+                            $buttonattributes['data-submitpopup'] = $configdata['submitpopup'];
                         }
 
                         // Determine button styling based on style configuration.
