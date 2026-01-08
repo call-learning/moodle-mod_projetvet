@@ -76,13 +76,24 @@ class entries {
             foreach ($fields as $field) {
                 // Only include fields for categories in this form set.
                 if (isset($data[$field->get('categoryid')])) {
+                    // Decode configdata once here so all consumers get it as an array.
+                    $configdata = $field->get('configdata');
+                    if (is_string($configdata)) {
+                        $configdata = json_decode(stripslashes($configdata), true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $configdata = [];
+                        }
+                    } else {
+                        $configdata = (array) $configdata;
+                    }
+
                     $data[$field->get('categoryid')]->fields[] = (object) [
                         'id' => $field->get('id'),
                         'idnumber' => $field->get('idnumber'),
                         'name' => get_string('field_' . $field->get('idnumber'), 'mod_projetvet'),
                         'type' => $field->get('type'),
                         'description' => $field->get('description'),
-                        'configdata' => $field->get('configdata'),
+                        'configdata' => $configdata,
                         'capability' => $field->get('capability'),
                         'entrystatus' => $field->get('entrystatus'),
                         'listorder' => $field->get('listorder'),

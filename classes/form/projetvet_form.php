@@ -159,6 +159,21 @@ class projetvet_form extends dynamic_form {
             );
         }
 
+        // Send notification if studentmessage is configured.
+        if (isset($data->button_studentmessage) && !empty($data->button_studentmessage)) {
+            $studentid = $data->studentid ?? $USER->id;
+            $cmid = $data->cmid;
+            $messagekey = $data->button_studentmessage;
+
+            // Send notification to student.
+            \mod_projetvet\local\notifications::send_student_notification(
+                $entryid,
+                $studentid,
+                $cmid,
+                $messagekey
+            );
+        }
+
         return $result;
     }
 
@@ -287,6 +302,10 @@ class projetvet_form extends dynamic_form {
         $mform->setType('button_submitpopup', PARAM_ALPHANUMEXT);
         $mform->addElement('hidden', 'button_teachermessage');
         $mform->setType('button_teachermessage', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'button_studentmessage');
+        $mform->setType('button_studentmessage', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'rang_value');
+        $mform->setType('rang_value', PARAM_INT);
 
         // Get the context for capability checking.
         $context = context_module::instance($cmid);
@@ -316,7 +335,7 @@ class projetvet_form extends dynamic_form {
             $mform->addElement('header', 'category_' . $category->id, $category->name);
 
             // Expand header if category entrystatus matches current entry status.
-            if ($category->entrystatus == $currententrystatus) {
+            if ($category->entrystatus == $currententrystatus || $category->canedit) {
                 $mform->setExpanded('category_' . $category->id, true, true);
                 $hasexpanded = true;
             } else {
@@ -339,16 +358,8 @@ class projetvet_form extends dynamic_form {
                 // Use category-level edit permission for all fields in the category.
                 $caneditfield = $category->canedit;
 
-                // Decode configdata - it may be a string or already decoded.
-                if (is_string($field->configdata)) {
-                    // Remove slashes that may have been added during storage.
-                    $configdata = json_decode(stripslashes($field->configdata), true);
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        $configdata = [];
-                    }
-                } else {
-                    $configdata = (array) $field->configdata;
-                }
+                // configdata is already decoded as array from entries.php.
+                $configdata = (array) $field->configdata;
 
                 switch ($field->type) {
                     case 'text':
@@ -390,6 +401,9 @@ class projetvet_form extends dynamic_form {
                         // Add data-action attribute if present in configdata.
                         if (!empty($configdata['data-action'])) {
                             $attributes['data-action'] = $configdata['data-action'];
+                        }
+                        if (!empty($configdata['data-string'])) {
+                            $attributes['data-string'] = $configdata['data-string'];
                         }
 
                         $mform->addElement('number', $fieldname, $field->name, $attributes);
@@ -565,6 +579,10 @@ class projetvet_form extends dynamic_form {
                             $buttonattributes['data-teachermessage'] = $configdata['teachermessage'];
                         }
 
+                        if (!empty($configdata['studentmessage'])) {
+                            $buttonattributes['data-studentmessage'] = $configdata['studentmessage'];
+                        }
+
                         // Determine button styling based on style configuration.
                         $styleclass = 'btn-' . $buttonstyle;
                         $customclass = 'btn ' . $styleclass;
@@ -694,16 +712,8 @@ class projetvet_form extends dynamic_form {
 
                     // Handle hidden fields with special date formatting.
                     if ($fieldobj->type === 'hidden') {
-                        // Decode configdata if it's a string.
-                        $fieldconfigdata = $fieldobj->configdata;
-                        if (is_string($fieldconfigdata)) {
-                            $fieldconfigdata = json_decode(stripslashes($fieldconfigdata), true);
-                            if (json_last_error() !== JSON_ERROR_NONE) {
-                                $fieldconfigdata = [];
-                            }
-                        } else {
-                            $fieldconfigdata = (array) $fieldconfigdata;
-                        }
+                        // configdata is already decoded as array from entries.php.
+                        $fieldconfigdata = (array) $fieldobj->configdata;
 
                         $action = $fieldconfigdata['action'] ?? '';
                         $dateformat = $fieldconfigdata['dateformat'] ?? 'strftimedatetime';
@@ -775,8 +785,27 @@ class projetvet_form extends dynamic_form {
                         }
                     }
 
+                    // Check if this is a number field with prefillfrom config and no value yet.
+                    if ($fieldobj->type === 'number' && empty($field->value)) {
+                        // configdata is already decoded as array from entries.php.
+                        $fieldconfigdata = (array) $fieldobj->configdata;
+
+                        if (!empty($fieldconfigdata['prefillfrom'])) {
+                            $prefillvalue = $this->get_field_value_by_idnumber($entry, $fieldconfigdata['prefillfrom']);
+                            if ($prefillvalue !== null) {
+                                $fieldvalue = $prefillvalue;
+                            }
+                        }
+                    }
+
                     $data[$fieldname] = $fieldvalue;
                 }
+            }
+
+            // Store rang value in hidden field for ECTS calculation.
+            $rangvalue = $this->get_field_value_by_idnumber($entry, 'rang');
+            if ($rangvalue !== null) {
+                $data['rang_value'] = $rangvalue;
             }
         }
 
@@ -812,6 +841,24 @@ class projetvet_form extends dynamic_form {
         foreach ($structure as $category) {
             if ($category->id == $categoryid) {
                 return $category;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get field value by idnumber from entry object
+     *
+     * @param object $entry The entry object with categories and fields
+     * @param string $idnumber The field idnumber to search for
+     * @return mixed|null The field value if found, null otherwise
+     */
+    private function get_field_value_by_idnumber($entry, $idnumber) {
+        foreach ($entry->categories as $category) {
+            foreach ($category->fields as $field) {
+                if ($field->idnumber === $idnumber) {
+                    return $field->value;
+                }
             }
         }
         return null;

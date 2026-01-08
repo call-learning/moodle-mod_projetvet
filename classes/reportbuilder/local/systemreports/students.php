@@ -114,7 +114,7 @@ class students extends system_report {
         $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
 
         // Fullname with picture.
-        $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
+        $this->add_column($entityuser->get_column('fullnamewithpicture'));
 
         // Promotion (custom profile field) - column 2.
         $promotioncolumn = (new \core_reportbuilder\local\report\column(
@@ -221,7 +221,7 @@ class students extends system_report {
 
         $this->add_column($actionrequiredcolumn);
 
-        $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
+        $this->set_initial_sort_column('user:fullnamewithpicture', SORT_ASC);
     }
 
     /**

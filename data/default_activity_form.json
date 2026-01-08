@@ -163,7 +163,8 @@
           "description": "",
           "configdata": {
             "required": true,
-            "data-action": "suggestedects"
+            "data-action": "suggestedects",
+            "data-string": "suggestedects_hours"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -285,7 +286,9 @@
             "text": "btn_accept",
             "icon": "fa-check",
             "entrystatus": 2,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "confirmacceptance",
+            "studentmessage": "acceptedelegibility"
           },
           "capability": "approve",
           "entrystatus": 1,
@@ -325,13 +328,26 @@
       ]
     },
     {
-      "name": "Compte rendu & validation",
+      "name": "Bilan du projet",
       "idnumber": "report_validation",
       "description": "Section rapport et validation",
       "capability": "submit",
       "entrystatus": 2,
       "statusmsg": "studentadd",
       "fields": [
+        {
+          "idnumber": "third_forminfo",
+          "name": "A l'issue de cette activité..",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "third_forminfo_value"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 0
+        },
         {
           "idnumber": "start_date",
           "name": "Date de début de réalisation",
@@ -456,7 +472,11 @@
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
           "type": "number",
           "description": "",
-          "configdata": {},
+          "configdata": {
+            "prefillfrom": "hours",
+            "data-action": "suggestedects",
+            "data-string": "suggestedects_hours_completed"
+          },
           "capability": "submit",
           "entrystatus": 2,
           "listorder": 6
@@ -483,7 +503,9 @@
             "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 3,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "bilansubmittotutor",
+            "teachermessage": "studentsubmittedbilan"
           },
           "capability": "submit",
           "entrystatus": 2,
@@ -515,12 +537,27 @@
       "statusmsg": "validated",
       "fields": [
         {
+          "idnumber": "fourth_forminfo",
+          "name": "L’attribution finale des crédits",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "fourth_forminfo_value"
+          },
+          "capability": "approve",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "final_ects",
           "name": "Nombre d'ECTS final",
           "type": "number",
           "description": "",
-          "configdata": {},
-          "capability": "submit",
+          "configdata": {
+            "required": true
+          },
+          "capability": "approve",
           "entrystatus": 2,
           "listorder": 7
         },

@@ -88,12 +88,13 @@ class number_element extends MoodleQuickForm_text {
             'max' => $this->getAttribute('max'),
             'step' => $this->getAttribute('step') ?: '1', // Default to 1 for whole numbers.
             'action' => $this->getAttribute('data-action'),
+            'string' => $this->getAttribute('data-string'),
         ];
 
         // Add any additional attributes.
         $extraattributes = [];
         foreach ($this->_attributes as $name => $value) {
-            if (!in_array($name, ['type', 'name', 'id', 'value', 'min', 'max', 'step', 'class', 'data-action'])) {
+            if (!in_array($name, ['type', 'name', 'id', 'value', 'min', 'max', 'step', 'class', 'data-action', 'data-string'])) {
                 $extraattributes[] = $name . '="' . s($value) . '"';
             }
         }

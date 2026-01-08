@@ -28,47 +28,9 @@ import Repository from 'mod_projetvet/repository';
 import Templates from 'core/templates';
 
 /**
- * Get the hours per ECTS setting from the page config
- * @returns {number}
- */
-const getHoursPerEcts = () => {
-    // The value is set via $PAGE->requires->data_for_js() in view.php.
-    if (typeof M !== 'undefined' && M.cfg && M.cfg.hoursPerEcts) {
-        return parseInt(M.cfg.hoursPerEcts) || 30;
-    }
-    return 30;
-};
-
-/**
- * Get the max ECTS setting from the page config
- * @returns {number}
- */
-const getMaxEcts = () => {
-    if (typeof M !== 'undefined' && M.cfg && M.cfg.maxEcts) {
-        return parseInt(M.cfg.maxEcts) || 10;
-    }
-    return 10;
-};
-
-/**
- * Get the min hours setting from the page config
- * @returns {number}
- */
-const getMinHours = () => {
-    if (typeof M !== 'undefined' && M.cfg && M.cfg.minHours) {
-        return parseInt(M.cfg.minHours) || 20;
-    }
-    return 20;
-};
-
-/**
  * Initialize ECTS suggestion listeners
- * @param {number} hoursPerEcts - The hours per ECTS credit ratio
  */
-const initEctsSuggestion = (hoursPerEcts) => {
-    const maxEcts = getMaxEcts();
-    const minHours = getMinHours();
-
+const initEctsSuggestion = () => {
     // Find all number inputs with data-action="suggestedects".
     const inputs = document.querySelectorAll('input[type="number"][data-action="suggestedects"]');
 
@@ -78,8 +40,14 @@ const initEctsSuggestion = (hoursPerEcts) => {
             return;
         }
 
-        // Find the rang select element.
+        // Find the rang select element and hidden fields.
         const rangSelect = document.querySelector('select.custom-select[name="field_6"]');
+        const projetvetidInput = document.querySelector('input[name="projetvetid"]');
+        const studentidInput = document.querySelector('input[name="studentid"]');
+        const entryidInput = document.querySelector('input[name="entryid"]');
+
+        // Get the string identifier from data-string attribute.
+        const stringIdentifier = input.getAttribute('data-string') || '';
 
         // Update suggestion when user types.
         const updateSuggestion = async() => {
@@ -89,46 +57,44 @@ const initEctsSuggestion = (hoursPerEcts) => {
                 return;
             }
 
-            // Check minimum hours requirement.
-            if (hours < minHours) {
-                const errorMessage = await getString('min_hours_error', 'mod_projetvet', minHours);
-                suggestionDiv.innerHTML = `<div class="alert alert-warning" role="alert">${errorMessage}</div>`;
+            // Get projetvetid, studentid, and entryid.
+            const projetvetid = projetvetidInput ? parseInt(projetvetidInput.value) : 0;
+            const studentid = studentidInput ? parseInt(studentidInput.value) : 0;
+            const entryid = entryidInput ? parseInt(entryidInput.value) : 0;
+            const rangvalue = rangSelect ? parseInt(rangSelect.value) || 0 : 0;
+
+            if (!projetvetid || !studentid) {
                 return;
             }
 
-            // Get the selected rang value.
-            const rangValue = rangSelect ? rangSelect.value : null;
-            let suggestedEcts = 0;
-            let warningMessage = '';
+            try {
+                // Call the webservice to get suggested ECTS.
+                const result = await Repository.getSuggestedEcts({
+                    projetvetid: projetvetid,
+                    studentid: studentid,
+                    entryid: entryid,
+                    hours: hours,
+                    stringidentifier: stringIdentifier,
+                    rangvalue: rangvalue,
+                });
 
-            if (rangValue === '2') {
-                // Rang B: flat rate of 1 ECTS.
-                suggestedEcts = 1;
-            } else if (rangValue === '1') {
-                // Rang A: calculate based on hours.
-                suggestedEcts = Math.ceil(hours / hoursPerEcts);
-
-                // Apply maximum ECTS cap.
-                if (suggestedEcts > maxEcts) {
-                    warningMessage = await getString('max_ects_warning', 'mod_projetvet', maxEcts);
-                    suggestedEcts = maxEcts;
+                // Handle error.
+                if (result.error) {
+                    suggestionDiv.innerHTML = `<div class="alert alert-warning" role="alert">${result.error}</div>`;
+                    return;
                 }
-            } else {
-                // No rang selected yet, use default calculation.
-                suggestedEcts = Math.ceil(hours / hoursPerEcts);
-                if (suggestedEcts > maxEcts) {
-                    suggestedEcts = maxEcts;
+
+                // Display the suggestion using the returned message or fallback to simple display.
+                let html = result.message || `<strong>ECTS suggérés : ${result.suggestedects}</strong>`;
+
+                if (result.warning) {
+                    html += `<div class="alert alert-warning mt-2" role="alert">${result.warning}</div>`;
                 }
+
+                suggestionDiv.innerHTML = html;
+            } catch (error) {
+                Notification.exception(error);
             }
-
-            const message = await getString('suggested_credits', 'mod_projetvet', suggestedEcts);
-            let html = message;
-
-            if (warningMessage) {
-                html += `<div class="alert alert-warning mt-2" role="alert">${warningMessage}</div>`;
-            }
-
-            suggestionDiv.innerHTML = html;
         };
 
         // Listen for input changes.
@@ -147,8 +113,6 @@ const initEctsSuggestion = (hoursPerEcts) => {
 };
 
 export const init = async() => {
-    // Get the hours per ECTS setting once on init.
-    const hoursPerEcts = getHoursPerEcts();
 
     // Check if there's a stored submitpopup message to display after page reload.
     const storedPopup = sessionStorage.getItem('projetvet_submitpopup');
@@ -197,7 +161,7 @@ export const init = async() => {
             modalForm.modal.getModal().addClass('modal-fullscreen-form');
             modalForm.modal.getRoot().on('modal:bodyRendered', () => {
                 // Initialize ECTS suggestion listeners.
-                initEctsSuggestion(hoursPerEcts);
+                initEctsSuggestion();
             });
         });
 
@@ -242,7 +206,10 @@ export const init = async() => {
         modalForm.addEventListener(modalForm.events.LOADED, () => {
             modalForm.modal.getModal().addClass('modal-fullscreen-form');
             // Initialize ECTS suggestion listeners.
-            initEctsSuggestion(hoursPerEcts);
+            modalForm.modal.getRoot().on('modal:bodyRendered', () => {
+                // Initialize ECTS suggestion listeners.
+                initEctsSuggestion();
+            });
         });
 
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
@@ -263,11 +230,6 @@ export const init = async() => {
             args: {
                 ...button.dataset,
             },
-        });
-
-        // Initialize ECTS suggestion listeners after modal loads.
-        modalForm.addEventListener(modalForm.events.LOADED, () => {
-            initEctsSuggestion(hoursPerEcts);
         });
 
         // After form submission, reload the subset entries list via AJAX.
@@ -382,6 +344,19 @@ export const init = async() => {
                     form.appendChild(messageField);
                 }
                 messageField.value = teachermessage;
+            }
+
+            // Add studentmessage value if present.
+            const studentmessage = button.dataset.studentmessage;
+            if (studentmessage) {
+                let studentMessageField = form.querySelector('input[name="button_studentmessage"]');
+                if (!studentMessageField) {
+                    studentMessageField = document.createElement('input');
+                    studentMessageField.type = 'hidden';
+                    studentMessageField.name = 'button_studentmessage';
+                    form.appendChild(studentMessageField);
+                }
+                studentMessageField.value = studentmessage;
             }
 
             // Submit the form.

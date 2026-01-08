@@ -72,11 +72,68 @@ class notifications {
         $message->name = 'entry_action_required';
         $message->userfrom = $student;
         $message->userto = $tutor;
-        $message->subject = get_string('notification_subject', 'mod_projetvet');
+        $message->subject = get_string($messagekey . '_subject', 'mod_projetvet');
         $message->fullmessage = html_to_text($messagehtml);
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = $messagehtml;
         $message->smallmessage = get_string('notification_smallmessage', 'mod_projetvet', $messagedata);
+        $message->notification = 1;
+        $message->contexturl = $linkurl->out(false);
+        $message->contexturlname = get_string('openprojetvet', 'mod_projetvet');
+        $message->courseid = $cm->course;
+
+        // Send the message.
+        return message_send($message) !== false;
+    }
+
+    /**
+     * Send notification to student when tutor takes action
+     *
+     * @param int $entryid The entry ID
+     * @param int $studentid The student ID
+     * @param int $cmid The course module ID
+     * @param string $messagekey The language string key for the message
+     * @return bool True if notification sent successfully
+     */
+    public static function send_student_notification(int $entryid, int $studentid, int $cmid, string $messagekey): bool {
+        global $DB;
+
+        // Get the student user object.
+        $student = $DB->get_record('user', ['id' => $studentid], '*', MUST_EXIST);
+
+        // Get the tutor for this student.
+        $tutor = \mod_projetvet\utils::get_student_tutor($studentid, $cmid);
+        if (!$tutor) {
+            // No tutor found - send from noreply.
+            $tutor = \core_user::get_noreply_user();
+        }
+
+        // Get course module to build the link.
+        $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
+
+        // Build the link to the entry.
+        $linkurl = new moodle_url('/mod/projetvet/view.php', [
+            'id' => $cmid,
+        ]);
+
+        // Prepare the message data.
+        $messagedata = new \stdClass();
+        $messagedata->link = $linkurl->out(false);
+
+        // Get the message HTML from language string.
+        $messagehtml = get_string($messagekey, 'mod_projetvet', $messagedata);
+
+        // Create the message object.
+        $message = new message();
+        $message->component = 'mod_projetvet';
+        $message->name = 'entry_action_required';
+        $message->userfrom = $tutor;
+        $message->userto = $student;
+        $message->subject = get_string($messagekey . '_subject', 'mod_projetvet');
+        $message->fullmessage = html_to_text($messagehtml);
+        $message->fullmessageformat = FORMAT_HTML;
+        $message->fullmessagehtml = $messagehtml;
+        $message->smallmessage = get_string('notification_smallmessage_student', 'mod_projetvet');
         $message->notification = 1;
         $message->contexturl = $linkurl->out(false);
         $message->contexturlname = get_string('openprojetvet', 'mod_projetvet');

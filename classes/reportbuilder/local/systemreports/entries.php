@@ -199,8 +199,8 @@ class entries extends system_report {
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(true)
             ->add_callback(static function ($value, $row) use ($fieldpersistent, $fieldalias, $studentid, $cmid): string {
-                // Check if field has a columnfilter configuration.
-                $configdata = json_decode(stripslashes($fieldpersistent->get('configdata')), true);
+                // configdata is already decoded as array from entries.php.
+                $configdata = (array) $fieldpersistent->get('configdata');
                 if (!empty($configdata['columnfilter'])) {
                     // Apply the filter to get the display value.
                     return \mod_projetvet\utils::get_filter($configdata['columnfilter'], $studentid, $cmid);

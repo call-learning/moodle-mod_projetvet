@@ -42,4 +42,12 @@ $functions = [
         'ajax'          => true,
         'capabilities'  => 'mod/projetvet:view',
     ],
+    'mod_projetvet_get_suggested_ects' => [
+        'classname'     => 'mod_projetvet\external\suggested_ects',
+        'methodname'    => 'execute',
+        'description'   => 'Get suggested ECTS credits for given hours and rang',
+        'type'          => 'read',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:view',
+    ],
 ];

@@ -62,6 +62,23 @@ class Repository {
 
         return promise;
     }
+
+    /**
+     * Get suggested ECTS for given hours and rang.
+     * @param {Object} args The arguments containing projetvetid, studentid, entryid, hours, stringidentifier.
+     * @return {Promise} The promise.
+     */
+    getSuggestedEcts(args) {
+        const request = {
+            methodname: 'mod_projetvet_get_suggested_ects',
+            args: args
+        };
+
+        let promise = Ajax.call([request])[0]
+            .fail(Notification.exception);
+
+        return promise;
+    }
 }
 
 const RepositoryInstance = new Repository();
