@@ -213,6 +213,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "statusact_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "submit_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
           "type": "button",
@@ -274,6 +286,18 @@
           "configdata": {
             "dateformat": "strftimedatemonthtimeshort",
             "action": "setcurrentdate"
+          },
+          "capability": "approve",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
+          "idnumber": "status1_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
           },
           "capability": "approve",
           "entrystatus": 1,
@@ -497,6 +521,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "status2_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "submit",
+          "entrystatus": 2,
+          "listorder": 0
+        },
+        {
           "idnumber": "final_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
           "type": "button",
@@ -589,13 +625,15 @@
               "1": "Excellent",
               "2": "Bien",
               "3": "Satisfaisant",
-              "4": "Insuffisant"
+              "4": "Insuffisant",
+              "5": "Échec"
             },
             "optionstrings": {
               "1": "excellent",
               "2": "good",
               "3": "satisfactory",
-              "4": "insufficient"
+              "4": "insufficient",
+              "5": "fail"
             }
           },
           "capability": "approve",
@@ -616,6 +654,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "status3_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
           "idnumber": "validate_button",
           "name": "Valider définitivement",
           "type": "button",
@@ -624,7 +674,9 @@
             "text": "btn_validate_final",
             "icon": "fa-check-circle",
             "entrystatus": 4,
-            "style": "success"
+            "style": "success",
+            "submitpopup": "confirmvalidationfinal",
+            "teachermessage": "studentvalidatedfinal"
           },
           "capability": "approve",
           "entrystatus": 3,

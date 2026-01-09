@@ -229,7 +229,7 @@ class projetvet_form extends dynamic_form {
      * @return void
      */
     protected function definition() {
-        global $CFG;
+        global $CFG, $USER;
         $mform = $this->_form;
 
         // Set vertical display mode.
@@ -535,6 +535,17 @@ class projetvet_form extends dynamic_form {
                                 // Add a static element placeholder that will be populated with formatted date.
                                 $mform->addElement('static', $fieldname . '_static', $field->name, '');
                             }
+                        } else if ($action === 'setcurrentuser') {
+                            // Only add this hidden field if category entrystatus matches current entry status.
+                            if ($category->entrystatus == $currententrystatus && $category->canedit) {
+                                $mform->addElement('hidden', $fieldname);
+                                $mform->setType($fieldname, PARAM_INT);
+                                $mform->setDefault($fieldname, $USER->id);
+                            } else {
+                                // If not current entrystatus, it will be displayed as static text in set_data.
+                                // Add a static element placeholder that will be populated with formatted date.
+                                $mform->addElement('static', $fieldname . '_static', $field->name, '');
+                            }
                         } else {
                             // For other hidden fields, add them normally.
                             $mform->addElement('hidden', $fieldname);
@@ -737,9 +748,23 @@ class projetvet_form extends dynamic_form {
                                 // Use existing value if set, otherwise use current time.
                                 $fieldvalue = !empty($field->value) ? $field->value : time();
                                 $data[$fieldname] = $fieldvalue;
+                                $data[$fieldname . '_user'] = $USER->id;
                             } else if (!empty($field->value)) {
                                 // Display as static formatted date for past entrystatus.
                                 $data[$fieldname . '_static'] = userdate($field->value, get_string($dateformat, 'langconfig'));
+                            }
+                            // Skip further processing.
+                            continue;
+                        } else if ($action === 'setcurrentuser') {
+                            // Only set value if category entrystatus matches current entry status.
+                            if ($categoryobj && $categoryobj->entrystatus == $currententrystatus) {
+                                // Use existing value if set, otherwise use current user.
+                                $fieldvalue = !empty($field->value) ? $field->value : $USER->id;
+                                $data[$fieldname] = $fieldvalue;
+                            } else if (!empty($field->value)) {
+                                // Display as static user fullname for past entrystatus.
+                                $user = \core_user::get_user($field->value);
+                                $data[$fieldname . '_static'] = fullname($user);
                             }
                             // Skip further processing.
                             continue;
