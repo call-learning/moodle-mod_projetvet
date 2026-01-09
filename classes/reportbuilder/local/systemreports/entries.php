@@ -312,7 +312,7 @@ class entries extends system_report {
             )));
         }
 
-        // Delete action (for students viewing their own entries).
+        // Delete action (for students viewing their own entries with entrystatus 0).
         if (!$isteacher) {
             $this->add_action((new action(
                 new moodle_url('#'),
@@ -323,7 +323,11 @@ class entries extends system_report {
                 ],
                 false,
                 new lang_string('delete'),
-            )));
+            ))
+                ->add_callback(static function(\stdClass $row): bool {
+                    return ($row->entrystatus == 0 || $row->entrystatus == 1);
+                })
+            );
         }
     }
 

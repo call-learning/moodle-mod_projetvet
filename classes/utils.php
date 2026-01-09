@@ -430,6 +430,14 @@ class utils {
             $a->hours = $hours;
             $a->finalects = $finalects;
             $message = get_string($stringidentifier, 'mod_projetvet', $a);
+
+            if (preg_match_all('/\[([a-z]+)\]/', $message, $matches)) {
+                foreach ($matches[1] as $filter) {
+                    $cmid = get_coursemodule_from_instance('projetvet', $projetvetid)->id;
+                    $filtervalue = self::get_filter($filter, $studentid, $cmid);
+                    $message = str_replace('[' . $filter . ']', $filtervalue, $message);
+                }
+            }
         }
 
         return [

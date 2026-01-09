@@ -41,7 +41,7 @@ const initEctsSuggestion = () => {
         }
 
         // Find the rang select element and hidden fields.
-        const rangSelect = document.querySelector('select.custom-select[name="field_6"]');
+        const rangSelect = document.querySelector('select.custom-select[name="field_rang"]');
         const projetvetidInput = document.querySelector('input[name="projetvetid"]');
         const studentidInput = document.querySelector('input[name="studentid"]');
         const entryidInput = document.querySelector('input[name="entryid"]');
@@ -122,12 +122,12 @@ const initEctsSuggestion = () => {
         }
 
         // Find the rang select element and hidden fields.
-        const rangSelect = document.querySelector('select.custom-select[name="field_6"]');
+        const rangSelect = document.querySelector('select.custom-select[name="field_rang"]');
         const projetvetidInput = document.querySelector('input[name="projetvetid"]');
         const studentidInput = document.querySelector('input[name="studentid"]');
         const entryidInput = document.querySelector('input[name="entryid"]');
-        const hoursInput = document.querySelector('input[type="number"][name="field_33"]');
-        const finalInput = document.querySelector('input[type="number"][name="field_37"]');
+        const hoursInput = document.querySelector('input[type="number"][name="field_hours_completed"]');
+        const finalInput = document.querySelector('input[type="number"][name="field_final_ects"]');
 
         // Get the string identifier from data-string attribute.
         const stringIdentifier = element.getAttribute('data-string') || '';

@@ -75,7 +75,7 @@ class projetvet_form extends dynamic_form {
             if ($category->canedit) {
                 // Only collect fields from categories the user can edit.
                 foreach ($category->fields as $field) {
-                    $fieldname = 'field_' . $field->id;
+                    $fieldname = 'field_' . $field->idnumber;
                     if (isset($data->$fieldname)) {
                         $fields[$field->id] = $data->$fieldname;
                     }
@@ -89,7 +89,7 @@ class projetvet_form extends dynamic_form {
             if ($category->canedit) {
                 foreach ($category->fields as $field) {
                     if ($field->type === 'filemanager' && !empty($data->entryid)) {
-                        $fieldname = 'field_' . $field->id;
+                        $fieldname = 'field_' . $field->idnumber;
                         if (isset($data->$fieldname)) {
                             // The itemid in the entry becomes the permanent storage location.
                             // We use the field->id combined with entryid to create a unique itemid.
@@ -346,7 +346,7 @@ class projetvet_form extends dynamic_form {
             $buttonelements = [];
 
             foreach ($category->fields as $field) {
-                $fieldname = 'field_' . $field->id;
+                $fieldname = 'field_' . $field->idnumber;
 
                 // Check if user can view this field.
                 $canviewfield = entries::can_view_field($field, $studentid, $context);
@@ -715,7 +715,7 @@ class projetvet_form extends dynamic_form {
                 $categoryobj = $this->get_category_by_id($structure, $category->id);
 
                 foreach ($category->fields as $field) {
-                    $fieldname = 'field_' . $field->id;
+                    $fieldname = 'field_' . $field->idnumber;
                     $fieldobj = $this->get_field_by_id($structure, $field->id);
 
                     if (!$fieldobj) {

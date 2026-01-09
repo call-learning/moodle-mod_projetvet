@@ -6,7 +6,7 @@
       "description": "Informations générales sur l'entretien",
       "capability": "submit",
       "entrystatus": 0,
-      "statusmsg": "draft",
+      "statusmsg": "f2fdraft",
       "fields": [
         {
           "idnumber": "date_entretien",
@@ -76,7 +76,8 @@
               "1": "face_to_face",
               "2": "video_call",
               "3": "phone_call"
-            }
+            },
+            "required": true
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -166,7 +167,9 @@
             "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 1,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "entretienconfirm",
+            "teachermessage": "studentsubmittedentretien"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -195,7 +198,7 @@
       "description": "Validation de l'entretien par le tuteur",
       "capability": "approve",
       "entrystatus": 1,
-      "statusmsg": "teacheraccept",
+      "statusmsg": "f2fteacheraccept",
       "fields": [
         {
           "idnumber": "entretien_validation_comments",
@@ -270,7 +273,7 @@
       "description": "Activité verrouillée",
       "capability": "unlock",
       "entrystatus": 2,
-      "statusmsg": "locked",
+      "statusmsg": "f2flocked",
       "fields": [
         {
           "idnumber": "facetoface_locked",

@@ -583,7 +583,8 @@
             "readonly": true,
             "string": "field_fourth_forminfo",
             "data-action": "getects",
-            "data-string": "fourth_forminfo_value"
+            "data-string": "fourth_forminfo_value",
+            "filter": "getsuggestedectsfile"
           },
           "capability": "approve",
           "entrystatus": 0,
@@ -676,7 +677,7 @@
             "entrystatus": 4,
             "style": "success",
             "submitpopup": "confirmvalidationfinal",
-            "teachermessage": "studentvalidatedfinal"
+            "teachermessage": "teachervalidatedfinal"
           },
           "capability": "approve",
           "entrystatus": 3,

@@ -138,9 +138,9 @@ class entries {
             // Determine canedit based on capability rules.
             $category->canedit = false;
 
-            if ($hasunlock) {
+            if ($hasunlock && $category->capability === 'unlock') {
                 // Users with unlock can only edit unlock categories.
-                $category->canedit = ($category->capability === 'unlock');
+                $category->canedit = true;
             } else if ($hasapprove && $category->entrystatus == $entrystatus) {
                 // Users with approve (but not unlock) can edit approve and submit categories.
                 $category->canedit = ($category->capability === 'approve');

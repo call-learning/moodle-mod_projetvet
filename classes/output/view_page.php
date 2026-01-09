@@ -118,6 +118,8 @@ class view_page implements renderable, templatable {
             $data['facetofacebuttonlabel'] = get_string('newfacetoface', 'mod_projetvet');
         }
 
+        $data['facetofaceinfobox'] = get_string('facetofaceinfobox', 'mod_projetvet');
+
         // Create facetoface report.
         $facetofacereport = \core_reportbuilder\system_report_factory::create(
             \mod_projetvet\reportbuilder\local\systemreports\entries::class,
