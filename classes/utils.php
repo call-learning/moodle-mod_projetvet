@@ -315,6 +315,7 @@ class utils {
      * @param float $hours Number of hours
      * @param string $stringidentifier The language string identifier for the message
      * @param int $rangvalue The rang value (0 = fetch from entry, 1 = A, 2 = B)
+     * @param float|null $finalects The final ECTS value (optional)
      * @return array Array with 'suggestedects', 'message', 'warning', and 'error' keys
      */
     public static function get_suggested_ects(
@@ -323,8 +324,12 @@ class utils {
         int $entryid,
         float $hours,
         string $stringidentifier = '',
-        int $rangvalue = 0
+        int $rangvalue = 0,
+        ?float $finalects = 0
     ): array {
+        // Handle null finalects.
+        $finalects = $finalects ?? 0;
+
         // Get configuration values.
         $hoursperects = (int) get_config('mod_projetvet', 'hours_per_ects') ?: 30;
         $maxects = (int) get_config('mod_projetvet', 'max_ects') ?: 10;
@@ -422,6 +427,8 @@ class utils {
             $a = new \stdClass();
             $a->after = $suggestedects;
             $a->before = $beforeects;
+            $a->hours = $hours;
+            $a->finalects = $finalects;
             $message = get_string($stringidentifier, 'mod_projetvet', $a);
         }
 

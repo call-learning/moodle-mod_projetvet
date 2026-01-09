@@ -45,6 +45,15 @@ class html_element extends MoodleQuickForm_static {
     /** @var int The course module ID */
     protected $cmid = 0;
 
+    /** @var string The data-action attribute */
+    protected $dataaction = '';
+
+    /** @var string The data-string attribute */
+    protected $datastring = '';
+
+    /** @var string The filter name */
+    protected $filter = '';
+
     /**
      * Constructor
      *
@@ -66,6 +75,15 @@ class html_element extends MoodleQuickForm_static {
             }
             if (isset($attributes['cmid'])) {
                 $this->cmid = $attributes['cmid'];
+            }
+            if (isset($attributes['data-action'])) {
+                $this->dataaction = $attributes['data-action'];
+            }
+            if (isset($attributes['data-string'])) {
+                $this->datastring = $attributes['data-string'];
+            }
+            if (isset($attributes['filter'])) {
+                $this->filter = $attributes['filter'];
             }
         }
 
@@ -107,6 +125,8 @@ class html_element extends MoodleQuickForm_static {
             'id' => $this->getAttribute('id'),
             'label' => $this->getLabel(),
             'content' => $content,
+            'action' => $this->dataaction,
+            'string' => $this->datastring,
         ];
 
         return $context;

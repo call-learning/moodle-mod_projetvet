@@ -191,7 +191,9 @@
           "description": "",
           "configdata": {
             "max": 5,
-            "required": true
+            "required": true,
+            "data-action": "validateects",
+            "data-string": "validateects"
           },
           "capability": "viewteacher",
           "entrystatus": 0,
@@ -543,7 +545,9 @@
           "description": "",
           "configdata": {
             "readonly": true,
-            "string": "fourth_forminfo_value"
+            "string": "field_fourth_forminfo",
+            "data-action": "getects",
+            "data-string": "fourth_forminfo_value"
           },
           "capability": "approve",
           "entrystatus": 0,
@@ -555,7 +559,9 @@
           "type": "number",
           "description": "",
           "configdata": {
-            "required": true
+            "required": true,
+            "data-action": "validateects",
+            "data-string": "validateects"
           },
           "capability": "approve",
           "entrystatus": 2,

@@ -65,7 +65,7 @@ class Repository {
 
     /**
      * Get suggested ECTS for given hours and rang.
-     * @param {Object} args The arguments containing projetvetid, studentid, entryid, hours, stringidentifier.
+     * @param {Object} args The arguments containing projetvetid, studentid, entryid, hours, stringidentifier, rangvalue, finalects.
      * @return {Promise} The promise.
      */
     getSuggestedEcts(args) {

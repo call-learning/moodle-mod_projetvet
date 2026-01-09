@@ -38,6 +38,7 @@ class suggested_ects extends external_api {
      * @param float $hours The number of hours
      * @param string $stringidentifier The language string identifier for the message
      * @param int $rangvalue The rang value (0 = fetch from entry, 1 = A, 2 = B)
+     * @param float|null $finalects The final ECTS value (optional)
      * @return array
      */
     public static function execute(
@@ -46,7 +47,8 @@ class suggested_ects extends external_api {
         int $entryid,
         float $hours,
         string $stringidentifier = '',
-        int $rangvalue = 0
+        int $rangvalue = 0,
+        ?float $finalects = 0
     ): array {
         $params = self::validate_parameters(
             self::execute_parameters(),
@@ -57,6 +59,7 @@ class suggested_ects extends external_api {
                 'hours' => $hours,
                 'stringidentifier' => $stringidentifier,
                 'rangvalue' => $rangvalue,
+                'finalects' => $finalects,
             ]
         );
 
@@ -72,7 +75,8 @@ class suggested_ects extends external_api {
             $params['entryid'],
             $params['hours'],
             $params['stringidentifier'],
-            $params['rangvalue']
+            $params['rangvalue'],
+            $params['finalects']
         );
     }
 
@@ -89,6 +93,7 @@ class suggested_ects extends external_api {
             'hours' => new external_value(PARAM_FLOAT, 'Number of hours', VALUE_REQUIRED),
             'stringidentifier' => new external_value(PARAM_TEXT, 'Language string identifier', VALUE_DEFAULT, ''),
             'rangvalue' => new external_value(PARAM_INT, 'Rang value (0=fetch from entry, 1=A, 2=B)', VALUE_DEFAULT, 0),
+            'finalects' => new external_value(PARAM_FLOAT, 'Final ECTS value', VALUE_DEFAULT, 0),
         ]);
     }
 

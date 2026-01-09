@@ -612,11 +612,24 @@ class projetvet_form extends dynamic_form {
                         // Get HTML configuration.
                         $stringkey = $configdata['string'] ?? '';
 
-                        $mform->addElement('html', $fieldname, $field->name, '', [
+                        $attributes = [
                             'stringkey' => $stringkey,
                             'studentid' => $studentid,
                             'cmid' => $cmid,
-                        ]);
+                        ];
+
+                        // Add data-action attribute if present in configdata.
+                        if (!empty($configdata['data-action'])) {
+                            $attributes['data-action'] = $configdata['data-action'];
+                        }
+                        if (!empty($configdata['data-string'])) {
+                            $attributes['data-string'] = $configdata['data-string'];
+                        }
+                        if (!empty($configdata['filter'])) {
+                            $attributes['filter'] = $configdata['filter'];
+                        }
+
+                        $mform->addElement('html', $fieldname, $field->name, '', $attributes);
                         break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;

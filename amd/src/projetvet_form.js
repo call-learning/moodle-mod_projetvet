@@ -76,6 +76,7 @@ const initEctsSuggestion = () => {
                     hours: hours,
                     stringidentifier: stringIdentifier,
                     rangvalue: rangvalue,
+                    finalects: 0,
                 });
 
                 // Handle error.
@@ -108,6 +109,133 @@ const initEctsSuggestion = () => {
         // Update immediately if there's already a value.
         if (input.value) {
             updateSuggestion();
+        }
+    });
+
+    // Find all HTML elements with data-action="getects".
+    const htmlElements = document.querySelectorAll('[data-action="getects"]');
+
+    htmlElements.forEach(element => {
+        const suggestionDiv = document.getElementById(element.id + '_suggestion');
+        if (!suggestionDiv) {
+            return;
+        }
+
+        // Find the rang select element and hidden fields.
+        const rangSelect = document.querySelector('select.custom-select[name="field_6"]');
+        const projetvetidInput = document.querySelector('input[name="projetvetid"]');
+        const studentidInput = document.querySelector('input[name="studentid"]');
+        const entryidInput = document.querySelector('input[name="entryid"]');
+        const hoursInput = document.querySelector('input[type="number"][name="field_33"]');
+        const finalInput = document.querySelector('input[type="number"][name="field_37"]');
+
+        // Get the string identifier from data-string attribute.
+        const stringIdentifier = element.getAttribute('data-string') || '';
+
+        // Update suggestion when dependent fields change.
+        const updateSuggestion = async() => {
+            const hours = hoursInput ? parseFloat(hoursInput.value) : 0;
+            const finalects = finalInput ? parseFloat(finalInput.value) : 0;
+
+            if (isNaN(hours) || hours <= 0) {
+                suggestionDiv.innerHTML = '';
+                return;
+            }
+
+            // Get projetvetid, studentid, and entryid.
+            const projetvetid = projetvetidInput ? parseInt(projetvetidInput.value) : 0;
+            const studentid = studentidInput ? parseInt(studentidInput.value) : 0;
+            const entryid = entryidInput ? parseInt(entryidInput.value) : 0;
+            const rangvalue = rangSelect ? parseInt(rangSelect.value) || 0 : 0;
+
+            if (!projetvetid || !studentid) {
+                return;
+            }
+
+            try {
+                // Call the webservice to get suggested ECTS.
+                const result = await Repository.getSuggestedEcts({
+                    projetvetid: projetvetid,
+                    studentid: studentid,
+                    entryid: entryid,
+                    hours: hours,
+                    stringidentifier: stringIdentifier,
+                    rangvalue: rangvalue,
+                    finalects: finalects,
+                });
+
+                // Handle error.
+                if (result.error) {
+                    suggestionDiv.innerHTML = `<div class="alert alert-warning" role="alert">${result.error}</div>`;
+                    return;
+                }
+
+                // Display the suggestion using the returned message.
+                let html = result.message || '';
+
+                if (result.warning) {
+                    html += `<div class="alert alert-warning mt-2" role="alert">${result.warning}</div>`;
+                }
+
+                suggestionDiv.innerHTML = html;
+
+                // Set finalInput to suggestedects if it doesn't have a value yet.
+                if (finalInput && !finalInput.value) {
+                    finalInput.value = result.suggestedects;
+                }
+            } catch (error) {
+                Notification.exception(error);
+            }
+        };
+
+        // Listen for input changes on hours field.
+        if (hoursInput) {
+            hoursInput.addEventListener('input', updateSuggestion);
+        }
+
+        // Listen for rang select changes.
+        if (rangSelect) {
+            rangSelect.addEventListener('change', updateSuggestion);
+        }
+
+        // Update immediately if there are already values.
+        if (hoursInput && hoursInput.value) {
+            updateSuggestion();
+        }
+    });
+
+    // Find all HTML elements with data-action="validateects".
+    const validateElements = document.querySelectorAll('[data-action="validateects"]');
+
+    validateElements.forEach(element => {
+        const suggestionDiv = document.getElementById(element.id + '_suggestion');
+        if (!suggestionDiv) {
+            return;
+        }
+        const stringIdentifier = element.getAttribute('data-string') || '';
+
+        // Update validation message when final ECTS input changes.
+        const updateValidation = async() => {
+            const finalects = element ? parseFloat(element.value) : 0;
+            suggestionDiv.innerHTML = '';
+            if (finalects > 10) {
+                suggestionDiv.innerHTML = await getString(stringIdentifier, 'mod_projetvet');
+                return;
+            }
+            // Check if decimals are used.
+            if (finalects % 1 !== 0) {
+                suggestionDiv.innerHTML = await getString('nodecimals', 'mod_projetvet');
+                return;
+            }
+            suggestionDiv.innerHTML = '';
+        };
+
+        // Listen for input changes on the element
+        element.addEventListener('input', updateValidation);
+
+        // Update immediately if there is already a value.
+        if (element.value) {
+            updateValidation();
         }
     });
 };

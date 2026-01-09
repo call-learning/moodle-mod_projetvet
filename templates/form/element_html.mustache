@@ -24,11 +24,16 @@
         "id": "id_field_123",
         "name": "field_123",
         "label": "Tutor",
-        "content": "Henry Chateau<br>Si le tuteur n'est pas le bon, contacter la DEVE"
+        "content": "Henry Chateau<br>Si le tuteur n'est pas le bon, contacter la DEVE",
+        "action": "suggestedects",
+        "string": "suggestedects_hours"
     }
 }}
-<div class="form-html-display" id="{{id}}_container">
+<div class="form-html-display" id="{{id}}"
+     {{#action}}data-action="{{action}}"{{/action}}
+     {{#string}}data-string="{{string}}"{{/string}}>
     <div class="form-html-content">
         {{{content}}}
     </div>
+    {{#action}}<div class="mt-1 text-muted" id="{{id}}_suggestion"></div>{{/action}}
 </div>

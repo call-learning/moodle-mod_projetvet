@@ -147,7 +147,7 @@ class entries {
             } else if (
                 $hasapprove && $category->capability === 'submit' &&
                 get_config('mod_projetvet', 'allow_edit_previous_status') &&
-                $category->entrystatus == ($entrystatus - 1)
+                $category->entrystatus == ($entrystatus - 1) || $entrystatus === 3
             ) {
                 // Users with approve can edit submit categories from previous status if setting is enabled.
                 $category->canedit = true;
