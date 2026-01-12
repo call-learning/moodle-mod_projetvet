@@ -136,7 +136,7 @@ class behat_mod_projetvet extends behat_base {
      */
     public function i_select_tag_in_tagselect_popup($tagname) {
         // Find the tagselect popup.
-        $popup = $this->find('css', '[data-region="tagselect-popup"]');
+        $popup = $this->find('css', '[data-region="tagselect-popup"]:not(.d-none)');
 
         if (!$popup) {
             throw new ElementNotFoundException(
@@ -152,6 +152,7 @@ class behat_mod_projetvet extends behat_base {
         $found = false;
 
         foreach ($tags as $tag) {
+            $text = $tag->getText();
             if (stripos($tag->getText(), $tagname) !== false) {
                 $tag->click();
                 $found = true;
@@ -176,7 +177,7 @@ class behat_mod_projetvet extends behat_base {
      * @throws ExpectationException
      */
     public function i_save_tags_in_tagselect_popup() {
-        $popup = $this->find('css', '[data-region="tagselect-popup"]');
+        $popup = $this->find('css', '[data-region="tagselect-popup"]:not(.d-none)');
 
         if (!$popup) {
             throw new ElementNotFoundException(
@@ -195,6 +196,23 @@ class behat_mod_projetvet extends behat_base {
         );
 
         $savebutton->click();
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Submits the projetvet form
+     *
+     * @Given /^I submit the projetvet form$/
+     * @throws ExpectationException
+     */
+    public function i_submit_the_projetvet_form() {
+        $submitbutton = $this->find(
+            'css',
+            'button.btn-primary.projetvet-form-button',
+            new ExpectationException('Submit button not found', $this->getSession())
+        );
+
+        $submitbutton->click();
         $this->wait_for_pending_js();
     }
 
@@ -433,5 +451,48 @@ class behat_mod_projetvet extends behat_base {
                 $this->getSession()
             );
         }
+    }
+
+    /**
+     * Waits for and closes a notification alert modal
+     *
+     * @Given /^I close the notification alert$/
+     * @throws ExpectationException
+     */
+    public function i_close_the_notification_alert() {
+        // Wait for the modal to appear.
+        $this->wait_for_pending_js();
+
+        // Find the modal footer with the OK button.
+        $modalfooter = $this->find(
+            'css',
+            '.modal.show .modal-footer'
+        );
+
+        if (!$modalfooter) {
+            throw new ElementNotFoundException(
+                $this->getSession(),
+                'Modal footer',
+                'css',
+                '.modal.show .modal-footer'
+            );
+        }
+
+        // Find the cancel button (which is the OK button in alert modals).
+        $button = $modalfooter->find('css', 'button[data-action="cancel"]');
+
+        if (!$button) {
+            throw new ElementNotFoundException(
+                $this->getSession(),
+                'Alert OK button',
+                'css',
+                'button[data-action="cancel"]'
+            );
+        }
+
+        // Ensure button is visible and clickable.
+        $this->ensure_node_is_visible($button);
+        $button->click();
+        $this->wait_for_pending_js();
     }
 }

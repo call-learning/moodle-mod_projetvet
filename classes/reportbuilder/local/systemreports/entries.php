@@ -199,7 +199,6 @@ class entries extends system_report {
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(true)
             ->add_callback(static function ($value, $row) use ($fieldpersistent, $fieldalias, $studentid, $cmid): string {
-                // configdata is already decoded as array from entries.php.
                 $configdata = (array) $fieldpersistent->get('configdata');
                 if (!empty($configdata['columnfilter'])) {
                     // Apply the filter to get the display value.
@@ -324,10 +323,9 @@ class entries extends system_report {
                 false,
                 new lang_string('delete'),
             ))
-                ->add_callback(static function(\stdClass $row): bool {
+                ->add_callback(static function (\stdClass $row): bool {
                     return ($row->entrystatus == 0 || $row->entrystatus == 1);
-                })
-            );
+                }));
         }
     }
 

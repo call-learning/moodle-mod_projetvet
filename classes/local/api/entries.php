@@ -138,7 +138,7 @@ class entries {
             // Determine canedit based on capability rules.
             $category->canedit = false;
 
-            if ($hasunlock && $category->capability === 'unlock') {
+            if ($hasunlock && $category->capability === 'unlock' && $category->entrystatus === $entrystatus) {
                 // Users with unlock can only edit unlock categories.
                 $category->canedit = true;
             } else if ($hasapprove && $category->entrystatus == $entrystatus) {
@@ -147,7 +147,7 @@ class entries {
             } else if (
                 $hasapprove && $category->capability === 'submit' &&
                 get_config('mod_projetvet', 'allow_edit_previous_status') &&
-                $category->entrystatus == ($entrystatus - 1) || $entrystatus === 3
+                ( $category->entrystatus == ($entrystatus - 1) || $entrystatus === 3 )
             ) {
                 // Users with approve can edit submit categories from previous status if setting is enabled.
                 $category->canedit = true;

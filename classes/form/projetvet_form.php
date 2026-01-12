@@ -358,7 +358,6 @@ class projetvet_form extends dynamic_form {
                 // Use category-level edit permission for all fields in the category.
                 $caneditfield = $category->canedit;
 
-                // configdata is already decoded as array from entries.php.
                 $configdata = (array) $field->configdata;
 
                 switch ($field->type) {
@@ -736,7 +735,6 @@ class projetvet_form extends dynamic_form {
 
                     // Handle hidden fields with special date formatting.
                     if ($fieldobj->type === 'hidden') {
-                        // configdata is already decoded as array from entries.php.
                         $fieldconfigdata = (array) $fieldobj->configdata;
 
                         $action = $fieldconfigdata['action'] ?? '';
@@ -825,7 +823,6 @@ class projetvet_form extends dynamic_form {
 
                     // Check if this is a number field with prefillfrom config and no value yet.
                     if ($fieldobj->type === 'number' && empty($field->value)) {
-                        // configdata is already decoded as array from entries.php.
                         $fieldconfigdata = (array) $fieldobj->configdata;
 
                         if (!empty($fieldconfigdata['prefillfrom'])) {

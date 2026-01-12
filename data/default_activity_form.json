@@ -675,7 +675,7 @@
             "text": "btn_validate_final",
             "icon": "fa-check-circle",
             "entrystatus": 4,
-            "style": "success",
+            "style": "primary",
             "submitpopup": "confirmvalidationfinal",
             "teachermessage": "teachervalidatedfinal"
           },

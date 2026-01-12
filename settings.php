@@ -71,7 +71,7 @@ if ($hassiteconfig) {
                 'mod_projetvet/hours_per_ects',
                 get_string('hours_per_ects', 'mod_projetvet'),
                 get_string('hours_per_ects_desc', 'mod_projetvet'),
-                '27.5',
+                '30',
                 PARAM_INT
             )
         );
