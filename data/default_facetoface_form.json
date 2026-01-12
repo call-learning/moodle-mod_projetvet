@@ -9,7 +9,7 @@
       "statusmsg": "f2fdraft",
       "fields": [
         {
-          "idnumber": "date_entretien",
+          "idnumber": "date_facetoface",
           "name": "Date de l'entretien",
           "type": "datetime",
           "description": "",
@@ -62,7 +62,7 @@
           "listorder": 2
         },
         {
-          "idnumber": "type_entretien",
+          "idnumber": "type_facetoface",
           "name": "Type d'entretien",
           "type": "select",
           "description": "",
@@ -159,7 +159,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "entretien_to_tutor",
+          "idnumber": "facetoface_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
           "type": "button",
           "description": "",
@@ -168,15 +168,15 @@
             "icon": "fa-users",
             "entrystatus": 1,
             "style": "primary",
-            "submitpopup": "entretienconfirm",
-            "teachermessage": "studentsubmittedentretien"
+            "submitpopup": "facetofaceconfirm",
+            "teachermessage": "studentsubmittedfacetoface"
           },
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         },
         {
-          "idnumber": "entretien_as_draft",
+          "idnumber": "facetoface_as_draft",
           "name": "Enregistrer comme brouillon",
           "type": "button",
           "description": "",
@@ -201,7 +201,7 @@
       "statusmsg": "f2fteacheraccept",
       "fields": [
         {
-          "idnumber": "entretien_validation_comments",
+          "idnumber": "facetoface_validation_comments",
           "name": "Commentaires finaux",
           "type": "textarea",
           "description": "Commentaires finaux sur le compte rendu et la réalisation de l'activité",
@@ -251,7 +251,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "entretien_validate",
+          "idnumber": "facetoface_validate",
           "name": "Enregistrer et confirmer que l'entretien a eu lieu",
           "type": "button",
           "description": "",
