@@ -66,6 +66,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Submit to tutor (changes status to 1)
     And I submit the projetvet form
     And I wait until the page is ready
+    And I close the notification alert
 
     Then I should see "My First Activity"
 
