@@ -259,7 +259,9 @@
             "text": "btn_confirm_interview",
             "icon": "fa-users",
             "entrystatus": 2,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "facetofacevalidated",
+            "studentmessage": "teacherconfirmedfacetoface"
           },
           "capability": "approve",
           "entrystatus": 1,
