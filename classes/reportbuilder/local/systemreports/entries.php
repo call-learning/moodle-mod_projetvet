@@ -184,21 +184,39 @@ class entries extends system_report {
             ON {$dataalias}.entryid = {$entityentryalias}.id
             AND {$dataalias}.fieldid = {$field->id}");
 
+        // Get report parameters for use in callback.
+        $studentid = $this->get_parameter('studentid', 0, PARAM_INT);
+        $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
+
         // Create column.
         $column = (new column(
             'field_' . $field->idnumber,
-            new lang_string('field_' . $field->idnumber, 'mod_projetvet'),
+            new lang_string('field_' . $field->idnumber . '_column', 'mod_projetvet'),
             'form_entry'
         ))
             ->add_field("{$dataalias}.{$datacolumn}", $fieldalias)
             ->add_field("{$dataalias}.fieldid", $fieldalias . '_fieldid')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(true)
-            ->add_callback(static function ($value, $row) use ($fieldpersistent, $fieldalias): string {
+            ->add_callback(static function ($value, $row) use ($fieldpersistent, $fieldalias, $studentid, $cmid): string {
+                $configdata = (array) $fieldpersistent->get('configdata');
+                if (!empty($configdata['columnfilter'])) {
+                    // Apply the filter to get the display value.
+                    return \mod_projetvet\utils::get_filter($configdata['columnfilter'], $studentid, $cmid);
+                }
                 // Use the persistent class display_value method.
                 if (empty($row->{$fieldalias . '_fieldid'})) {
                     return '';
                 }
+                // Check if field has tickondataentry configuration.
+                if (!empty($configdata['tickondataentry'])) {
+                    // Display a tick if there's any data.
+                    if (!empty($value)) {
+                        return '<i class="fa fa-check text-success" aria-hidden="true"></i>';
+                    }
+                    return '';
+                }
+
                 return $fieldpersistent->display_value($value);
             });
 
@@ -293,7 +311,7 @@ class entries extends system_report {
             )));
         }
 
-        // Delete action (for students viewing their own entries).
+        // Delete action (for students viewing their own entries with entrystatus 0).
         if (!$isteacher) {
             $this->add_action((new action(
                 new moodle_url('#'),
@@ -304,7 +322,10 @@ class entries extends system_report {
                 ],
                 false,
                 new lang_string('delete'),
-            )));
+            ))
+                ->add_callback(static function (\stdClass $row): bool {
+                    return ($row->entrystatus == 0 || $row->entrystatus == 1);
+                }));
         }
     }
 

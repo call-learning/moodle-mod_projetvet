@@ -9,6 +9,19 @@
       "statusmsg": "draft",
       "fields": [
         {
+          "idnumber": "first_forminfo",
+          "name": "Ce projet doit être validé par votre enseignant..",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "first_forminfo_value"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "activity_title",
           "name": "Intitulé de l'activité",
           "type": "text",
@@ -84,7 +97,8 @@
             "optionstrings": {
               "1": "rank_a",
               "2": "rank_b"
-            }
+            },
+            "helpbutton": "true"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -106,7 +120,9 @@
           "type": "tagselect",
           "description": "",
           "configdata": {
-            "maxtags": 5
+            "required": true,
+            "maxtags": 500,
+            "helptext": true
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -147,11 +163,12 @@
           "description": "",
           "configdata": {
             "required": true,
-            "data-action": "suggestedects"
+            "data-action": "suggestedects",
+            "data-string": "suggestedects_hours"
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 6
+          "listorder": 0
         },
         {
           "idnumber": "facetoface_message",
@@ -169,12 +186,14 @@
         },
         {
           "idnumber": "credits",
-          "name": "Nombre de crédits suggéré après discussion avec le tuteur",
+          "name": "",
           "type": "number",
           "description": "",
           "configdata": {
             "max": 5,
-            "required": true
+            "required": true,
+            "data-action": "validateects",
+            "data-string": "validateects"
           },
           "capability": "viewteacher",
           "entrystatus": 0,
@@ -194,6 +213,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "statusact_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "submit",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "submit_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
           "type": "button",
@@ -202,7 +233,9 @@
             "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 1,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "confirmsubmittotutor",
+            "teachermessage": "studentsubmittedactivity"
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -259,6 +292,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "status1_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "approve",
+          "entrystatus": 1,
+          "listorder": 0
+        },
+        {
           "idnumber": "accept_button",
           "name": "Accepter",
           "type": "button",
@@ -267,7 +312,9 @@
             "text": "btn_accept",
             "icon": "fa-check",
             "entrystatus": 2,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "confirmacceptance",
+            "studentmessage": "acceptedelegibility"
           },
           "capability": "approve",
           "entrystatus": 1,
@@ -307,13 +354,26 @@
       ]
     },
     {
-      "name": "Compte rendu & validation",
+      "name": "Bilan du projet",
       "idnumber": "report_validation",
       "description": "Section rapport et validation",
       "capability": "submit",
       "entrystatus": 2,
       "statusmsg": "studentadd",
       "fields": [
+        {
+          "idnumber": "third_forminfo",
+          "name": "A l'issue de cette activité..",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "third_forminfo_value"
+          },
+          "capability": "viewown",
+          "entrystatus": 0,
+          "listorder": 0
+        },
         {
           "idnumber": "start_date",
           "name": "Date de début de réalisation",
@@ -438,10 +498,14 @@
           "name": "Nombre d'heures réalisées (modifier si nécessaire)",
           "type": "number",
           "description": "",
-          "configdata": {},
+          "configdata": {
+            "prefillfrom": "hours",
+            "data-action": "suggestedects",
+            "data-string": "suggestedects_hours_completed"
+          },
           "capability": "submit",
           "entrystatus": 2,
-          "listorder": 0
+          "listorder": 6
         },
         {
           "idnumber": "status2_date",
@@ -457,6 +521,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "status2_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "submit",
+          "entrystatus": 2,
+          "listorder": 0
+        },
+        {
           "idnumber": "final_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
           "type": "button",
@@ -465,7 +541,9 @@
             "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 3,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "bilansubmittotutor",
+            "teachermessage": "studentsubmittedbilan"
           },
           "capability": "submit",
           "entrystatus": 2,
@@ -497,12 +575,32 @@
       "statusmsg": "validated",
       "fields": [
         {
+          "idnumber": "fourth_forminfo",
+          "name": "L’attribution finale des crédits",
+          "type": "html",
+          "description": "",
+          "configdata": {
+            "readonly": true,
+            "string": "field_fourth_forminfo",
+            "data-action": "getects",
+            "data-string": "fourth_forminfo_value",
+            "filter": "getsuggestedectsfile"
+          },
+          "capability": "approve",
+          "entrystatus": 0,
+          "listorder": 0
+        },
+        {
           "idnumber": "final_ects",
           "name": "Nombre d'ECTS final",
           "type": "number",
           "description": "",
-          "configdata": {},
-          "capability": "submit",
+          "configdata": {
+            "required": true,
+            "data-action": "validateects",
+            "data-string": "validateects"
+          },
+          "capability": "approve",
           "entrystatus": 2,
           "listorder": 7
         },
@@ -528,13 +626,15 @@
               "1": "Excellent",
               "2": "Bien",
               "3": "Satisfaisant",
-              "4": "Insuffisant"
+              "4": "Insuffisant",
+              "5": "Échec"
             },
             "optionstrings": {
               "1": "excellent",
               "2": "good",
               "3": "satisfactory",
-              "4": "insufficient"
+              "4": "insufficient",
+              "5": "fail"
             }
           },
           "capability": "approve",
@@ -555,6 +655,18 @@
           "listorder": 0
         },
         {
+          "idnumber": "status3_date_user",
+          "name": "Utilisateur qui a validé",
+          "type": "hidden",
+          "description": "",
+          "configdata": {
+            "action": "setcurrentuser"
+          },
+          "capability": "approve",
+          "entrystatus": 3,
+          "listorder": 0
+        },
+        {
           "idnumber": "validate_button",
           "name": "Valider définitivement",
           "type": "button",
@@ -563,7 +675,9 @@
             "text": "btn_validate_final",
             "icon": "fa-check-circle",
             "entrystatus": 4,
-            "style": "success"
+            "style": "primary",
+            "submitpopup": "confirmvalidationfinal",
+            "teachermessage": "teachervalidatedfinal"
           },
           "capability": "approve",
           "entrystatus": 3,

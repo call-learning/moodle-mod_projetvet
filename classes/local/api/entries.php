@@ -23,7 +23,6 @@ use mod_projetvet\local\persistent\form_data;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\persistent\form_field;
 use mod_projetvet\local\persistent\form_set;
-use mod_projetvet\local\notifications;
 use moodle_exception;
 use stdClass;
 
@@ -77,13 +76,24 @@ class entries {
             foreach ($fields as $field) {
                 // Only include fields for categories in this form set.
                 if (isset($data[$field->get('categoryid')])) {
+                    // Decode configdata once here so all consumers get it as an array.
+                    $configdata = $field->get('configdata');
+                    if (is_string($configdata)) {
+                        $configdata = json_decode(stripslashes($configdata), true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $configdata = [];
+                        }
+                    } else {
+                        $configdata = (array) $configdata;
+                    }
+
                     $data[$field->get('categoryid')]->fields[] = (object) [
                         'id' => $field->get('id'),
                         'idnumber' => $field->get('idnumber'),
                         'name' => get_string('field_' . $field->get('idnumber'), 'mod_projetvet'),
                         'type' => $field->get('type'),
                         'description' => $field->get('description'),
-                        'configdata' => $field->get('configdata'),
+                        'configdata' => $configdata,
                         'capability' => $field->get('capability'),
                         'entrystatus' => $field->get('entrystatus'),
                         'listorder' => $field->get('listorder'),
@@ -128,16 +138,16 @@ class entries {
             // Determine canedit based on capability rules.
             $category->canedit = false;
 
-            if ($hasunlock) {
+            if ($hasunlock && $category->capability === 'unlock' && $category->entrystatus === $entrystatus) {
                 // Users with unlock can only edit unlock categories.
-                $category->canedit = ($category->capability === 'unlock');
+                $category->canedit = true;
             } else if ($hasapprove && $category->entrystatus == $entrystatus) {
                 // Users with approve (but not unlock) can edit approve and submit categories.
                 $category->canedit = ($category->capability === 'approve');
             } else if (
                 $hasapprove && $category->capability === 'submit' &&
                 get_config('mod_projetvet', 'allow_edit_previous_status') &&
-                $category->entrystatus == ($entrystatus - 1)
+                ( $category->entrystatus == ($entrystatus - 1) || $entrystatus === 3 )
             ) {
                 // Users with approve can edit submit categories from previous status if setting is enabled.
                 $category->canedit = true;
@@ -268,13 +278,6 @@ class entries {
             $data->save();
         }
 
-        // If an entry is created directly in a non-draft status, notify the next actor.
-        if ($entrystatus > 0) {
-            $cm = get_coursemodule_from_instance('projetvet', $projetvetid);
-            if ($cm) {
-                notifications::queue_entry_action_required($entry->get('id'), (int)$cm->id, 0, $entrystatus);
-            }
-        }
         return $entry->get('id');
     }
 
@@ -358,7 +361,6 @@ class entries {
      * @return void
      */
     public static function update_entry(int $entryid, array $fields, ?int $entrystatus = null): void {
-        global $DB;
 
         // Get the entry.
         $entry = form_entry::get_record(['id' => $entryid]);
@@ -414,11 +416,6 @@ class entries {
                 $data->create();
             }
             $data->save();
-        }
-
-        // Queue notification only when the status actually changes.
-        if ($entrystatus !== null && $entrystatus !== $currententrystatus) {
-            notifications::queue_entry_action_required($entryid, (int)$cm->id, $currententrystatus, $entrystatus);
         }
     }
 

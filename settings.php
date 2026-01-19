@@ -76,6 +76,26 @@ if ($hassiteconfig) {
             )
         );
 
+        $settings->add(
+            new admin_setting_configtext(
+                'mod_projetvet/max_ects',
+                get_string('max_ects', 'mod_projetvet'),
+                get_string('max_ects_desc', 'mod_projetvet'),
+                '10',
+                PARAM_INT
+            )
+        );
+
+        $settings->add(
+            new admin_setting_configtext(
+                'mod_projetvet/min_hours',
+                get_string('min_hours', 'mod_projetvet'),
+                get_string('min_hours_desc', 'mod_projetvet'),
+                '20',
+                PARAM_INT
+            )
+        );
+
         // ECTS attribution guide PDF.
         $settings->add(
             new admin_setting_configstoredfile(

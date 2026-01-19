@@ -6,10 +6,10 @@
       "description": "Informations générales sur l'entretien",
       "capability": "submit",
       "entrystatus": 0,
-      "statusmsg": "draft",
+      "statusmsg": "f2fdraft",
       "fields": [
         {
-          "idnumber": "date_entretien",
+          "idnumber": "date_facetoface",
           "name": "Date de l'entretien",
           "type": "datetime",
           "description": "",
@@ -44,7 +44,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 3
+          "listorder": 5
         },
         {
           "idnumber": "tuteur",
@@ -54,14 +54,15 @@
           "configdata": {
             "readonly": true,
             "string": "tutor_name",
-            "filter": "gettutor"
+            "filter": "gettutor",
+            "columnfilter": "gettutor"
           },
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 2
         },
         {
-          "idnumber": "type_entretien",
+          "idnumber": "type_facetoface",
           "name": "Type d'entretien",
           "type": "select",
           "description": "",
@@ -75,11 +76,12 @@
               "1": "face_to_face",
               "2": "video_call",
               "3": "phone_call"
-            }
+            },
+            "required": true
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 4
+          "listorder": 6
         }
       ]
     },
@@ -102,7 +104,7 @@
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 2
+          "listorder": 0
         },
         {
           "idnumber": "compte_rendu",
@@ -110,11 +112,12 @@
           "type": "textarea",
           "description": "",
           "configdata": {
-            "rows": 6
+            "rows": 6,
+            "tickondataentry": true
           },
           "capability": "submit",
           "entrystatus": 0,
-          "listorder": 5
+          "listorder": 3
         },
         {
           "idnumber": "personal_notes_intro",
@@ -127,7 +130,7 @@
           },
           "capability": "viewown",
           "entrystatus": 0,
-          "listorder": 2
+          "listorder": 0
         },
         {
           "idnumber": "personal_notes",
@@ -135,11 +138,12 @@
           "type": "textarea",
           "description": "",
           "configdata": {
-            "rows": 6
+            "rows": 6,
+            "tickondataentry": true
           },
           "capability": "viewown",
           "entrystatus": 0,
-          "listorder": 0
+          "listorder": 4
         },
         {
           "idnumber": "statusf2f0_date_compte_rendu",
@@ -155,7 +159,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "entretien_to_tutor",
+          "idnumber": "facetoface_to_tutor",
           "name": "Enregistrer et soumettre au tuteur",
           "type": "button",
           "description": "",
@@ -163,14 +167,16 @@
             "text": "btn_save_submit_tutor",
             "icon": "fa-users",
             "entrystatus": 1,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "facetofaceconfirm",
+            "teachermessage": "studentsubmittedfacetoface"
           },
           "capability": "submit",
           "entrystatus": 0,
           "listorder": 0
         },
         {
-          "idnumber": "entretien_as_draft",
+          "idnumber": "facetoface_as_draft",
           "name": "Enregistrer comme brouillon",
           "type": "button",
           "description": "",
@@ -192,10 +198,10 @@
       "description": "Validation de l'entretien par le tuteur",
       "capability": "approve",
       "entrystatus": 1,
-      "statusmsg": "teacheraccept",
+      "statusmsg": "f2fteacheraccept",
       "fields": [
         {
-          "idnumber": "entretien_validation_comments",
+          "idnumber": "facetoface_validation_comments",
           "name": "Commentaires finaux",
           "type": "textarea",
           "description": "Commentaires finaux sur le compte rendu et la réalisation de l'activité",
@@ -217,7 +223,7 @@
           },
           "capability": "viewteacher",
           "entrystatus": 1,
-          "listorder": 2
+          "listorder": 0
         },
         {
           "idnumber": "teacher_personal_notes",
@@ -245,7 +251,7 @@
           "listorder": 0
         },
         {
-          "idnumber": "entretien_validate",
+          "idnumber": "facetoface_validate",
           "name": "Enregistrer et confirmer que l'entretien a eu lieu",
           "type": "button",
           "description": "",
@@ -253,7 +259,9 @@
             "text": "btn_confirm_interview",
             "icon": "fa-users",
             "entrystatus": 2,
-            "style": "primary"
+            "style": "primary",
+            "submitpopup": "facetofacevalidated",
+            "studentmessage": "teacherconfirmedfacetoface"
           },
           "capability": "approve",
           "entrystatus": 1,
@@ -267,7 +275,7 @@
       "description": "Activité verrouillée",
       "capability": "unlock",
       "entrystatus": 2,
-      "statusmsg": "locked",
+      "statusmsg": "f2flocked",
       "fields": [
         {
           "idnumber": "facetoface_locked",

@@ -305,4 +305,146 @@ class utils {
 
         return $count > 0;
     }
+
+    /**
+     * Get suggested ECTS credits based on hours and rang.
+     *
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $studentid The student ID
+     * @param int $entryid The entry ID to get rang value from
+     * @param float $hours Number of hours
+     * @param string $stringidentifier The language string identifier for the message
+     * @param int $rangvalue The rang value (0 = fetch from entry, 1 = A, 2 = B)
+     * @param float|null $finalects The final ECTS value (optional)
+     * @return array Array with 'suggestedects', 'message', 'warning', and 'error' keys
+     */
+    public static function get_suggested_ects(
+        int $projetvetid,
+        int $studentid,
+        int $entryid,
+        float $hours,
+        string $stringidentifier = '',
+        int $rangvalue = 0,
+        ?float $finalects = 0
+    ): array {
+        // Handle null finalects.
+        $finalects = $finalects ?? 0;
+
+        // Get configuration values.
+        $hoursperects = (int) get_config('mod_projetvet', 'hours_per_ects') ?: 30;
+        $maxects = (int) get_config('mod_projetvet', 'max_ects') ?: 10;
+        $minhours = (int) get_config('mod_projetvet', 'min_hours') ?: 20;
+
+        // Validate hours.
+        if ($hours <= 0 || !is_numeric($hours)) {
+            return [
+                'suggestedects' => 0,
+                'message' => '',
+                'warning' => '',
+                'error' => get_string('invalid_hours', 'mod_projetvet'),
+            ];
+        }
+
+        // Check minimum hours requirement.
+        if ($hours < $minhours) {
+            return [
+                'suggestedects' => 0,
+                'message' => '',
+                'warning' => '',
+                'error' => get_string('min_hours_error', 'mod_projetvet', $minhours),
+            ];
+        }
+
+        // Get rang value from entry if not provided.
+        if ($rangvalue === 0 && $entryid > 0) {
+            $entry = \mod_projetvet\local\api\entries::get_entry($entryid);
+            // Loop through categories and fields to find rang.
+            foreach ($entry->categories as $category) {
+                foreach ($category->fields as $field) {
+                    if ($field->idnumber === 'rang') {
+                        $rangvalue = (int) $field->value;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        $suggestedects = 0;
+        $warning = '';
+
+        if ($rangvalue === 2) {
+            // Rang B: flat rate of 1 ECTS.
+            $suggestedects = 1;
+        } else if ($rangvalue === 1) {
+            // Rang A: calculate based on hours.
+            $suggestedects = (int) ceil($hours / $hoursperects);
+
+            // Apply maximum ECTS cap.
+            if ($suggestedects > $maxects) {
+                $warning = get_string('max_ects_warning', 'mod_projetvet', $maxects);
+                $suggestedects = $maxects;
+            }
+        } else {
+            // No rang selected yet, use default calculation.
+            $suggestedects = (int) ceil($hours / $hoursperects);
+            if ($suggestedects > $maxects) {
+                $suggestedects = $maxects;
+            }
+        }
+
+        // Calculate "before" value from the 'hours' field if entry exists.
+        $beforeects = 0;
+        if ($entryid > 0 && $stringidentifier !== '') {
+            $entry = \mod_projetvet\local\api\entries::get_entry($entryid);
+            // Loop through categories and fields to find the 'hours' field.
+            foreach ($entry->categories as $category) {
+                foreach ($category->fields as $field) {
+                    if ($field->idnumber === 'hours' && !empty($field->value)) {
+                        $hoursbefore = (float) $field->value;
+                        // Calculate ECTS for hours field using same rang logic.
+                        if ($rangvalue === 2) {
+                            $beforeects = 1;
+                        } else if ($rangvalue === 1) {
+                            $beforeects = (int) ceil($hoursbefore / $hoursperects);
+                            if ($beforeects > $maxects) {
+                                $beforeects = $maxects;
+                            }
+                        } else {
+                            $beforeects = (int) ceil($hoursbefore / $hoursperects);
+                            if ($beforeects > $maxects) {
+                                $beforeects = $maxects;
+                            }
+                        }
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // Format the message if a string identifier is provided.
+        $message = '';
+        if ($stringidentifier !== '') {
+            $a = new \stdClass();
+            $a->after = $suggestedects;
+            $a->before = $beforeects;
+            $a->hours = $hours;
+            $a->finalects = $finalects;
+            $message = get_string($stringidentifier, 'mod_projetvet', $a);
+
+            if (preg_match_all('/\[([a-z]+)\]/', $message, $matches)) {
+                foreach ($matches[1] as $filter) {
+                    $cmid = get_coursemodule_from_instance('projetvet', $projetvetid)->id;
+                    $filtervalue = self::get_filter($filter, $studentid, $cmid);
+                    $message = str_replace('[' . $filter . ']', $filtervalue, $message);
+                }
+            }
+        }
+
+        return [
+            'suggestedects' => $suggestedects,
+            'message' => $message,
+            'warning' => $warning,
+            'error' => '',
+        ];
+    }
 }

@@ -121,6 +121,11 @@
                                 <span class="sr-only">{{#str}}close, admin{{/str}}</span>
                             </button>
                         </div>
+                        {{#element.helptext}}
+                        <div class="alert alert-secondary small">
+                            {{{element.helptext}}}
+                        </div>
+                        {{/element.helptext}}
                         <div class="form-group d-flex mb-0">
                             <label for="tag-search-{{element.id}}" class="sr-only">{{#str}}search{{/str}}</label>
                             <div class="{{#element.showtoggleall}}col-10{{/element.showtoggleall}}{{^element.showtoggleall}}col-12{{/element.showtoggleall}} p-0">

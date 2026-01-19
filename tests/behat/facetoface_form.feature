@@ -42,11 +42,14 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Report                                                              | We discussed my progress |
       | Personal notes                                                      | Remember to follow up    |
 
-    And I click on form button "Save and submit to tutor"
+    And I submit the projetvet form
     And I wait until the page is ready
 
     # Verify table row shows correct values
-    Then I should see "15/03/25"
+    Then I should see "Interview submitted to tutor"
+    And I close the notification alert
+    And I should see "15/03/25"
+    And I should see "Face-to-face to be confirmed by the tutor" in the "15/03/25" "table_row"
     And I should see "Year 2" in the "15/03/25" "table_row"
     And I should see "Face-to-face" in the "15/03/25" "table_row"
     And I should see "We discussed my progress" in the "15/03/25" "table_row"
@@ -65,7 +68,7 @@ Feature: Face-to-face session form operations in mod_projetvet
     And I wait until the page is ready
 
     Then I should see "20/03/25"
-    And I should see "Draft" in the "20/03/25" "table_row"
+    And I should see "Editing in progress" in the "20/03/25" "table_row"
 
     # Edit and submit
     When I click on row with text "20/03/25"
@@ -73,11 +76,11 @@ Feature: Face-to-face session form operations in mod_projetvet
     And I set the following fields to these values:
       | Report                                                              | Updated meeting notes   |
 
-    And I click on form button "Save and submit to tutor"
+    And I submit the projetvet form
     And I wait until the page is ready
 
     Then I should see "Updated meeting notes" in the "20/03/25" "table_row"
-    And I should see "Teacher acceptance" in the "20/03/25" "table_row"
+    And I should see "Face-to-face to be confirmed by the tutor" in the "20/03/25" "table_row"
 
   Scenario: Teacher validates face-to-face session
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -87,7 +90,7 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Year of study in which the interview was conducted                  | Year 4                  |
       | Type of interview                                                   | Phone call              |
       | Report                                                              | Session summary         |
-    And I click on form button "Save and submit to tutor"
+    And I submit the projetvet form
     And I wait until the page is ready
     And I log out
 
@@ -96,11 +99,12 @@ Feature: Face-to-face session form operations in mod_projetvet
     And I view activities for student "Student One"
     And I click on row with text "25/03/25"
     And I wait "1" seconds
-    And I click on form button "Save and confirm that the interview took place"
+    And I submit the projetvet form
     And I wait until the page is ready
 
-    Then I should see "25/03/25"
-    And I should see "Validated" in the "25/03/25" "table_row"
+    Then I should see "Interview confirmed"
+    And I close the notification alert
+    And I should see "Face-to-face confirmed by the tutor" in the "25/03/25" "table_row"
 
   Scenario: Delete face-to-face session
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"

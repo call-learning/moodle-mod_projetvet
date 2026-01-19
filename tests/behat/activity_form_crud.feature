@@ -55,11 +55,18 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Select category using tagselect
     And I open tagselect for "Category"
     And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
-    And I click on "save-tags" buttonaction in the "tagselect-popup" "region"
+    And I save tags in tagselect popup
+
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
 
     # Submit to tutor (changes status to 1)
-    And I click on "Save and submit to tutor" "button"
+    And I submit the projetvet form
     And I wait until the page is ready
+    And I close the notification alert
 
     Then I should see "My First Activity"
 
@@ -76,7 +83,13 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Select category using tagselect
     And I open tagselect for "Category"
     And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
-    And I click on "save-tags" buttonaction in the "tagselect-popup" "region"
+    And I save tags in tagselect popup
+
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
 
     And I click on "Save as draft" "button"
     And I wait until the page is ready
@@ -89,11 +102,13 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Activity title                                                      | Updated Activity        |
       | Summary description                                                 | Updated content         |
 
-    And I click on "Save and submit to tutor" "button"
+    And I submit the projetvet form
     And I wait until the page is ready
 
-    Then I should see "Updated Activity"
-    And I should see "Teacher acceptance"
+    Then I should see "Your project has been submitted"
+    And I close the notification alert
+    And I wait until the page is ready
+    And I should see "Project submitted – awaiting eligibility"
 
   Scenario: Teacher accepts student activity
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -106,9 +121,15 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Select category using tagselect
     And I open tagselect for "Category"
     And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
-    And I click on "save-tags" buttonaction in the "tagselect-popup" "region"
+    And I save tags in tagselect popup
 
-    And I click on "Save and submit to tutor" "button"
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
+
+    And I submit the projetvet form
     And I wait until the page is ready
     And I log out
 
@@ -122,12 +143,15 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I set the following fields to these values:
       | Comments | Good work, approved |
 
-    And I click on form button "Accept"
+    And I submit the projetvet form
     And I wait until the page is ready
 
+    Then I should see "Eligibility validated"
+    And I close the notification alert
+
     # Verify we're back at the entry list and status is updated
-    Then I should see "Activity for Approval"
-    And I should see "Student additions"
+    And I should see "Activity for Approval"
+    And I should see "Report being written"
 
   Scenario: Student completes activity report after acceptance
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -140,9 +164,15 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Select category using tagselect
     And I open tagselect for "Category"
     And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
-    And I click on "save-tags" buttonaction in the "tagselect-popup" "region"
+    And I save tags in tagselect popup
 
-    And I click on "Save and submit to tutor" "button"
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
+
+    And I submit the projetvet form
     And I wait until the page is ready
     And I log out
 
@@ -156,12 +186,13 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I set the following fields to these values:
       | Comments | Good work, approved |
 
-    And I click on form button "Accept"
+    And I submit the projetvet form
     And I wait until the page is ready
+    And I close the notification alert
 
     # Verify we're back at the entry list and status is updated
     Then I should see "Almost there"
-    And I should see "Student additions"
+    And I should see "Report being written"
 
     # Student adds completion report (entrystatus 2)
     When I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -172,11 +203,13 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Summary of main achievements and actions carried out during this project | I completed all tasks   |
       | Number of hours completed (modify if necessary)                     | 25                      |
 
-    And I click on "Save and submit to tutor" "button"
+    And I submit the projetvet form
     And I wait until the page is ready
+    Then I should see "Project report submitted to the supervisor"
+    And I close the notification alert
 
-    Then I should see "Almost there"
-    And I should see "Teacher final acceptance"
+    And I should see "Almost there"
+    And I should see "Report submitted – awaiting validation"
 
   Scenario: Teacher provides final validation
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -189,9 +222,15 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Select category using tagselect
     And I open tagselect for "Category"
     And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
-    And I click on "save-tags" buttonaction in the "tagselect-popup" "region"
+    And I save tags in tagselect popup
 
-    And I click on "Save and submit to tutor" "button"
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
+
+    And I submit the projetvet form
     And I wait until the page is ready
     And I log out
 
@@ -204,7 +243,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I set the following fields to these values:
       | Comments | Good work, approved |
 
-    And I click on form button "Accept"
+    And I submit the projetvet form
     And I wait until the page is ready
     And I log out
 
@@ -217,7 +256,7 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Summary of main achievements and actions carried out during this project | All objectives achieved |
       | Number of hours completed (modify if necessary)                     | 30                      |
 
-    And I click on "Save and submit to tutor" "button"
+    And I submit the projetvet form
     And I wait until the page is ready
     And I log out
 
@@ -229,14 +268,15 @@ Feature: Activity form CRUD operations in mod_projetvet
 
     And I set the following fields to these values:
       | Final comments    | Excellent work completed |
-      | Final assessment  | Excellent                |
+      | Final assessment  | Project objectives fully achieved and skills clearly developed |
       | Final number of ECTS | 3                     |
 
-    And I click on form button "Validate definitively"
+    And I submit the projetvet form
     And I wait until the page is ready
 
-    Then I should see "Final Validation Test"
-    And I should see "Validated"
+    Then I should see "Project validated – ECTS credits awarded"
+    And I close the notification alert
+    And I should see "Project validated – ECTS awarded"
 
   Scenario: Delete activity entry
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -249,7 +289,13 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Select category using tagselect
     And I open tagselect for "Category"
     And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
-    And I click on "save-tags" buttonaction in the "tagselect-popup" "region"
+    And I save tags in tagselect popup
+
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
 
     And I click on "Save as draft" "button"
     And I wait until the page is ready

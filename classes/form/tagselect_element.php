@@ -47,6 +47,9 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
     /** @var bool Whether to show the toggle-all button */
     protected $showtoggleall = false;
 
+    /** @var string Help text to display */
+    protected $helptext = '';
+
     /**
      * Constructor
      *
@@ -58,6 +61,7 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
      *                          - 'maxtags': Maximum number of selections allowed (0 = unlimited)
      *                          - 'rowname': Display name for the row
      *                          - 'showtoggleall': Whether to show the toggle-all button (default: false)
+     *                          - 'helptext': Help text to display in the popup
      */
     public function __construct($elementname = null, $elementlabel = null, $options = [], $attributes = null) {
         if ($elementname == null) {
@@ -88,6 +92,11 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
         if (isset($attributes['showtoggleall'])) {
             $this->showtoggleall = (bool) $attributes['showtoggleall'];
             unset($attributes['showtoggleall']);
+        }
+
+        if (isset($attributes['helptext'])) {
+            $this->helptext = $attributes['helptext'];
+            unset($attributes['helptext']);
         }
 
         // Always enable multiple selection.
@@ -191,6 +200,7 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
         $context['maxtags'] = $this->maxtags;
         $context['rowname'] = $this->rowname ?: $this->getLabel();
         $context['showtoggleall'] = $this->showtoggleall;
+        $context['helptext'] = $this->helptext;
 
         // Get currently selected values.
         $selectedvalues = $this->getValue();

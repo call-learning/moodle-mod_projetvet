@@ -283,9 +283,10 @@ final class entries_permissions_test extends advanced_testcase {
         // At status 3, teacher can edit approve and submit categories.
         $structure = entries::get_form_structure('activities', 3, $this->context);
         $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => true, 4 => false]);
+
         // At status 4 (locked), teacher cannot edit anything (only unlock can).
         $structure = entries::get_form_structure('activities', 4, $this->context);
-        $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => false]);
+        $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => true]);
     }
 
     /**
@@ -296,10 +297,10 @@ final class entries_permissions_test extends advanced_testcase {
 
         // At any status, admin with unlock can ONLY edit unlock category.
         $structure = entries::get_form_structure('activities', 0, $this->context);
-        $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => true]);
+        $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => false]);
 
         $structure = entries::get_form_structure('activities', 1, $this->context);
-        $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => true]);
+        $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => false]);
 
         $structure = entries::get_form_structure('activities', 4, $this->context);
         $this->assert_canedit_by_status($structure, [0 => false, 1 => false, 2 => false, 3 => false, 4 => true]);

@@ -75,7 +75,7 @@ class projetvet_form extends dynamic_form {
             if ($category->canedit) {
                 // Only collect fields from categories the user can edit.
                 foreach ($category->fields as $field) {
-                    $fieldname = 'field_' . $field->id;
+                    $fieldname = 'field_' . $field->idnumber;
                     if (isset($data->$fieldname)) {
                         $fields[$field->id] = $data->$fieldname;
                     }
@@ -89,7 +89,7 @@ class projetvet_form extends dynamic_form {
             if ($category->canedit) {
                 foreach ($category->fields as $field) {
                     if ($field->type === 'filemanager' && !empty($data->entryid)) {
-                        $fieldname = 'field_' . $field->id;
+                        $fieldname = 'field_' . $field->idnumber;
                         if (isset($data->$fieldname)) {
                             // The itemid in the entry becomes the permanent storage location.
                             // We use the field->id combined with entryid to create a unique itemid.
@@ -134,10 +134,47 @@ class projetvet_form extends dynamic_form {
             );
         }
 
-        return [
+        $result = [
             'result' => true,
             'entryid' => $entryid,
         ];
+
+        // Include submitpopup if it was set.
+        if (isset($data->button_submitpopup)) {
+            $result['submitpopup'] = $data->button_submitpopup;
+        }
+
+        // Send notification if teachermessage is configured.
+        if (isset($data->button_teachermessage) && !empty($data->button_teachermessage)) {
+            $studentid = $data->studentid ?? $USER->id;
+            $cmid = $data->cmid;
+            $messagekey = $data->button_teachermessage;
+
+            // Send notification to tutor.
+            \mod_projetvet\local\notifications::send_tutor_notification(
+                $entryid,
+                $studentid,
+                $cmid,
+                $messagekey
+            );
+        }
+
+        // Send notification if studentmessage is configured.
+        if (isset($data->button_studentmessage) && !empty($data->button_studentmessage)) {
+            $studentid = $data->studentid ?? $USER->id;
+            $cmid = $data->cmid;
+            $messagekey = $data->button_studentmessage;
+
+            // Send notification to student.
+            \mod_projetvet\local\notifications::send_student_notification(
+                $entryid,
+                $studentid,
+                $cmid,
+                $messagekey
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -192,7 +229,7 @@ class projetvet_form extends dynamic_form {
      * @return void
      */
     protected function definition() {
-        global $CFG;
+        global $CFG, $USER;
         $mform = $this->_form;
 
         // Set vertical display mode.
@@ -261,6 +298,14 @@ class projetvet_form extends dynamic_form {
         $mform->setType('entrystatus', PARAM_INT);
         $mform->addElement('hidden', 'button_entrystatus');
         $mform->setType('button_entrystatus', PARAM_INT);
+        $mform->addElement('hidden', 'button_submitpopup');
+        $mform->setType('button_submitpopup', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'button_teachermessage');
+        $mform->setType('button_teachermessage', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'button_studentmessage');
+        $mform->setType('button_studentmessage', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'rang_value');
+        $mform->setType('rang_value', PARAM_INT);
 
         // Get the context for capability checking.
         $context = context_module::instance($cmid);
@@ -290,7 +335,7 @@ class projetvet_form extends dynamic_form {
             $mform->addElement('header', 'category_' . $category->id, $category->name);
 
             // Expand header if category entrystatus matches current entry status.
-            if ($category->entrystatus == $currententrystatus) {
+            if ($category->entrystatus == $currententrystatus || $category->canedit) {
                 $mform->setExpanded('category_' . $category->id, true, true);
                 $hasexpanded = true;
             } else {
@@ -301,7 +346,7 @@ class projetvet_form extends dynamic_form {
             $buttonelements = [];
 
             foreach ($category->fields as $field) {
-                $fieldname = 'field_' . $field->id;
+                $fieldname = 'field_' . $field->idnumber;
 
                 // Check if user can view this field.
                 $canviewfield = entries::can_view_field($field, $studentid, $context);
@@ -313,16 +358,7 @@ class projetvet_form extends dynamic_form {
                 // Use category-level edit permission for all fields in the category.
                 $caneditfield = $category->canedit;
 
-                // Decode configdata - it may be a string or already decoded.
-                if (is_string($field->configdata)) {
-                    // Remove slashes that may have been added during storage.
-                    $configdata = json_decode(stripslashes($field->configdata), true);
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        $configdata = [];
-                    }
-                } else {
-                    $configdata = (array) $field->configdata;
-                }
+                $configdata = (array) $field->configdata;
 
                 switch ($field->type) {
                     case 'text':
@@ -365,6 +401,9 @@ class projetvet_form extends dynamic_form {
                         if (!empty($configdata['data-action'])) {
                             $attributes['data-action'] = $configdata['data-action'];
                         }
+                        if (!empty($configdata['data-string'])) {
+                            $attributes['data-string'] = $configdata['data-string'];
+                        }
 
                         $mform->addElement('number', $fieldname, $field->name, $attributes);
                         $mform->setType($fieldname, PARAM_FLOAT);
@@ -400,12 +439,16 @@ class projetvet_form extends dynamic_form {
                     case 'tagselect':
                         // Load grouped options from field_data table.
                         $groupedoptions = field_data::get_grouped_options($field->id);
-                        $options = $configdata['options'] ?? [];
+                        $helptext = '';
+                        if (!empty($configdata['helptext'])) {
+                            $helptext = get_string('field_' . $field->idnumber . '_help', 'mod_projetvet');
+                        }
 
                         $mform->addElement('tagselect', $fieldname, $field->name, [], [
                             'groupedoptions' => $groupedoptions,
                             'rowname' => $field->name,
                             'maxtags' => $configdata['maxtags'] ?? 0,
+                            'helptext' => $helptext,
                         ]);
                         break;
 
@@ -491,6 +534,17 @@ class projetvet_form extends dynamic_form {
                                 // Add a static element placeholder that will be populated with formatted date.
                                 $mform->addElement('static', $fieldname . '_static', $field->name, '');
                             }
+                        } else if ($action === 'setcurrentuser') {
+                            // Only add this hidden field if category entrystatus matches current entry status.
+                            if ($category->entrystatus == $currententrystatus && $category->canedit) {
+                                $mform->addElement('hidden', $fieldname);
+                                $mform->setType($fieldname, PARAM_INT);
+                                $mform->setDefault($fieldname, $USER->id);
+                            } else {
+                                // If not current entrystatus, it will be displayed as static text in set_data.
+                                // Add a static element placeholder that will be populated with formatted date.
+                                $mform->addElement('static', $fieldname . '_static', $field->name, '');
+                            }
                         } else {
                             // For other hidden fields, add them normally.
                             $mform->addElement('hidden', $fieldname);
@@ -527,6 +581,18 @@ class projetvet_form extends dynamic_form {
                             $buttonattributes['data-action-type'] = $buttonaction;
                         }
 
+                        if (!empty($configdata['submitpopup'])) {
+                            $buttonattributes['data-submitpopup'] = $configdata['submitpopup'];
+                        }
+
+                        if (!empty($configdata['teachermessage'])) {
+                            $buttonattributes['data-teachermessage'] = $configdata['teachermessage'];
+                        }
+
+                        if (!empty($configdata['studentmessage'])) {
+                            $buttonattributes['data-studentmessage'] = $configdata['studentmessage'];
+                        }
+
                         // Determine button styling based on style configuration.
                         $styleclass = 'btn-' . $buttonstyle;
                         $customclass = 'btn ' . $styleclass;
@@ -556,14 +622,32 @@ class projetvet_form extends dynamic_form {
                         // Get HTML configuration.
                         $stringkey = $configdata['string'] ?? '';
 
-                        $mform->addElement('html', $fieldname, $field->name, '', [
+                        $attributes = [
                             'stringkey' => $stringkey,
                             'studentid' => $studentid,
                             'cmid' => $cmid,
-                        ]);
+                        ];
+
+                        // Add data-action attribute if present in configdata.
+                        if (!empty($configdata['data-action'])) {
+                            $attributes['data-action'] = $configdata['data-action'];
+                        }
+                        if (!empty($configdata['data-string'])) {
+                            $attributes['data-string'] = $configdata['data-string'];
+                        }
+                        if (!empty($configdata['filter'])) {
+                            $attributes['filter'] = $configdata['filter'];
+                        }
+
+                        $mform->addElement('html', $fieldname, $field->name, '', $attributes);
                         break;
                 }
                 $isrequired = !empty($configdata['required']) && $configdata['required'] == true;
+
+                $hashelp = !empty($configdata['helpbutton']);
+                if ($hashelp) {
+                    $mform->addHelpButton($fieldname, 'field_' . $field->idnumber, 'mod_projetvet');
+                }
 
                 if ($isrequired && $caneditfield && $field->type !== 'button') {
                     $mform->addRule($fieldname, null, 'required', null, 'client');
@@ -630,7 +714,7 @@ class projetvet_form extends dynamic_form {
                 $categoryobj = $this->get_category_by_id($structure, $category->id);
 
                 foreach ($category->fields as $field) {
-                    $fieldname = 'field_' . $field->id;
+                    $fieldname = 'field_' . $field->idnumber;
                     $fieldobj = $this->get_field_by_id($structure, $field->id);
 
                     if (!$fieldobj) {
@@ -651,16 +735,7 @@ class projetvet_form extends dynamic_form {
 
                     // Handle hidden fields with special date formatting.
                     if ($fieldobj->type === 'hidden') {
-                        // Decode configdata if it's a string.
-                        $fieldconfigdata = $fieldobj->configdata;
-                        if (is_string($fieldconfigdata)) {
-                            $fieldconfigdata = json_decode(stripslashes($fieldconfigdata), true);
-                            if (json_last_error() !== JSON_ERROR_NONE) {
-                                $fieldconfigdata = [];
-                            }
-                        } else {
-                            $fieldconfigdata = (array) $fieldconfigdata;
-                        }
+                        $fieldconfigdata = (array) $fieldobj->configdata;
 
                         $action = $fieldconfigdata['action'] ?? '';
                         $dateformat = $fieldconfigdata['dateformat'] ?? 'strftimedatetime';
@@ -671,9 +746,23 @@ class projetvet_form extends dynamic_form {
                                 // Use existing value if set, otherwise use current time.
                                 $fieldvalue = !empty($field->value) ? $field->value : time();
                                 $data[$fieldname] = $fieldvalue;
+                                $data[$fieldname . '_user'] = $USER->id;
                             } else if (!empty($field->value)) {
                                 // Display as static formatted date for past entrystatus.
                                 $data[$fieldname . '_static'] = userdate($field->value, get_string($dateformat, 'langconfig'));
+                            }
+                            // Skip further processing.
+                            continue;
+                        } else if ($action === 'setcurrentuser') {
+                            // Only set value if category entrystatus matches current entry status.
+                            if ($categoryobj && $categoryobj->entrystatus == $currententrystatus) {
+                                // Use existing value if set, otherwise use current user.
+                                $fieldvalue = !empty($field->value) ? $field->value : $USER->id;
+                                $data[$fieldname] = $fieldvalue;
+                            } else if (!empty($field->value)) {
+                                // Display as static user fullname for past entrystatus.
+                                $user = \core_user::get_user($field->value);
+                                $data[$fieldname . '_static'] = fullname($user);
                             }
                             // Skip further processing.
                             continue;
@@ -732,8 +821,26 @@ class projetvet_form extends dynamic_form {
                         }
                     }
 
+                    // Check if this is a number field with prefillfrom config and no value yet.
+                    if ($fieldobj->type === 'number' && empty($field->value)) {
+                        $fieldconfigdata = (array) $fieldobj->configdata;
+
+                        if (!empty($fieldconfigdata['prefillfrom'])) {
+                            $prefillvalue = $this->get_field_value_by_idnumber($entry, $fieldconfigdata['prefillfrom']);
+                            if ($prefillvalue !== null) {
+                                $fieldvalue = $prefillvalue;
+                            }
+                        }
+                    }
+
                     $data[$fieldname] = $fieldvalue;
                 }
+            }
+
+            // Store rang value in hidden field for ECTS calculation.
+            $rangvalue = $this->get_field_value_by_idnumber($entry, 'rang');
+            if ($rangvalue !== null) {
+                $data['rang_value'] = $rangvalue;
             }
         }
 
@@ -769,6 +876,24 @@ class projetvet_form extends dynamic_form {
         foreach ($structure as $category) {
             if ($category->id == $categoryid) {
                 return $category;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get field value by idnumber from entry object
+     *
+     * @param object $entry The entry object with categories and fields
+     * @param string $idnumber The field idnumber to search for
+     * @return mixed|null The field value if found, null otherwise
+     */
+    private function get_field_value_by_idnumber($entry, $idnumber) {
+        foreach ($entry->categories as $category) {
+            foreach ($category->fields as $field) {
+                if ($field->idnumber === $idnumber) {
+                    return $field->value;
+                }
             }
         }
         return null;
