@@ -35,8 +35,6 @@ $string['activitiesinfobox'] = '<div class="d-flex align-items-center mb-1"><i c
 $string['activitytitle'] = 'Titre';
 $string['addcompetence'] = 'Ajouter une compétence';
 $string['addentry'] = 'Ajouter une entrée';
-$string['allow_edit_previous_status'] = 'Autoriser l\'édition des soumissions de statut précédent';
-$string['allow_edit_previous_status_desc'] = 'Lorsque activé, les utilisateurs avec la capacité d\'approbation peuvent éditer les catégories de soumission du statut d\'entrée précédent (par exemple, éditer les catégories de statut 0 quand l\'entrée est au statut 1)';
 $string['backtolist'] = 'Retour à la liste des étudiants';
 $string['bilansubmittotutor'] = '<p><strong>Bilan de projet soumis au tuteur</strong></p><p>Votre <strong>bilan de projet</strong> a bien été transmis à votre enseignante ou enseignant tuteur.</p><p>Nous vous recommandons de <strong>prendre rendez-vous</strong> avec elle ou lui afin d\'échanger sur le déroulement de l\'activité et de procéder à la <strong>validation finale du projet</strong> et à l\'<strong>attribution des crédits ECTS</strong>.</p>';
 $string['btn_accept'] = 'Valider l\'éligibilité';

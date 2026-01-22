@@ -35,8 +35,6 @@ $string['activitiesinfobox'] = '<div class="d-flex align-items-center mb-1"><i c
 $string['activitytitle'] = 'Title';
 $string['addcompetence'] = 'Add a competence';
 $string['addentry'] = 'Add entry';
-$string['allow_edit_previous_status'] = 'Allow editing previous status submissions';
-$string['allow_edit_previous_status_desc'] = 'When enabled, users with approve capability can edit submit categories from the previous entry status (e.g., edit status 0 categories when entry is at status 1)';
 $string['backtolist'] = 'Back to student list';
 $string['bilansubmittotutor'] = '<p><strong>Project report submitted to the supervisor</strong></p><p>Your <strong>project report</strong> has been successfully sent to your supervising teacher.</p><p>We recommend that you <strong>schedule an appointment</strong> with them to discuss how the activity went and to proceed with the <strong>final validation of the project</strong> and the <strong>award of ECTS credits</strong>.</p>';
 $string['btn_accept'] = 'Validate eligibility';

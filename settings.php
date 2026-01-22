@@ -169,15 +169,5 @@ if ($hassiteconfig) {
                 get_string('permissions_heading_desc', 'mod_projetvet'),
             )
         );
-
-        // Allow editing previous status.
-        $settings->add(
-            new admin_setting_configcheckbox(
-                'mod_projetvet/allow_edit_previous_status',
-                get_string('allow_edit_previous_status', 'mod_projetvet'),
-                get_string('allow_edit_previous_status_desc', 'mod_projetvet'),
-                0
-            )
-        );
     }
 }
