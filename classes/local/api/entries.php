@@ -132,6 +132,12 @@ class entries {
         $hassubmit = has_capability('mod/projetvet:submit', $context);
 
         foreach ($structure as $category) {
+            if ($category->capability === 'all') {
+                // Categories with 'all' capability are always viewable and editable.
+                $category->canview = true;
+                $category->canedit = true;
+                continue;
+            }
             // Determine canview: cannot view if category entrystatus is greater than current entrystatus.
             $category->canview = $category->entrystatus <= $entrystatus;
 
@@ -350,6 +356,27 @@ class entries {
 
         // For now all else goes.
         return true;
+    }
+
+    /**
+     * Check if user can edit a specific field based on capability
+     *
+     * @param object $category The category object with capability property
+     * @param object $context The module context
+     * @return bool
+     */
+    public static function can_edit_field(object $category, $context): bool {
+
+        if ($category->capability == 'all') {
+            if (has_capability('mod/projetvet:approve', $context)) {
+                return true;
+            }
+            if (has_capability('mod/projetvet:submit', $context)) {
+                return false;
+            }
+        } else {
+            return $category->canedit;
+        }
     }
 
     /**

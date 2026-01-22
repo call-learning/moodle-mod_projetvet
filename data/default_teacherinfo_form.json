@@ -4,7 +4,7 @@
       "name": "Teacher Information",
       "idnumber": "teacher_info",
       "description": "Teacher practical information",
-      "capability": "approve",
+      "capability": "all",
       "entrystatus": 0,
       "statusmsg": "draft",
       "fields": [
@@ -45,7 +45,7 @@
             "entrystatus": 0,
             "style": "primary"
           },
-          "capability": "submit",
+          "capability": "viewteacher",
           "entrystatus": 0,
           "listorder": 0
         }

@@ -356,7 +356,7 @@ class projetvet_form extends dynamic_form {
                 }
 
                 // Use category-level edit permission for all fields in the category.
-                $caneditfield = $category->canedit;
+                $caneditfield = entries::can_edit_field($category, $context);
 
                 $configdata = (array) $field->configdata;
 
@@ -676,7 +676,7 @@ class projetvet_form extends dynamic_form {
         if (!$hasexpanded && !empty($structure)) {
             // If no category was expanded, expand the first one by default.
             $lastcategory = reset($structure);
-            $mform->setExpanded('category_' . $lastcategory->id);
+            //$mform->setExpanded('category_' . $lastcategory->id);
         }
     }
 

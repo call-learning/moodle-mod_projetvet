@@ -142,6 +142,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Add acceptance comments (entrystatus 1)
     And I set the following fields to these values:
       | Comments | Good work, approved |
+      | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
 
     And I submit the projetvet form
     And I wait until the page is ready
@@ -185,6 +186,7 @@ Feature: Activity form CRUD operations in mod_projetvet
     # Add acceptance comments (entrystatus 1)
     And I set the following fields to these values:
       | Comments | Good work, approved |
+      | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
 
     And I submit the projetvet form
     And I wait until the page is ready
@@ -242,6 +244,7 @@ Feature: Activity form CRUD operations in mod_projetvet
 
     And I set the following fields to these values:
       | Comments | Good work, approved |
+      | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
 
     And I submit the projetvet form
     And I wait until the page is ready

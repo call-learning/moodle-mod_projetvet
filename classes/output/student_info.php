@@ -124,7 +124,7 @@ class student_info implements renderable, templatable {
         // Teacher row.
         $teacherrow = ['label' => get_string('tutor', 'mod_projetvet')];
         $teacherrow['value'] = $tutorname;
-        $teacherrow['hasbutton'] = $this->isteacher;
+        $teacherrow['hasbutton'] = true;
         $teacherrow['buttontext'] = get_string('practicalinfo', 'mod_projetvet');
         $teacherrow['buttonaction'] = 'activity-entry-form';
         $teacherrow['cmid'] = $this->cm->id;
