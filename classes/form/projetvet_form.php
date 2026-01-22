@@ -676,7 +676,7 @@ class projetvet_form extends dynamic_form {
         if (!$hasexpanded && !empty($structure)) {
             // If no category was expanded, expand the first one by default.
             $lastcategory = reset($structure);
-            //$mform->setExpanded('category_' . $lastcategory->id);
+            $mform->setExpanded('category_' . $lastcategory->id);
         }
     }
 
