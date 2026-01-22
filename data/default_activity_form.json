@@ -677,7 +677,7 @@
             "entrystatus": 4,
             "style": "primary",
             "submitpopup": "confirmvalidationfinal",
-            "teachermessage": "teachervalidatedfinal"
+            "studentmessage": "teachervalidatedfinal"
           },
           "capability": "approve",
           "entrystatus": 3,
