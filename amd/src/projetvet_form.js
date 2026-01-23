@@ -26,6 +26,7 @@ import {get_string as getString} from 'core/str';
 import Notification from 'core/notification';
 import Repository from 'mod_projetvet/repository';
 import Templates from 'core/templates';
+import Pending from 'core/pending';
 
 /**
  * Initialize ECTS suggestion listeners
@@ -362,11 +363,13 @@ export const init = async() => {
 
         // After form submission, reload the subset entries list via AJAX.
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, async() => {
+            const pending = new Pending('mod_projetvet/projetvet_form_subset_reload');
             // Get the element ID and container.
             const elementId = button.dataset.elementid;
             const listContainer = document.querySelector(`#${elementId}_list`);
 
             if (!listContainer) {
+                pending.resolve();
                 return;
             }
 
@@ -405,6 +408,9 @@ export const init = async() => {
                 Templates.replaceNodeContents(listContainer, html, js);
             } catch (error) {
                 Notification.exception(error);
+            }
+            finally {
+                pending.resolve();
             }
         });
 
@@ -515,7 +521,9 @@ export const init = async() => {
             getString('cancel'),
             async() => {
                 try {
+                    const pending = new Pending('mod_projetvet/projetvet_form_delete_entry');
                     await Repository.deleteEntry({entryid: parseInt(entryid)});
+                    pending.resolve();
                     window.location.reload();
                 } catch (error) {
                     Notification.exception(error);

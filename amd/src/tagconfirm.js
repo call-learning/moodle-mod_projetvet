@@ -22,6 +22,7 @@
  */
 
 import Templates from 'core/templates';
+import Pending from 'core/pending';
 
 class TagConfirm {
 
@@ -127,14 +128,17 @@ class TagConfirm {
      * @param {string} tagName
      */
     async addTempSelection(tagId, tagName) {
+        const pending = new Pending('mod_projetvet/tagconfirm');
         // Check if already exists in table.
         const existingCheckbox = this.tbody.querySelector(`input[data-tag-id="${tagId}"]`);
         if (existingCheckbox) {
+            pending.resolve();
             return;
         }
 
         // Check if already in temp selections.
         if (this.tempSelections.has(tagId)) {
+            pending.resolve();
             return;
         }
 
@@ -149,6 +153,7 @@ class TagConfirm {
 
         const {html, js} = await Templates.renderForPromise('mod_projetvet/tagselect_badge', context);
         Templates.appendNodeContents(this.selectedAdditionsPopup, html, js);
+        pending.resolve();
     }
 
     /**

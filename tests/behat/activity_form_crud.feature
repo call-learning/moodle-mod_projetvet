@@ -41,7 +41,6 @@ Feature: Activity form CRUD operations in mod_projetvet
   Scenario: Student creates a new activity with all fields
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
     And I click on "New Activity" "button"
-    And I wait until the page is ready
     Then I should see "General information"
 
     # Fill in general information category (entrystatus 0)
@@ -65,7 +64,6 @@ Feature: Activity form CRUD operations in mod_projetvet
 
     # Submit to tutor (changes status to 1)
     And I submit the projetvet form
-    And I wait until the page is ready
     And I close the notification alert
 
     Then I should see "My First Activity"
@@ -92,7 +90,6 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I save tags in tagselect popup
 
     And I click on "Save as draft" "button"
-    And I wait until the page is ready
 
     Then I should see "Draft Activity"
 
@@ -103,11 +100,9 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Summary description                                                 | Updated content         |
 
     And I submit the projetvet form
-    And I wait until the page is ready
 
     Then I should see "Your project has been submitted"
     And I close the notification alert
-    And I wait until the page is ready
     And I should see "Project submitted – awaiting eligibility"
 
   Scenario: Teacher accepts student activity
@@ -130,14 +125,12 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I save tags in tagselect popup
 
     And I submit the projetvet form
-    And I wait until the page is ready
     And I log out
 
     # Teacher reviews and accepts
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
     And I click on row with text "Activity for Approval"
-    And I wait "1" seconds
 
     # Add acceptance comments (entrystatus 1)
     And I set the following fields to these values:
@@ -145,7 +138,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
 
     And I submit the projetvet form
-    And I wait until the page is ready
 
     Then I should see "Eligibility validated"
     And I close the notification alert
@@ -174,14 +166,12 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I save tags in tagselect popup
 
     And I submit the projetvet form
-    And I wait until the page is ready
     And I log out
 
     # Teacher reviews and accepts
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
     And I click on row with text "Almost there"
-    And I wait "1" seconds
 
     # Add acceptance comments (entrystatus 1)
     And I set the following fields to these values:
@@ -189,7 +179,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
 
     And I submit the projetvet form
-    And I wait until the page is ready
     And I close the notification alert
 
     # Verify we're back at the entry list and status is updated
@@ -206,7 +195,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Number of hours completed (modify if necessary)                     | 25                      |
 
     And I submit the projetvet form
-    And I wait until the page is ready
     Then I should see "Project report submitted to the supervisor"
     And I close the notification alert
 
@@ -233,21 +221,18 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I save tags in tagselect popup
 
     And I submit the projetvet form
-    And I wait until the page is ready
     And I log out
 
     # Teacher reviews and accepts (entrystatus 1)
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
     And I click on row with text "Final Validation Test"
-    And I wait "1" seconds
 
     And I set the following fields to these values:
       | Comments | Good work, approved |
       | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
 
     And I submit the projetvet form
-    And I wait until the page is ready
     And I log out
 
     # Student adds completion report (entrystatus 2)
@@ -260,14 +245,12 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Number of hours completed (modify if necessary)                     | 30                      |
 
     And I submit the projetvet form
-    And I wait until the page is ready
     And I log out
 
     # Teacher provides final validation (entrystatus 3)
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
     And I click on row with text "Final Validation Test"
-    And I wait "1" seconds
 
     And I set the following fields to these values:
       | Final comments    | Excellent work completed |
@@ -275,7 +258,6 @@ Feature: Activity form CRUD operations in mod_projetvet
       | Final number of ECTS | 3                     |
 
     And I submit the projetvet form
-    And I wait until the page is ready
 
     Then I should see "Project validated – ECTS credits awarded"
     And I close the notification alert
@@ -301,15 +283,12 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I save tags in tagselect popup
 
     And I click on "Save as draft" "button"
-    And I wait until the page is ready
 
     Then I should see "Activity to Delete"
 
     # First click on the row containing "Activity to Delete" to find the dropdown, then delete
     When I click on "Actions" "button" in the "Activity to Delete" "table_row"
-    And I wait "1" seconds
     And I click on "Delete" "link"
     And I click on "Delete" "button" in the "Confirm" "dialogue"
-    And I wait until the page is ready
 
     Then I should not see "Activity to Delete"

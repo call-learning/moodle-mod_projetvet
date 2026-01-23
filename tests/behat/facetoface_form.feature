@@ -27,7 +27,6 @@ Feature: Face-to-face session form operations in mod_projetvet
   Scenario: Student creates a new face-to-face session
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
     And I click on "New Face-to-Face Session" "button"
-    And I wait until the page is ready
     Then I should see "Interview date"
     And I should see "Teacher One"
 
@@ -43,7 +42,6 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Personal notes                                                      | Remember to follow up    |
 
     And I submit the projetvet form
-    And I wait until the page is ready
 
     # Verify table row shows correct values
     Then I should see "Interview submitted to tutor"
@@ -65,19 +63,16 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Report                                                              | Initial notes           |
 
     And I click on form button "Save as draft"
-    And I wait until the page is ready
 
     Then I should see "20/03/25"
     And I should see "Editing in progress" in the "20/03/25" "table_row"
 
     # Edit and submit
     When I click on row with text "20/03/25"
-    And I wait "1" seconds
     And I set the following fields to these values:
       | Report                                                              | Updated meeting notes   |
 
     And I submit the projetvet form
-    And I wait until the page is ready
 
     Then I should see "Updated meeting notes" in the "20/03/25" "table_row"
     And I should see "Face-to-face to be confirmed by the tutor" in the "20/03/25" "table_row"
@@ -91,16 +86,13 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Type of interview                                                   | Phone call              |
       | Report                                                              | Session summary         |
     And I submit the projetvet form
-    And I wait until the page is ready
     And I log out
 
     # Teacher validates (entrystatus 1)
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
     And I click on row with text "25/03/25"
-    And I wait "1" seconds
     And I submit the projetvet form
-    And I wait until the page is ready
 
     Then I should see "Interview confirmed"
     And I close the notification alert
@@ -115,7 +107,6 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Type of interview                                                   | Face-to-face            |
       | Report                                                              | Session to delete       |
     And I click on form button "Save as draft"
-    And I wait until the page is ready
 
     Then I should see "10/04/25"
 
@@ -123,6 +114,5 @@ Feature: Face-to-face session form operations in mod_projetvet
     When I click on "Actions" "button" in the "10/04/25" "table_row"
     And I click on "Delete" "link"
     And I click on "Delete" "button" in the "Confirm" "dialogue"
-    And I wait until the page is ready
 
     Then I should not see "10/04/25"
