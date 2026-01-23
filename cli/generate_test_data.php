@@ -173,6 +173,19 @@ class projetvet_cli_generator {
             cli_error("Activities formset not found. Please run import_forms.php first.");
         }
 
+        return $this->generate_entries($formset, $studentid, $projetvetid, $count);
+    }
+
+    /**
+     * Generate random entries for a given formset
+     *
+     * @param stdClass $formset The formset object
+     * @param int $studentid User ID
+     * @param int $projetvetid ProjetVet instance ID
+     * @param int $count Number of entries to create
+     * @return array Array of created entries
+     */
+    public function generate_entries(stdClass $formset, int $studentid, int $projetvetid, int $count = 5): array {
         $entries = [];
         for ($i = 0; $i < $count; $i++) {
             $entrystatus = $this->get_random_entry_status($formset->id);
@@ -211,7 +224,6 @@ class projetvet_cli_generator {
 
         return $entries;
     }
-
     /**
      * Generate random facetoface entries for a student
      *
@@ -225,44 +237,7 @@ class projetvet_cli_generator {
         if (!$formset) {
             cli_error("Facetoface formset not found. Please run import_forms.php first.");
         }
-
-        $entries = [];
-        for ($i = 0; $i < $count; $i++) {
-            $entrystatus = $this->get_random_entry_status($formset->id);
-            $entry = $this->create_entry([
-                'studentid' => $studentid,
-                'projetvetid' => $projetvetid,
-                'formsetid' => $formset->id,
-                'entrystatus' => $entrystatus,
-            ]);
-
-            // Get fields only up to the current entry status.
-            $fields = $this->get_form_fields($formset->id, $entrystatus);
-            $entrydata = new stdClass();
-
-            foreach ($fields as $field) {
-                $value = $this->generate_random_field_value($field, $entrydata);
-
-                // Store value for cross-field dependencies.
-                if ($field->idnumber) {
-                    $entrydata->{$field->idnumber} = $value;
-                }
-
-                if ($value !== null) {
-                    $this->create_form_data([
-                        'entryid' => $entry->id,
-                        'fieldid' => $field->id,
-                        'charvalue' => is_string($value) && strlen($value) <= 255 ? $value : '',
-                        'textvalue' => is_string($value) && strlen($value) > 255 ? $value : '',
-                        'intvalue' => is_numeric($value) ? (int)$value : 0,
-                    ]);
-                }
-            }
-
-            $entries[] = $entry;
-        }
-
-        return $entries;
+        return $this->generate_entries($formset, $studentid, $projetvetid, $count);
     }
 
     /**

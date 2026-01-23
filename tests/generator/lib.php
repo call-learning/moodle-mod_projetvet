@@ -32,7 +32,7 @@ class mod_projetvet_generator extends testing_module_generator {
      *     cmid (corresponding id in course_modules table)
      */
     public function create_instance($record = null, ?array $options = null) {
-        $record = (object)(array)$record;
+        $record = (object) (array) $record;
 
         $defaultsettings = [
             'name' => 'Test ProjetVet',
@@ -48,7 +48,7 @@ class mod_projetvet_generator extends testing_module_generator {
             }
         }
 
-        $instance = parent::create_instance($record, (array)$options);
+        $instance = parent::create_instance($record, (array) $options);
         return $instance;
     }
 
@@ -184,34 +184,7 @@ class mod_projetvet_generator extends testing_module_generator {
             return [];
         }
 
-        $entries = [];
-        for ($i = 0; $i < $count; $i++) {
-            $entry = $this->create_form_entry([
-                'studentid' => $studentid,
-                'projetvetid' => $projetvetid,
-                'formsetid' => $formset->id,
-                'entrystatus' => $status,
-            ]);
-
-            // Get all fields for this formset and add random values.
-            $fields = $this->get_form_fields($formset->id);
-            foreach ($fields as $field) {
-                $value = $this->generate_random_field_value($field);
-                if ($value !== null) {
-                    $this->create_form_data([
-                        'entryid' => $entry->id,
-                        'fieldid' => $field->id,
-                        'charvalue' => is_string($value) && strlen($value) <= 255 ? $value : '',
-                        'textvalue' => is_string($value) && strlen($value) > 255 ? $value : '',
-                        'intvalue' => is_numeric($value) ? (int)$value : 0,
-                    ]);
-                }
-            }
-
-            $entries[] = $entry;
-        }
-
-        return $entries;
+        return $this->generate_entries($formset, $studentid, $projetvetid, $count, $status);
     }
 
     /**
@@ -233,6 +206,26 @@ class mod_projetvet_generator extends testing_module_generator {
             return [];
         }
 
+        return $this->generate_entries($formset, $studentid, $projetvetid, $count, $status);
+    }
+
+    /**
+     * Generic method to generate entries for a given formset
+     *
+     * @param stdClass $formset The formset object
+     * @param int $studentid User ID
+     * @param int $projetvetid ProjetVet instance ID
+     * @param int $count Number of entries to create
+     * @param int $status Entry status (default: 1 = submitted)
+     * @return array Array of created entries
+     */
+    protected function generate_entries(
+        stdClass $formset,
+        int $studentid,
+        int $projetvetid,
+        int $count = 5,
+        int $status = 1
+    ): array {
         $entries = [];
         for ($i = 0; $i < $count; $i++) {
             $entry = $this->create_form_entry([
@@ -252,7 +245,7 @@ class mod_projetvet_generator extends testing_module_generator {
                         'fieldid' => $field->id,
                         'charvalue' => is_string($value) && strlen($value) <= 255 ? $value : '',
                         'textvalue' => is_string($value) && strlen($value) > 255 ? $value : '',
-                        'intvalue' => is_numeric($value) ? (int)$value : 0,
+                        'intvalue' => is_numeric($value) ? (int) $value : 0,
                     ]);
                 }
             }

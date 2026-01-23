@@ -75,44 +75,7 @@ php import_forms.php --formset=thesis
 }
 
 // Define form sets to import.
-$formsets = [
-    'activities' => [
-        'name' => 'Activities',
-        'description' => 'Activity form fields',
-        'sortorder' => 0,
-        'jsonfile' => 'default_activity_form.json',
-    ],
-    'facetoface' => [
-        'name' => 'Face-to-face sessions',
-        'description' => 'Face-to-face session forms',
-        'sortorder' => 1,
-        'jsonfile' => 'default_facetoface_form.json',
-    ],
-    'carnet_cas' => [
-        'name' => 'Carnet de cas',
-        'description' => 'Carnet de cas cliniques',
-        'sortorder' => 2,
-        'jsonfile' => 'default_carnet_cas_form.json',
-    ],
-    'thesis' => [
-        'name' => 'Thesis',
-        'description' => 'Thesis subject form',
-        'sortorder' => 3,
-        'jsonfile' => 'default_thesis_form.json',
-    ],
-    'mobility' => [
-        'name' => 'International Mobility',
-        'description' => 'International mobility form',
-        'sortorder' => 4,
-        'jsonfile' => 'default_mobility_form.json',
-    ],
-    'teacherinfo' => [
-        'name' => 'Teacher Information',
-        'description' => 'Teacher practical information form',
-        'sortorder' => 5,
-        'jsonfile' => 'default_teacherinfo_form.json',
-    ],
-];
+$formsets = mod_projetvet\setup::DEFAULT_FORM_SETS;
 
 // Filter by requested form set if specified.
 if ($options['formset']) {

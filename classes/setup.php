@@ -27,6 +27,45 @@ use mod_projetvet\local\persistent\form_field;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class setup {
+    /** @var array Default form sets to create */
+    public const DEFAULT_FORM_SETS = [
+        'activities' => [
+            'name' => 'Activities',
+            'description' => 'Activity form fields',
+            'sortorder' => 0,
+            'jsonfile' => 'default_activity_form.json',
+        ],
+        'facetoface' => [
+            'name' => 'Face-to-face sessions',
+            'description' => 'Face-to-face session forms',
+            'sortorder' => 1,
+            'jsonfile' => 'default_facetoface_form.json',
+        ],
+        'carnet_cas' => [
+            'name' => 'Carnet de cas',
+            'description' => 'Carnet de cas cliniques',
+            'sortorder' => 2,
+            'jsonfile' => 'default_carnet_cas_form.json',
+        ],
+        'thesis' => [
+            'name' => 'Thesis',
+            'description' => 'Thesis subject form',
+            'sortorder' => 3,
+            'jsonfile' => 'default_thesis_form.json',
+        ],
+        'mobility' => [
+            'name' => 'International Mobility',
+            'description' => 'International mobility form',
+            'sortorder' => 4,
+            'jsonfile' => 'default_mobility_form.json',
+        ],
+        'teacherinfo' => [
+            'name' => 'Teacher Information',
+            'description' => 'Teacher practical information form',
+            'sortorder' => 5,
+            'jsonfile' => 'default_teacherinfo_form.json',
+        ],
+    ];
     /**
      * Create the default activity fields.
      *
@@ -35,48 +74,8 @@ class setup {
     public static function create_default_activities() {
         global $CFG;
 
-        // Define all form sets to import.
-        $formsets = [
-            'activities' => [
-                'name' => 'Activities',
-                'description' => 'Activity form fields',
-                'sortorder' => 0,
-                'jsonfile' => 'default_activity_form.json',
-            ],
-            'facetoface' => [
-                'name' => 'Face-to-face sessions',
-                'description' => 'Face-to-face session forms',
-                'sortorder' => 1,
-                'jsonfile' => 'default_facetoface_form.json',
-            ],
-            'carnet_cas' => [
-                'name' => 'Carnet de cas',
-                'description' => 'Carnet de cas cliniques',
-                'sortorder' => 2,
-                'jsonfile' => 'default_carnet_cas_form.json',
-            ],
-            'thesis' => [
-                'name' => 'Thesis',
-                'description' => 'Thesis subject form',
-                'sortorder' => 3,
-                'jsonfile' => 'default_thesis_form.json',
-            ],
-            'mobility' => [
-                'name' => 'International Mobility',
-                'description' => 'International mobility form',
-                'sortorder' => 4,
-                'jsonfile' => 'default_mobility_form.json',
-            ],
-            'teacherinfo' => [
-                'name' => 'Teacher Information',
-                'description' => 'Teacher practical information form',
-                'sortorder' => 5,
-                'jsonfile' => 'default_teacherinfo_form.json',
-            ],
-        ];
-
         // Import each form set.
-        foreach ($formsets as $idnumber => $config) {
+        foreach (self::DEFAULT_FORM_SETS as $idnumber => $config) {
             $jsonfile = $CFG->dirroot . '/mod/projetvet/data/' . $config['jsonfile'];
 
             if (!file_exists($jsonfile)) {
