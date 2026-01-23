@@ -73,6 +73,12 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Interview date                                                      | ##21 March 2025 14:00## |
 
     And I submit the projetvet form
+<<<<<<< HEAD
+=======
+    And I wait until the page is ready
+    Then I should see "Interview submitted to tutor"
+    And I close the notification alert
+>>>>>>> 1eff622 (Admin UI)
 
     Then I should see "21/03/25"
     And I should see "Face-to-face to be confirmed by the tutor" in the "21/03/25" "table_row"
