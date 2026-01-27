@@ -266,6 +266,22 @@
           "capability": "approve",
           "entrystatus": 1,
           "listorder": 0
+        },
+        {
+          "idnumber": "f2f_contact_student_button",
+          "name": "Contacter l'étudiant pour en discuter",
+          "type": "button",
+          "description": "",
+          "configdata": {
+            "text": "btn_contact_student",
+            "icon": "fa-envelope",
+            "entrystatus": 1,
+            "style": "secondary",
+            "action": "email"
+          },
+          "capability": "approve",
+          "entrystatus": 1,
+          "listorder": 0
         }
       ]
     },

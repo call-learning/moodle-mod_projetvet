@@ -86,6 +86,12 @@ $string['draft'] = 'Draft';
 $string['ects_guide_pdf'] = 'ECTS attribution guide';
 $string['ects_guide_pdf_desc'] = 'Upload a PDF document explaining the ECTS attribution modalities. This document will be linked in the activity forms.';
 $string['editactivity'] = 'Edit Activity';
+$string['email_body_discussion'] = 'Hello,
+
+I would like to have a discussion with you concerning your ProjetVet activity.
+
+Best regards';
+$string['email_subject_discussion'] = 'Discussion on ProjetVet';
 $string['entries'] = 'Entries';
 $string['entry'] = 'Entry';
 $string['entry_not_found'] = 'Activity entry not found: {$a}';
@@ -310,7 +316,7 @@ $string['status_submitted'] = 'Submitted';
 $string['status_validated'] = 'Validated';
 $string['statusmsg_draft'] = 'Project in preparation';
 $string['statusmsg_f2fdraft'] = 'Editing in progress';
-$string['statusmsg_f2flocked'] = 'Face-to-face confirmed by the tutor';
+$string['statusmsg_f2flocked'] = '<span class="badge badge-success">Face-to-face confirmed by the tutor</span>';
 $string['statusmsg_f2fteacheraccept'] = 'Face-to-face to be confirmed by the tutor';
 $string['statusmsg_locked'] = '<span class="badge badge-success">Project validated – ECTS awarded</span>';
 $string['statusmsg_studentadd'] = 'Report being written';

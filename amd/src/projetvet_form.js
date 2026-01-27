@@ -418,7 +418,7 @@ export const init = async() => {
     });
 
     // Handle form button clicks for save/submit actions.
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', async(event) => {
         if (!event.target.closest('.projetvet-form-button')) {
             return;
         }
@@ -434,10 +434,10 @@ export const init = async() => {
             const studentEmailInput = form.querySelector('input[name="studentemail"]');
             if (studentEmailInput && studentEmailInput.value) {
                 const email = studentEmailInput.value;
-                const activityTitleInput = form.querySelector('input[name="activity_title"]');
-                const activityTitle = activityTitleInput ? activityTitleInput.value : 'votre activité';
-                const subject = encodeURIComponent('Discussion concernant: ' + activityTitle);
-                const body = encodeURIComponent('Bonjour,\n\nJe souhaiterais discuter avec vous concernant votre activité.\n\n');
+                const subjectString = await getString('email_subject_discussion', 'mod_projetvet');
+                const bodyString = await getString('email_body_discussion', 'mod_projetvet');
+                const subject = encodeURIComponent(subjectString);
+                const body = encodeURIComponent(bodyString);
                 window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
             }
             return;

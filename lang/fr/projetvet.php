@@ -86,6 +86,12 @@ $string['draft'] = 'Brouillon';
 $string['ects_guide_pdf'] = 'Guide d\'attribution des ECTS';
 $string['ects_guide_pdf_desc'] = 'Téléverser un document PDF expliquant les modalités d\'attribution des ECTS. Ce document sera accessible par lien dans les formulaires d\'activité.';
 $string['editactivity'] = 'Modifier l\'activité';
+$string['email_body_discussion'] = 'Bonjour,
+
+Je souhaiterais discuter avec vous concernant votre activité ProjetVet.
+
+Cordialement';
+$string['email_subject_discussion'] = 'Discussion concernant ProjetVet';
 $string['entries'] = 'Entrées';
 $string['entry'] = 'Entrée';
 $string['entry_not_found'] = 'Entrée d\'activité introuvable : {$a}';
@@ -303,7 +309,7 @@ $string['status_submitted'] = 'Soumis';
 $string['status_validated'] = 'Validé';
 $string['statusmsg_draft'] = 'Projet en préparation';
 $string['statusmsg_f2fdraft'] = 'Rédaction en cours';
-$string['statusmsg_f2flocked'] = 'Entretien confirmé par le tuteur';
+$string['statusmsg_f2flocked'] = '<span class="badge badge-success">Entretien confirmé par le tuteur</span>';
 $string['statusmsg_f2fteacheraccept'] = 'Entretien à confirmer par le tuteur';
 $string['statusmsg_locked'] = '<span class="badge badge-success">Projet validé – ECTS attribués</span>';
 $string['statusmsg_studentadd'] = 'Bilan en cours de rédaction';
