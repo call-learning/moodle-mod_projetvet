@@ -148,7 +148,7 @@ class student_info implements renderable, templatable {
 
         // Thesis subject row.
         $thesisrow = ['label' => get_string('thesissubject', 'mod_projetvet')];
-        $thesisrow['hasbutton'] = !$this->isteacher;
+        $thesisrow['hasbutton'] = true;
         $thesisrow['buttontext'] = get_string('setsubject', 'mod_projetvet');
         $thesisrow['buttonaction'] = 'activity-entry-form';
         $thesisrow['cmid'] = $this->cm->id;
@@ -191,7 +191,9 @@ class student_info implements renderable, templatable {
         $mobilityrow['studentid'] = $this->studentid;
         $mobilityrow['formsetidnumber'] = 'mobility';
 
-        // Get the mobility entry if it exists.
+        $mobilityrealized = false;
+
+        // Check the mobility formset for mobilityerasmus or mobilityfmp fields.
         $mobilityformset = form_set::get_record(['idnumber' => 'mobility']);
         if ($mobilityformset) {
             $mobilityentry = form_entry::get_record([
@@ -207,13 +209,40 @@ class student_info implements renderable, templatable {
                 $mobilityerasmus = $this->get_field_value($entrycontent, 'mobilityerasmus');
                 $mobilityfmp = $this->get_field_value($entrycontent, 'mobilityfmp');
                 if ($mobilityerasmus || $mobilityfmp) {
-                    $mobilityrow['value'] = $checkedicon . ' ' . get_string('mobilityrealized', 'mod_projetvet');
-                } else {
-                    $mobilityrow['value'] = get_string('mobilitynotrealizedyet', 'mod_projetvet');
+                    $mobilityrealized = true;
                 }
-            } else {
-                $mobilityrow['value'] = get_string('mobilitynotrealizedyet', 'mod_projetvet');
             }
+        }
+
+        // Also check the activity formset for mobility_completed checkbox.
+        if (!$mobilityrealized) {
+            $activityformset = form_set::get_record(['idnumber' => 'activities']);
+            if ($activityformset) {
+                // Get all activity entries for this student with entrystatus >= 2.
+                $activityentries = form_entry::get_records([
+                    'projetvetid' => $this->moduleinstance->id,
+                    'studentid' => $this->studentid,
+                    'formsetid' => $activityformset->get('id'),
+                ]);
+
+                foreach ($activityentries as $activityentry) {
+                    if ($activityentry->get('entrystatus') >= 2) {
+                        $entrycontent = entries::get_entry($activityentry->get('id'));
+                        $mobilitycompleted = $this->get_field_value($entrycontent, 'mobility_completed');
+                        if ($mobilitycompleted) {
+                            $mobilityrealized = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Set the mobility row value based on whether mobility was realized.
+        if ($mobilityrealized) {
+            $mobilityrow['value'] = $checkedicon . ' ' . get_string('mobilityrealized', 'mod_projetvet');
+        } else {
+            $mobilityrow['value'] = get_string('mobilitynotrealizedyet', 'mod_projetvet');
         }
 
         $data['infotable']['rows'][] = $mobilityrow;

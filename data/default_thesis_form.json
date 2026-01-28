@@ -4,7 +4,7 @@
       "name": "Thesis Information",
       "idnumber": "thesis_info",
       "description": "Thesis subject information",
-      "capability": "submit",
+      "capability": "alledit",
       "entrystatus": 0,
       "statusmsg": "draft",
       "fields": [

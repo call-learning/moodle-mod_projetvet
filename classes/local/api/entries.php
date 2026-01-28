@@ -132,7 +132,7 @@ class entries {
         $hassubmit = has_capability('mod/projetvet:submit', $context);
 
         foreach ($structure as $category) {
-            if ($category->capability === 'all') {
+            if ($category->capability === 'all' || $category->capability === 'alledit') {
                 // Categories with 'all' capability are always viewable and editable.
                 $category->canview = true;
                 $category->canedit = true;
@@ -365,7 +365,9 @@ class entries {
      * @return bool
      */
     public static function can_edit_field(object $category, $context): bool {
-
+        if ($category->capability == 'alledit') {
+            return true;
+        }
         if ($category->capability == 'all') {
             if (has_capability('mod/projetvet:approve', $context)) {
                 return true;

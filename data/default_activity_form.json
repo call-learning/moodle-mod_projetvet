@@ -105,7 +105,7 @@
           "listorder": 5
         },
         {
-          "idnumber": "completed",
+          "idnumber": "mobility_completed",
           "name": "Complété",
           "type": "checkbox",
           "description": "",
