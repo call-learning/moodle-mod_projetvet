@@ -202,30 +202,88 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
         $context['showtoggleall'] = $this->showtoggleall;
         $context['helptext'] = $this->helptext;
 
+        // Create a mapping of item ID to category for quick lookup.
+        $itemtocategory = [];
+        foreach ($this->groupedoptions as $groupindex => $group) {
+            if (isset($group['items'])) {
+                foreach ($group['items'] as $item) {
+                    if (isset($item['uniqueid'])) {
+                        $itemtocategory[$item['uniqueid']] = [
+                            'catid' => $groupindex,
+                            'catname' => $group['name'] ?? '',
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Add category information to each option.
+        if (isset($context['options'])) {
+            foreach ($context['options'] as &$option) {
+                if (isset($itemtocategory[$option['value']])) {
+                    $option['catid'] = $itemtocategory[$option['value']]['catid'];
+                    $option['catname'] = $itemtocategory[$option['value']]['catname'];
+                }
+            }
+            unset($option); // Break reference.
+        }
+
         // Get currently selected values.
         $selectedvalues = $this->getValue();
         if (!is_array($selectedvalues)) {
             $selectedvalues = $selectedvalues ? [$selectedvalues] : [];
         }
 
-        // Build selected tags for display.
-        $selectedtags = [];
+        // Build selected tags organized by groups.
+        $selectedgroups = [];
+        $allselectedtags = [];
+
+        // First, collect all selected tags with their details.
         foreach ($selectedvalues as $value) {
             if (isset($context['options'])) {
                 foreach ($context['options'] as $option) {
                     if ($option['value'] == $value) {
-                        $selectedtags[] = [
+                        $allselectedtags[$value] = [
                             'tagid' => $value,
                             'tagname' => $option['text'],
                             'action' => 'remove-tag',
+                            'catid' => $option['catid'] ?? null,
+                            'catname' => $option['catname'] ?? '',
                         ];
                         break;
                     }
                 }
             }
         }
-        $context['selectedtags'] = $selectedtags;
-        $context['hasmaxtags'] = $this->maxtags > 0 && count($selectedtags) >= $this->maxtags;
+
+        // Now organize them by groups.
+        foreach ($this->groupedoptions as $groupindex => $group) {
+            $groupitems = [];
+            if (isset($group['items'])) {
+                foreach ($group['items'] as $item) {
+                    if (isset($allselectedtags[$item['uniqueid']])) {
+                        $groupitems[] = [
+                            'tagid' => $item['uniqueid'],
+                            'tagname' => $item['name'],
+                            'action' => 'remove-tag',
+                        ];
+                    }
+                }
+            }
+
+            // Only include groups that have selected items.
+            if (!empty($groupitems)) {
+                $selectedgroups[] = [
+                    'heading' => $group['name'],
+                    'items' => $groupitems,
+                ];
+            }
+        }
+
+        $context['selectedgroups'] = $selectedgroups;
+        $context['hasselectedgroups'] = !empty($selectedgroups);
+        $context['selectedtags'] = array_values($allselectedtags);
+        $context['hasmaxtags'] = $this->maxtags > 0 && count($allselectedtags) >= $this->maxtags;
 
         return $context;
     }

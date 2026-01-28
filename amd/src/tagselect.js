@@ -188,13 +188,8 @@ class TagSelect {
             popupBadge.remove();
         }
 
-        // Remove from main display.
-        const displayBadges = this.selectedTagsDisplay.querySelectorAll(`[data-action="remove-tag"]`);
-        displayBadges.forEach(btn => {
-            if (btn.dataset.tagId === tagId) {
-                btn.closest('.badge').remove();
-            }
-        });
+        // Re-render the main display with updated grouped table.
+        this.updateDisplay();
 
         // Update count and warnings.
         this.updateCount();
@@ -232,14 +227,38 @@ class TagSelect {
         this.selectedTagsDisplay.innerHTML = '';
         const selectedOptions = this.selectElement.querySelectorAll('option:checked');
 
+        // Build grouped structure like PHP does.
+        const groupedTags = {};
+        const groupOrder = [];
+
         for (const option of selectedOptions) {
-            const context = {
+            const catid = option.dataset.catid || 'ungrouped';
+            const catname = option.dataset.catname || 'Other';
+
+            if (!groupedTags[catid]) {
+                groupedTags[catid] = {
+                    heading: catname,
+                    items: []
+                };
+                groupOrder.push(catid);
+            }
+
+            groupedTags[catid].items.push({
                 tagid: option.value,
                 tagname: option.textContent,
                 action: 'remove-tag'
+            });
+        }
+
+        // Convert to array format expected by template.
+        const selectedgroups = groupOrder.map(catid => groupedTags[catid]);
+
+        if (selectedgroups.length > 0) {
+            const context = {
+                selectedgroups: selectedgroups
             };
-            const {html, js} = await Templates.renderForPromise('mod_projetvet/tagselect_badge', context);
-            Templates.appendNodeContents(this.selectedTagsDisplay, html, js);
+            const {html, js} = await Templates.renderForPromise('mod_projetvet/form/tagselect_grouped_table', context);
+            Templates.replaceNodeContents(this.selectedTagsDisplay, html, js);
         }
     }
 

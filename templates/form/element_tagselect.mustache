@@ -64,7 +64,7 @@
 }}
 {{< core_form/element-template }}
     {{$element}}
-        <div class="tagselect-wrapper" data-element-id="{{element.id}}">
+        <div class="tagselect-wrapper w-100" data-element-id="{{element.id}}">
             {{! Hidden select element for form submission }}
             <select
                 name="{{element.name}}"
@@ -73,7 +73,12 @@
                 class="d-none"
                 {{#element.frozen}}disabled{{/element.frozen}}>
                 {{#element.options}}
-                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{text}}</option>
+                    <option value="{{value}}"
+                            {{#selected}}selected{{/selected}}
+                            {{#catid}}data-catid="{{catid}}"{{/catid}}
+                            {{#catname}}data-catname="{{catname}}"{{/catname}}>
+                        {{text}}
+                    </option>
                 {{/element.options}}
             </select>
 
@@ -94,14 +99,18 @@
             {{! Display selected tags }}
             <div class="selected-tags-display mt-2" data-region="selected-tags-display">
                 {{^isfrozen}}
-                {{#element.selectedtags}}
-                    {{> mod_projetvet/tagselect_badge}}
-                {{/element.selectedtags}}
+                {{#element.hasselectedgroups}}
+                {{#element}}
+                {{> mod_projetvet/form/tagselect_grouped_table}}
+                {{/element}}
+                {{/element.hasselectedgroups}}
                 {{/isfrozen}}
                 {{#isfrozen}}
-                {{#element.selectedtags}}
+                {{#element.selectedgroups}}
+                {{#items}}
                     <div>{{tagname}}</div>
-                {{/element.selectedtags}}
+                {{/items}}
+                {{/element.selectedgroups}}
                 {{/isfrozen}}
             </div>
 
