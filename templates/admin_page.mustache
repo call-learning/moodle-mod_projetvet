@@ -105,7 +105,11 @@
 </div>
 
 {{#js}}
-require(['mod_projetvet/clickable_rows', 'mod_projetvet/manage_groups', 'mod_projetvet/admin_filters'], function(clickableRows, manageGroups, adminFilters) {
+require([
+    'mod_projetvet/clickable_rows',
+    'mod_projetvet/manage_groups',
+    'mod_projetvet/admin_filters'
+], function(clickableRows, manageGroups, adminFilters) {
     clickableRows.init();
     manageGroups.init();
     adminFilters.init();

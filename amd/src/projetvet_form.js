@@ -408,8 +408,7 @@ export const init = async() => {
                 Templates.replaceNodeContents(listContainer, html, js);
             } catch (error) {
                 Notification.exception(error);
-            }
-            finally {
+            } finally {
                 pending.resolve();
             }
         });

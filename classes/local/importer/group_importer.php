@@ -16,6 +16,8 @@
 
 namespace mod_projetvet\local\importer;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
 require_once($CFG->libdir . '/csvlib.class.php');
 use csv_import_reader;
@@ -25,7 +27,6 @@ use mod_projetvet\local\persistent\projetvet_group;
 use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\local\persistent\teacher_rating;
 
-defined('MOODLE_INTERNAL') || die();
 /**
  * Group importer for CSV uploads
  *

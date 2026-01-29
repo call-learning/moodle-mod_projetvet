@@ -42,15 +42,16 @@ class notifications {
         // Get the student user object.
         $student = $DB->get_record('user', ['id' => $studentid], '*', MUST_EXIST);
 
+        // Get course module to build the link.
+        $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
+        $projetvetid = $cm->instance;
+
         // Get the tutor for this student.
-        $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($studentid, $cmid);
+        $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($studentid, $projetvetid);
         if (!$tutor) {
             // No tutor found - cannot send notification.
             return false;
         }
-
-        // Get course module to build the link.
-        $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
 
         // Build the link to the entry.
         $linkurl = new moodle_url('/mod/projetvet/view.php', [
@@ -101,15 +102,16 @@ class notifications {
         // Get the student user object.
         $student = $DB->get_record('user', ['id' => $studentid], '*', MUST_EXIST);
 
+        // Get course module to build the link.
+        $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
+        $projetvetid = $cm->instance;
+
         // Get the tutor for this student.
-        $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($studentid, $cmid);
+        $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($studentid, $projetvetid);
         if (!$tutor) {
             // No tutor found - send from noreply.
             $tutor = \core_user::get_noreply_user();
         }
-
-        // Get course module to build the link.
-        $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
 
         // Build the link to the entry.
         $linkurl = new moodle_url('/mod/projetvet/view.php', [

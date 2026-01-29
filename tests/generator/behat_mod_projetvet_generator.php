@@ -41,6 +41,18 @@ class behat_mod_projetvet_generator extends behat_generator_base {
                 'required' => ['field', 'entry'],
                 'switchids' => ['field' => 'fieldid', 'entry' => 'entryid'],
             ],
+            'projetvet groups' => [
+                'singular' => 'projetvet group',
+                'datagenerator' => 'projetvet_group',
+                'required' => ['name', 'teacher', 'projetvetidnumber'],
+                'switchids' => [],
+            ],
+            'projetvet group members' => [
+                'singular' => 'projetvet group member',
+                'datagenerator' => 'projetvet_group_member',
+                'required' => ['user', 'group'],
+                'switchids' => [],
+            ],
         ];
     }
 
@@ -108,5 +120,40 @@ class behat_mod_projetvet_generator extends behat_generator_base {
      */
     protected function get_student_id(string $username): int {
         return $this->get_user_id($username);
+    }
+
+    /**
+     * Gets the teacher user id from its username.
+     *
+     * @param string $username
+     * @return int
+     */
+    protected function get_teacher_id(string $username): int {
+        return $this->get_user_id($username);
+    }
+
+    /**
+     * Gets the secondary teacher user id from its username.
+     *
+     * @param string $username
+     * @return int
+     */
+    protected function get_secondaryteacher_id(string $username): int {
+        return $this->get_user_id($username);
+    }
+
+    /**
+     * Gets the projetvet group id from its name.
+     *
+     * @param string $groupname
+     * @return int
+     */
+    protected function get_projetvetgroup_id(string $groupname): int {
+        global $DB;
+        $group = $DB->get_record('projetvet_group', ['name' => $groupname]);
+        if (!$group) {
+            throw new Exception("Projetvet group with name '$groupname' not found");
+        }
+        return $group->id;
     }
 }

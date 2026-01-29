@@ -11,18 +11,17 @@ Feature: Face-to-face session form operations in mod_projetvet
       | student1 | Student   | One      | student1@example.com |
     And the following "course enrolments" exist:
       | user     | course | role           |
-      | teacher1 | C1     | teacher |
+      | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
-    And the following "groups" exist:
-      | name | description | course | idnumber |
-      | Group 1 | G1 description | C1 | G1 |
-    And the following "group members" exist:
-      | user | group |
-      | student1 | G1 |
-      | teacher1 | G1 |
     And the following "activities" exist:
-      | activity  | name            | course | idnumber    | groupmode |
-      | projetvet | My Activities   | C1     | projetvet1  | 1         |
+      | activity  | name            | course | idnumber    |
+      | projetvet | My Activities   | C1     | projetvet1  |
+    And the following "mod_projetvet > projetvet groups" exist:
+      | name          | teacher  | rating  | projetvetidnumber | course |
+      | teacher1group | teacher1 | average | projetvet1        | C1     |
+    And the following "mod_projetvet > projetvet group members" exist:
+      | user     | group          |
+      | student1 | teacher1group  |
 
   Scenario: Student creates a new face-to-face session
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
@@ -73,12 +72,9 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Interview date                                                      | ##21 March 2025 14:00## |
 
     And I submit the projetvet form
-<<<<<<< HEAD
-=======
     And I wait until the page is ready
     Then I should see "Interview submitted to tutor"
     And I close the notification alert
->>>>>>> 1eff622 (Admin UI)
 
     Then I should see "21/03/25"
     And I should see "Face-to-face to be confirmed by the tutor" in the "21/03/25" "table_row"

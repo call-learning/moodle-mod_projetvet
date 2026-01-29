@@ -75,8 +75,8 @@ class groups {
      * Get all group memberships for a user
      *
      * @param int $userid The user ID
-     * @param int $projetvetid Optional: filter by projetvet instance
-     * @param string $membertype Optional: filter by member type
+     * @param int|null $projetvetid Optional: filter by projetvet instance
+     * @param string|null $membertype Optional: filter by member type
      * @return array Array of group_member objects
      */
     public static function get_user_memberships(int $userid, ?int $projetvetid = null, ?string $membertype = null): array {
@@ -258,6 +258,28 @@ class groups {
         }
 
         return $studentoptions;
+    }
+
+    /**
+     * Get all teachers in the course with approve capability
+     *
+     * @param int $cmid Course module ID
+     * @return array Array of teacher user IDs
+     */
+    public static function get_all_teachers(int $cmid): array {
+        $modcontext = \context_module::instance($cmid);
+        $coursecontext = $modcontext->get_course_context();
+
+        // Get teachers (users with approve capability).
+        $enrolledteachers = get_enrolled_users(
+            $coursecontext,
+            'mod/projetvet:approve',
+            0,
+            'u.id, u.lastname, u.firstname',
+            'u.lastname ASC, u.firstname ASC'
+        );
+
+        return array_keys($enrolledteachers);
     }
 
     /**

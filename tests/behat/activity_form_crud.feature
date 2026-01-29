@@ -21,22 +21,19 @@ Feature: Activity form CRUD operations in mod_projetvet
       | student2 | C1     | student        |
       | student3 | C1     | student        |
       | student4 | C1     | student        |
-    And the following "groups" exist:
-      | name | description | course | idnumber |
-      | Group 1 | G1 description | C1 | G1 |
-      | Group 2 | G1 description | C1 | G2 |
-    And the following "group members" exist:
-      | user | group |
-      | student1 | G1 |
-      | student2 | G1 |
-      | student2 | G2 |
-      | student3 | G2 |
-      | teacher1 | G1 |
-      | student4 | G2 |
-      | teacher2 | G2 |
     And the following "activities" exist:
       | activity  | name            | course | idnumber    |
       | projetvet | My Activities   | C1     | projetvet1  |
+    And the following "mod_projetvet > projetvet groups" exist:
+      | name    | teacher  | rating  | projetvetidnumber | course |
+      | Group 1 | teacher1 | average | projetvet1        | C1     |
+      | Group 2 | teacher2 | average | projetvet1        | C1     |
+    And the following "mod_projetvet > projetvet group members" exist:
+      | user     | group   |
+      | student1 | Group 1 |
+      | student2 | Group 1 |
+      | student3 | Group 2 |
+      | student4 | Group 2 |
 
   Scenario: Student creates a new activity with all fields
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"

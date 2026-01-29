@@ -28,35 +28,6 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('mod_projetvet_settings', new lang_string('pluginname', 'mod_projetvet'));
 
     if ($ADMIN->fulltree) {
-        // Tutor role setting.
-        $settings->add(
-            new admin_setting_heading(
-                'mod_projetvet/tutor_heading',
-                get_string('tutor_heading', 'mod_projetvet'),
-                get_string('tutor_heading_desc', 'mod_projetvet'),
-            )
-        );
-
-        // Get all roles for selection.
-        if (!during_initial_install()) {
-            global $DB;
-            $allroles = $DB->get_records('role', null, 'sortorder', 'id, name, shortname');
-            $roles = [];
-            foreach ($allroles as $role) {
-                $roles[$role->shortname] = $role->name ? $role->name : $role->shortname;
-            }
-
-            $settings->add(
-                new admin_setting_configselect(
-                    'mod_projetvet/tutor_role',
-                    get_string('tutor_role', 'mod_projetvet'),
-                    get_string('tutor_role_desc', 'mod_projetvet'),
-                    'teacher',
-                    $roles
-                )
-            );
-        }
-
         // Hours to ECTS conversion.
         $settings->add(
             new admin_setting_heading(

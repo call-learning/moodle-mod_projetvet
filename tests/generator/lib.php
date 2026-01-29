@@ -297,4 +297,96 @@ class mod_projetvet_generator extends testing_module_generator {
                 return null;
         }
     }
+
+    /**
+     * Create a projetvet group with teacher rating and optional secondary teacher
+     *
+     * @param array $data Group data with keys: name, teacher, rating, secondaryteacher, projetvetidnumber, course
+     * @return stdClass The created group record
+     */
+    public function create_projetvet_group(array $data): stdClass {
+        global $DB;
+
+        // Required fields.
+        if (!isset($data['name']) || !isset($data['teacher']) || !isset($data['projetvetidnumber'])) {
+            throw new coding_exception('name, teacher, and projetvetidnumber are required for projetvet_group');
+        }
+
+        // Get teacher user.
+        $teacher = $DB->get_record('user', ['username' => $data['teacher']], '*', MUST_EXIST);
+
+        // Get projetvet instance by idnumber.
+        $cm = $DB->get_record_sql(
+            "SELECT cm.instance
+               FROM {course_modules} cm
+               JOIN {modules} m ON m.id = cm.module
+              WHERE cm.idnumber = :idnumber AND m.name = 'projetvet'",
+            ['idnumber' => $data['projetvetidnumber']],
+            MUST_EXIST
+        );
+        $projetvetid = $cm->instance;
+
+        // Create the group using the persistent class.
+        $group = new \mod_projetvet\local\persistent\projetvet_group(0, (object)[
+            'name' => $data['name'],
+            'description' => $data['description'] ?? '',
+            'ownerid' => $teacher->id,
+            'projetvetid' => $projetvetid,
+        ]);
+        $group->create();
+
+        // Set teacher rating if provided.
+        if (isset($data['rating'])) {
+            \mod_projetvet\local\api\groups::set_teacher_rating($teacher->id, $projetvetid, $data['rating']);
+        }
+
+        // Add secondary teacher if provided.
+        if (isset($data['secondaryteacher'])) {
+            $secondaryteacher = $DB->get_record('user', ['username' => $data['secondaryteacher']], '*', MUST_EXIST);
+            \mod_projetvet\local\api\groups::add_members(
+                $group->get('id'),
+                [$secondaryteacher->id],
+                []
+            );
+        }
+
+        return $group->to_record();
+    }
+
+    /**
+     * Add a member to a projetvet group
+     *
+     * @param array $data Member data with keys: user (username), group (group name)
+     * @return stdClass The created group_member record
+     */
+    public function create_projetvet_group_member(array $data): stdClass {
+        global $DB;
+
+        // Required fields.
+        if (!isset($data['user']) || !isset($data['group'])) {
+            throw new coding_exception('user and group are required for projetvet_group_member');
+        }
+
+        // Get user.
+        $user = $DB->get_record('user', ['username' => $data['user']], '*', MUST_EXIST);
+
+        // Get group by name.
+        $group = $DB->get_record('projetvet_groups', ['name' => $data['group']], '*', MUST_EXIST);
+
+        // Check if member already exists.
+        $existing = \mod_projetvet\local\persistent\group_member::get_membership($group->id, $user->id);
+        if ($existing) {
+            return $existing->to_record();
+        }
+
+        // Create member directly without using add_members to avoid sync behavior.
+        $member = new \mod_projetvet\local\persistent\group_member(0, (object)[
+            'groupid' => $group->id,
+            'userid' => $user->id,
+            'membertype' => \mod_projetvet\local\persistent\group_member::TYPE_STUDENT,
+        ]);
+        $member->create();
+
+        return $member->to_record();
+    }
 }

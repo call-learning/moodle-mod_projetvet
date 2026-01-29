@@ -50,10 +50,6 @@ class admin_teachers extends system_report {
         $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
         $context = context_course::instance($cm->course);
 
-        // Get tutor role.
-        $tutorrole = get_config('mod_projetvet', 'tutor_role') ?: 'teacher';
-        $role = $DB->get_record('role', ['shortname' => $tutorrole]);
-
         // Main user entity.
         $entityuser = new user();
         $entityuseralias = $entityuser->get_table_alias('user');
@@ -64,33 +60,24 @@ class admin_teachers extends system_report {
         // Base fields needed.
         $this->add_base_fields("{$entityuseralias}.id, {$entityuseralias}.firstname, {$entityuseralias}.lastname");
 
-        if ($role) {
-            // Get teachers with this role in the course.
-            $teachers = get_role_users($role->id, $context, false, 'u.id, u.lastname, u.firstname ');
-            if (!empty($teachers)) {
-                $teacherids = array_keys($teachers);
+        // Get all teachers with approve capability.
+        $teacherids = \mod_projetvet\local\api\groups::get_all_teachers($cmid);
 
-                // Filter teachers with capacity if requested.
-                if ($filterwithcapacity) {
-                    $teacherswithcapacity = [];
-                    foreach ($teacherids as $teacherid) {
-                        $capacity = \mod_projetvet\local\api\groups::get_teacher_available_capacity($teacherid, $projetvetid);
-                        if ($capacity > 0) {
-                            $teacherswithcapacity[] = $teacherid;
-                        }
+        if (!empty($teacherids)) {
+            // Filter teachers with capacity if requested.
+            if ($filterwithcapacity) {
+                $teacherswithcapacity = [];
+                foreach ($teacherids as $teacherid) {
+                    $capacity = \mod_projetvet\local\api\groups::get_teacher_available_capacity($teacherid, $projetvetid);
+                    if ($capacity > 0) {
+                        $teacherswithcapacity[] = $teacherid;
                     }
-                    $teacherids = $teacherswithcapacity;
                 }
-
-                if (!empty($teacherids)) {
-                    [$insql, $inparams] = $DB->get_in_or_equal($teacherids, SQL_PARAMS_NAMED, database::generate_param_name());
-                    $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
-                } else {
-                    $this->add_base_condition_sql("1 = 0");
-                }
-            } else {
-                $this->add_base_condition_sql("1 = 0");
+                $teacherids = $teacherswithcapacity;
             }
+
+            [$insql, $inparams] = $DB->get_in_or_equal($teacherids, SQL_PARAMS_NAMED, database::generate_param_name());
+            $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
         } else {
             $this->add_base_condition_sql("1 = 0");
         }

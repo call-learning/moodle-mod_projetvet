@@ -22,8 +22,6 @@ use core_form\dynamic_form;
 use mod_projetvet\local\persistent\teacher_rating;
 use moodle_url;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Form for updating teacher settings (rating/capacity)
  *

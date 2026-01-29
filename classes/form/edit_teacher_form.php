@@ -23,8 +23,6 @@ use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\local\persistent\projetvet_group;
 use moodle_url;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Form for assigning a teacher to a student
  *
@@ -62,8 +60,8 @@ class edit_teacher_form extends dynamic_form {
         global $DB;
 
         $data = $this->get_data();
-        $studentidsJson = $data->studentids ?? '[]';
-        $studentids = json_decode($studentidsJson, true);
+        $studentidsjson = $data->studentids ?? '[]';
+        $studentids = json_decode($studentidsjson, true);
         $projetvetid = $data->projetvetid;
         $teacherid = $data->teacherid ?? 0;
 
@@ -120,12 +118,12 @@ class edit_teacher_form extends dynamic_form {
      * @return void
      */
     public function set_data_for_dynamic_submission(): void {
-        $studentidsJson = $this->optional_param('studentids', '[]', PARAM_RAW);
+        $studentidsjson = $this->optional_param('studentids', '[]', PARAM_RAW);
         $projetvetid = $this->optional_param('projetvetid', 0, PARAM_INT);
         $cmid = $this->optional_param('cmid', 0, PARAM_INT);
 
         $data = [
-            'studentids' => $studentidsJson,
+            'studentids' => $studentidsjson,
             'projetvetid' => $projetvetid,
             'cmid' => $cmid,
         ];
@@ -149,21 +147,21 @@ class edit_teacher_form extends dynamic_form {
         );
 
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
-        $studentidsJson = $this->optional_param('studentids', '[]', PARAM_RAW);
+        $studentidsjson = $this->optional_param('studentids', '[]', PARAM_RAW);
         $projetvetid = $this->optional_param('projetvetid', 0, PARAM_INT);
 
         // Hidden fields.
         $mform->addElement('hidden', 'cmid', $cmid);
         $mform->setType('cmid', PARAM_INT);
 
-        $mform->addElement('hidden', 'studentids', $studentidsJson);
+        $mform->addElement('hidden', 'studentids', $studentidsjson);
         $mform->setType('studentids', PARAM_RAW);
 
         $mform->addElement('hidden', 'projetvetid', $projetvetid);
         $mform->setType('projetvetid', PARAM_INT);
 
         // Display selected students.
-        $studentshtml = $this->get_selected_students_html($cmid, $projetvetid, $studentidsJson);
+        $studentshtml = $this->get_selected_students_html($cmid, $projetvetid, $studentidsjson);
         if (!empty($studentshtml)) {
             $mform->addElement('html', $studentshtml);
         }
@@ -184,13 +182,13 @@ class edit_teacher_form extends dynamic_form {
      *
      * @param int $cmid Course module ID
      * @param int $projetvetid ProjetVet ID
-     * @param string $studentidsJson JSON string of student IDs
+     * @param string $studentidsjson JSON string of student IDs
      * @return string HTML output of the student list
      */
-    protected function get_selected_students_html(int $cmid, int $projetvetid, string $studentidsJson): string {
+    protected function get_selected_students_html(int $cmid, int $projetvetid, string $studentidsjson): string {
         global $OUTPUT;
 
-        $studentids = json_decode($studentidsJson, true);
+        $studentids = json_decode($studentidsjson, true);
         if (empty($studentids) || !is_array($studentids)) {
             return '';
         }

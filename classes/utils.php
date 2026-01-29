@@ -35,9 +35,12 @@ class utils {
      * @return string The filter value
      */
     public static function get_filter(string $filter, int $studentid, int $cmid): string {
+        $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
+        $projetvetid = $cm->instance;
+
         switch ($filter) {
             case 'gettutor':
-                $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($studentid, $cmid);
+                $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($studentid, $projetvetid);
                 if ($tutor) {
                     return fullname($tutor);
                 }
@@ -53,36 +56,6 @@ class utils {
             default:
                 return '';
         }
-    }
-
-    /**
-     * Get users with a specific role in the module context.
-     *
-     * @param string $roleshortname The role shortname
-     * @param int $cmid The course module ID
-     * @return array Array of user objects
-     */
-    public static function get_users_with_role(string $roleshortname, int $cmid): array {
-        global $DB;
-
-        // Get the role ID.
-        $role = $DB->get_record('role', ['shortname' => $roleshortname]);
-        if (!$role) {
-            return [];
-        }
-
-        // Get the course module and context.
-        $cm = get_coursemodule_from_id('projetvet', $cmid);
-        if (!$cm) {
-            return [];
-        }
-
-        $context = \context_module::instance($cm->id);
-
-        // Get all users with this role in this context.
-        $users = get_role_users($role->id, $context, true);
-
-        return $users ?: [];
     }
 
     /**
@@ -387,21 +360,6 @@ class utils {
             'warning' => $warning,
             'error' => '',
         ];
-    }
-
-    /**
-     * Get the teacher/tutor name for a student.
-     *
-     * @param int $userid The student user ID
-     * @param int $cmid The course module ID
-     * @return string The teacher's full name or empty string if not found
-     */
-    public static function get_student_teacher_name(int $userid, int $cmid): string {
-        $tutor = \mod_projetvet\local\api\groups::get_student_primary_tutor($userid, $cmid);
-        if ($tutor) {
-            return fullname($tutor);
-        }
-        return '';
     }
 
     /**

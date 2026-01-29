@@ -495,4 +495,48 @@ class behat_mod_projetvet extends behat_base {
         $button->click();
         $this->wait_for_pending_js();
     }
+
+    /**
+     * Convert page names to URLs for steps like 'When I am on the "[identifier]" "[page type]" page'.
+     *
+     * Recognised page names are:
+     * | pagetype          | name meaning | description                    |
+     * | View              | Activity name | The activity view page        |
+     * | Admin             | Activity name | The admin page (admin.php)    |
+     *
+     * @param string $type identifies which type of page this is, e.g. 'Admin'.
+     * @param string $identifier identifies the particular page, e.g. 'ProjetVet 1'.
+     * @return moodle_url the corresponding URL.
+     * @throws Exception with a meaningful error message if the specified page cannot be found.
+     */
+    protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
+        switch (strtolower($type)) {
+            case 'view':
+                return new moodle_url(
+                    '/mod/projetvet/view.php',
+                    ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
+                );
+
+            case 'admin':
+                return new moodle_url(
+                    '/mod/projetvet/admin.php',
+                    ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
+                );
+
+            default:
+                throw new Exception('Unrecognised projetvet page type "' . $type . '."');
+        }
+    }
+
+    /**
+     * Get a projetvet activity course module by activity name.
+     *
+     * @param string $name the activity name.
+     * @return stdClass cm from get_coursemodule_from_instance.
+     */
+    protected function get_cm_by_projetvet_name(string $name): stdClass {
+        global $DB;
+        $projetvet = $DB->get_record('projetvet', ['name' => $name], '*', MUST_EXIST);
+        return get_coursemodule_from_instance('projetvet', $projetvet->id, $projetvet->course, false, MUST_EXIST);
+    }
 }
