@@ -581,6 +581,10 @@ class projetvet_form extends dynamic_form {
                             $buttonattributes['data-action-type'] = $buttonaction;
                         }
 
+                        if (!empty($configdata['emailaction'])) {
+                            $buttonattributes['data-emailaction'] = $configdata['emailaction'];
+                        }
+
                         if (!empty($configdata['submitpopup'])) {
                             $buttonattributes['data-submitpopup'] = $configdata['submitpopup'];
                         }

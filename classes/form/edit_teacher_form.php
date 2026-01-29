@@ -139,13 +139,6 @@ class edit_teacher_form extends dynamic_form {
 
         $mform = $this->_form;
 
-        // Register the tagselect element type.
-        \MoodleQuickForm::registerElementType(
-            'tagselect',
-            "$CFG->dirroot/mod/projetvet/classes/form/tagselect_element.php",
-            'mod_projetvet\form\tagselect_element'
-        );
-
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
         $studentidsjson = $this->optional_param('studentids', '[]', PARAM_RAW);
         $projetvetid = $this->optional_param('projetvetid', 0, PARAM_INT);

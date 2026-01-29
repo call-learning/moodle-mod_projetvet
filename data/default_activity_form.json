@@ -330,7 +330,7 @@
             "icon": "fa-envelope",
             "entrystatus": 1,
             "style": "secondary",
-            "action": "email"
+            "emailaction": "contactactivity"
           },
           "capability": "approve",
           "entrystatus": 1,

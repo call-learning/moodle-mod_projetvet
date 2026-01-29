@@ -301,15 +301,10 @@ class edit_member_form extends dynamic_form {
                     ],
                 ];
 
-                // Calculate initial max capacity.
-                $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($teacherid, $projetvetid);
-                $capacity = $rating->get_capacity();
-
                 $mform->addElement('tagselect', 'studentuserid', get_string('selectstudent', 'mod_projetvet'), [], [
                     'groupedoptions' => $groupedstudentoptions,
                     'multiple' => true,
                     'showsuggestions' => true,
-                    'maxtags' => $capacity,
                 ]);
             }
 

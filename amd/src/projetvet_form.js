@@ -425,16 +425,16 @@ export const init = async() => {
         event.preventDefault();
 
         const entrystatus = button.dataset.entrystatus;
-        const actionType = button.dataset.actionType;
+        const emailAction = button.dataset.emailaction;
         const form = button.closest('form');
 
         // Handle email action.
-        if (actionType === 'email' && form) {
+        if (emailAction && form) {
             const studentEmailInput = form.querySelector('input[name="studentemail"]');
             if (studentEmailInput && studentEmailInput.value) {
                 const email = studentEmailInput.value;
-                const subjectString = await getString('email_subject_discussion', 'mod_projetvet');
-                const bodyString = await getString('email_body_discussion', 'mod_projetvet');
+                const subjectString = await getString(emailAction + '_subject', 'mod_projetvet');
+                const bodyString = await getString(emailAction, 'mod_projetvet');
                 const subject = encodeURIComponent(subjectString);
                 const body = encodeURIComponent(bodyString);
                 window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;

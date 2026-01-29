@@ -81,6 +81,18 @@ $string['competency'] = 'Competency';
 $string['completed'] = 'Completed';
 $string['compte_rendu_intro_value'] = 'Enter the report of the interview with your tutor. This report will be shared with your tutor and visible to your future tutors or the DEVE.';
 $string['confirmacceptance'] = '<strong>Eligibility validated</strong><br><br>The validation of the project eligibility has been successfully recorded. A notification has been sent to your tutored student to inform them that they can start the activity within the defined framework.';
+$string['contactactivity'] = 'Hello,
+
+I would like to discuss with you about your ProjetVet project.
+
+Best regards';
+$string['contactactivity_subject'] = 'Discussion about a ProjetVet project';
+$string['contactf2f'] = 'Hello,
+
+I would like to discuss with you about our ProjetVet face2face.
+
+Best regards';
+$string['contactf2f_subject'] = 'Discussion about a ProjetVet face2face';
 $string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
 $string['confirmdeletemember'] = 'Are you sure you want to remove this member from the group?';
 $string['confirmsubmittotutor'] = '<h5>Project submitted to tutor</h5><p>Your project has been submitted to your tutor teacher.</p><p>We recommend that you schedule a meeting with them to discuss the project eligibility before the start of the activity.</p>';
@@ -96,12 +108,6 @@ $string['draft'] = 'Draft';
 $string['ects_guide_pdf'] = 'ECTS attribution guide';
 $string['ects_guide_pdf_desc'] = 'Upload a PDF document explaining the ECTS attribution modalities. This document will be linked in the activity forms.';
 $string['editactivity'] = 'Edit Activity';
-$string['email_body_discussion'] = 'Hello,
-
-I would like to have a discussion with you concerning your ProjetVet activity.
-
-Best regards';
-$string['email_subject_discussion'] = 'Discussion on ProjetVet';
 $string['entries'] = 'Entries';
 $string['entry'] = 'Entry';
 $string['entry_not_found'] = 'Activity entry not found: {$a}';

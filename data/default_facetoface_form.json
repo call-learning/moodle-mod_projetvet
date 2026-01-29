@@ -277,7 +277,7 @@
             "icon": "fa-envelope",
             "entrystatus": 1,
             "style": "secondary",
-            "action": "email"
+            "emailaction": "contactf2f"
           },
           "capability": "approve",
           "entrystatus": 1,
