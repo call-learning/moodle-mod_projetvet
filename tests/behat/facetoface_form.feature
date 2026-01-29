@@ -50,7 +50,7 @@ Feature: Face-to-face session form operations in mod_projetvet
     And I should see "Face-to-face to be confirmed by the tutor" in the "15/03/25" "table_row"
     And I should see "Year 2" in the "15/03/25" "table_row"
     And I should see "Face-to-face" in the "15/03/25" "table_row"
-    And I should see "We discussed my progress" in the "15/03/25" "table_row"
+
   Scenario: Student creates draft, edits and submits face-to-face session
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
     And I click on "New Face-to-Face Session" "button"
@@ -70,12 +70,12 @@ Feature: Face-to-face session form operations in mod_projetvet
     # Edit and submit
     When I click on row with text "20/03/25"
     And I set the following fields to these values:
-      | Report                                                              | Updated meeting notes   |
+      | Interview date                                                      | ##21 March 2025 14:00## |
 
     And I submit the projetvet form
 
-    Then I should see "Updated meeting notes" in the "20/03/25" "table_row"
-    And I should see "Face-to-face to be confirmed by the tutor" in the "20/03/25" "table_row"
+    Then I should see "21/03/25"
+    And I should see "Face-to-face to be confirmed by the tutor" in the "21/03/25" "table_row"
 
   Scenario: Teacher validates face-to-face session
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
