@@ -140,7 +140,11 @@ class groups {
      * @param string $newrating The new rating value (expert, average, novice)
      * @return \mod_projetvet\local\persistent\teacher_rating The updated rating persistent
      */
-    public static function set_teacher_rating(int $userid, int $projetvetid, string $newrating): \mod_projetvet\local\persistent\teacher_rating {
+    public static function set_teacher_rating(
+        int $userid,
+        int $projetvetid,
+        string $newrating
+    ): \mod_projetvet\local\persistent\teacher_rating {
         // Get or create teacher rating.
         $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($userid, $projetvetid);
 
@@ -475,7 +479,7 @@ class groups {
 
         // Get all groups where this user is owner (primary tutor).
         $ownedgroups = projetvet_group::get_by_owner($tutorid, $projetvetid);
-        $groupids = array_map(function($group) {
+        $groupids = array_map(function ($group) {
             return $group->get('id');
         }, $ownedgroups);
 

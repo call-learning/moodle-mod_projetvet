@@ -23,8 +23,6 @@ use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\local\persistent\projetvet_group;
 use moodle_url;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Form for adding/editing group members
  *
@@ -288,7 +286,7 @@ class edit_member_form extends dynamic_form {
                     'groupedoptions' => $groupedteacheroptions,
                     'multiple' => true,
                     'showsuggestions' => true,
-                    'maxtags' => 1
+                    'maxtags' => 1,
                 ]);
             }
 

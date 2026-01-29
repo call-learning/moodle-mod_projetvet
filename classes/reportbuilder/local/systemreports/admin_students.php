@@ -145,7 +145,7 @@ class admin_students extends system_report {
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(false)
             ->add_attributes(['class' => 'w-30'])
-            ->add_callback(static function($value, $row): string {
+            ->add_callback(static function ($value, $row): string {
                 global $OUTPUT;
                 return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/student_checkbox', [
                     'studentid' => $row->userid_select,
@@ -167,7 +167,7 @@ class admin_students extends system_report {
             ->add_field("{$entityuseralias}.id", 'userid_promotion')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(true)
-            ->add_callback(static function($value, $row): string {
+            ->add_callback(static function ($value, $row): string {
                 return \mod_projetvet\utils::get_user_profile_field($row->userid_promotion, 'promotion');
             });
 
@@ -183,7 +183,7 @@ class admin_students extends system_report {
             ->add_field("{$entityuseralias}.id", 'userid_cohort')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(true)
-            ->add_callback(static function($value, $row): string {
+            ->add_callback(static function ($value, $row): string {
                 return \mod_projetvet\utils::get_user_cohort($row->userid_cohort);
             });
 
@@ -199,7 +199,7 @@ class admin_students extends system_report {
             ->add_field("{$entityuseralias}.id", 'userid_teacher')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(false)
-            ->add_callback(static function($value, $row) use ($cm): string {
+            ->add_callback(static function ($value, $row) use ($cm): string {
                 $primarytutor = \mod_projetvet\local\api\groups::get_student_primary_tutor(
                     $row->userid_teacher,
                     $cm->instance
@@ -219,7 +219,7 @@ class admin_students extends system_report {
             ->add_field("{$entityuseralias}.id", 'userid_secondary')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(false)
-            ->add_callback(static function($value, $row) use ($cm): string {
+            ->add_callback(static function ($value, $row) use ($cm): string {
                 $secondarytutors = \mod_projetvet\local\api\groups::get_student_secondary_tutors(
                     $row->userid_secondary,
                     $cm->instance

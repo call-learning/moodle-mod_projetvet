@@ -29,7 +29,6 @@ use mod_projetvet\local\persistent\teacher_rating;
  * @covers    \mod_projetvet\local\api\groups
  */
 final class groups_test extends \advanced_testcase {
-
     /**
      * Test setup - create course, users, module
      */
@@ -156,8 +155,11 @@ final class groups_test extends \advanced_testcase {
         $this->assertTrue($students[0]->is_student());
 
         // Get only tutors.
-        $tutors = groups::get_user_memberships($data['student2']->id, $data['projetvet']->id,
-            group_member::TYPE_SECONDARY_TUTOR);
+        $tutors = groups::get_user_memberships(
+            $data['student2']->id,
+            $data['projetvet']->id,
+            group_member::TYPE_SECONDARY_TUTOR
+        );
         $this->assertCount(1, $tutors);
         $this->assertTrue($tutors[0]->is_secondary_tutor());
 
@@ -234,7 +236,7 @@ final class groups_test extends \advanced_testcase {
         // Get available students (should exclude student1).
         $students = groups::get_available_students($cm->id, $data['projetvet']->id);
 
-        $this->assertCount(2, $students); // student2 and student3.
+        $this->assertCount(2, $students);
         $studentids = array_column($students, 'uniqueid');
         $this->assertNotContains($data['student1']->id, $studentids);
         $this->assertContains($data['student2']->id, $studentids);

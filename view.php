@@ -79,7 +79,7 @@ if ($canviewall && !$studentid) {
         $context,
         parameters: [
             'cmid' => $cm->id,
-            'projetvetid' => $moduleinstance->id
+            'projetvetid' => $moduleinstance->id,
         ]
     );
     echo $report->output();

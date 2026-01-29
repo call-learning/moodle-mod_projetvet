@@ -149,7 +149,7 @@ class admin_teachers extends system_report {
                 ->set_type(column::TYPE_TEXT)
                 ->set_is_sortable(false)
                 ->add_attributes(['class' => 'w-30'])
-                ->add_callback(static function($value, $row): string {
+                ->add_callback(static function ($value, $row): string {
                     global $OUTPUT;
                     return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [
                         'teacherid' => $row->userid_select,
