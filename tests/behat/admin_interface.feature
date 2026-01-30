@@ -1,5 +1,6 @@
-@mod @mod_projetvet
+@mod @mod_projetvet @javascript
 Feature: Admin interface for managing groups
+
   In order to manage student groups and teacher assignments
   As an editing teacher
   I need to be able to access the admin interface
@@ -72,3 +73,62 @@ Feature: Admin interface for managing groups
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
     Then I should see "Show only students without teachers"
+
+  Scenario: View teachers report with ratings and capacity
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    Then "#teachers-report-container" "css_element" should exist
+    And I should see "Teacher One" in the "#teachers-report-container" "css_element"
+    And I should see "Teacher Two" in the "#teachers-report-container" "css_element"
+    And I should see "Teacher Three" in the "#teachers-report-container" "css_element"
+    # Check Teacher One (average rating, 5 students, target 8)
+    And I should see "Average" in the "#teachers-report-container" "css_element"
+    And I should see "8" in the "#teachers-report-container" "css_element"
+    And I should see "5" in the "#teachers-report-container" "css_element"
+    # Check Teacher Two (expert rating, 5 students, target 12)
+    And I should see "Expert" in the "#teachers-report-container" "css_element"
+    And I should see "12" in the "#teachers-report-container" "css_element"
+
+  Scenario: View students report with teacher assignments
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    Then "#students-report-container" "css_element" should exist
+    And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
+    # Check some assigned students
+    And I should see "Student One" in the "#students-report-container" "css_element"
+    And I should see "Student Two" in the "#students-report-container" "css_element"
+    And I should see "Student Six" in the "#students-report-container" "css_element"
+    # Check some unassigned students
+    And I should see "Student Eleven" in the "#students-report-container" "css_element"
+    And I should see "Student Fifteen" in the "#students-report-container" "css_element"
+
+  Scenario: Verify student teacher assignments in report
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    Then "#students-report-container" "css_element" should exist
+    And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
+    # Students 1-5 should be assigned to Teacher One
+    And "#students-report-container" "css_element" should contain "Teacher One"
+    # Students 6-10 should be assigned to Teacher Two
+    And "#students-report-container" "css_element" should contain "Teacher Two"
+
+  Scenario: Verify teacher capacity calculations
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    Then "#teachers-report-container" "css_element" should exist
+    # Teacher table should have the required columns
+    And "#teachers-report-container" "css_element" should contain "Rating"
+    And "#teachers-report-container" "css_element" should contain "Target"
+    And "#teachers-report-container" "css_element" should contain "Current"
+    And "#teachers-report-container" "css_element" should contain "Gap"
+
+  Scenario: Filter students without teachers
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    And I click on "Show only students without teachers" "checkbox"
+    And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
+    Then I should see "Student Eleven" in the "#students-report-container" "css_element"
+    And I should see "Student Twelve" in the "#students-report-container" "css_element"
+    And I should see "Student Fifteen" in the "#students-report-container" "css_element"
+    But I should not see "Student One" in the "#students-report-container" "css_element"
+    And I should not see "Student Six" in the "#students-report-container" "css_element"

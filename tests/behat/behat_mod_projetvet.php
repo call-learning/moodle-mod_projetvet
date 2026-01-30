@@ -497,6 +497,45 @@ class behat_mod_projetvet extends behat_base {
     }
 
     /**
+     * Checks if a CSS element contains specific text
+     * // phpcs:disable moodle.Files.LineLength.TooLong
+     * @Then /^"(?P<selector_string>(?:[^"]|\\")*)" "(?P<selectortype_string>(?:[^"]|\\")*)" should contain "(?P<text_string>(?:[^"]|\\")*)"$/
+     * // phpcs:enable moodle.Files.LineLength.TooLong
+     * @param string $selector The CSS selector
+     * @param string $selectortype The type of selector (css_element, etc.)
+     * @param string $text The text to search for
+     * @throws ExpectationException
+     */
+    public function element_should_contain_text($selector, $selectortype, $text) {
+        // For css_element type, use the selector directly as CSS.
+        if ($selectortype === 'css_element') {
+            $element = $this->find('css', $selector);
+
+            if (!$element) {
+                throw new ElementNotFoundException(
+                    $this->getSession(),
+                    'Element',
+                    'css',
+                    $selector
+                );
+            }
+
+            $elementtext = $element->getText();
+            if (stripos($elementtext, $text) === false) {
+                throw new ExpectationException(
+                    'Element "' . $selector . '" does not contain text "' . $text . '". Found: ' . substr($elementtext, 0, 100),
+                    $this->getSession()
+                );
+            }
+        } else {
+            throw new ExpectationException(
+                'Selector type "' . $selectortype . '" is not supported in this step. Use css_element.',
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
      * Convert page names to URLs for steps like 'When I am on the "[identifier]" "[page type]" page'.
      *
      * Recognised page names are:
