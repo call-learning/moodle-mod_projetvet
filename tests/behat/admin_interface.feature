@@ -126,7 +126,6 @@ Feature: Admin interface for managing groups
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
     And I click on "Show only students without teachers" "checkbox"
-    And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
     Then I should see "Student Eleven" in the "#students-report-container" "css_element"
     And I should see "Student Twelve" in the "#students-report-container" "css_element"
     And I should see "Student Fifteen" in the "#students-report-container" "css_element"

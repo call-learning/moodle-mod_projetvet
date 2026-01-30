@@ -80,6 +80,10 @@ $string['competency'] = 'Compétence';
 $string['completed'] = 'Complété';
 $string['compte_rendu_intro_value'] = 'Saisissez le compte-rendu de l\'entretien avec votre tuteur. Ce compte-rendu sera partagé avec votre tuteur et visible par vos futurs tuteurs ou le DEVE.';
 $string['confirmacceptance'] = '<strong>Éligibilité validée</strong><br><br>La validation de l\'éligibilité du projet a bien été prise en compte. Une notification a été envoyée à votre étudiant·e tutoré·e afin de l\'informer qu\'il ou elle peut débuter l\'activité dans le cadre défini.';
+$string['confirmdeleteactivity'] = 'Êtes-vous sûr de vouloir supprimer cette activité ?';
+$string['confirmdeletemember'] = 'Êtes-vous sûr de vouloir supprimer ce membre du groupe ?';
+$string['confirmsubmittotutor'] = '<h5>Projet soumis au tuteur</h5><p>Votre projet a été transmis à votre enseignante ou enseignant tuteur.</p><p>Nous vous recommandons de prendre rendez-vous avec elle ou lui afin d\'échanger sur l\'éligibilité du projet avant le début de l\'activité.</p>';
+$string['confirmvalidationfinal'] = '<strong>Projet validé – crédits ECTS attribués</strong><br><br>La validation finale du projet a bien été enregistrée. Le nombre définitif de crédits ECTS a été attribué et sera comptabilisé dans le parcours de l\'étudiant·e. Une notification a été envoyée à votre étudiant·e tutoré·e. Vous pouvez toujours rouvrir ce projet pour l\'éditer ultérieurement si nécessaire.';
 $string['contactactivity'] = 'Bonjour,
 
 je souhaiterais discuter avec vous concernant votre projet ProjetVet.
@@ -92,10 +96,6 @@ je souhaiterais discuter avec vous concernant notre entretien ProjetVet.
 
 Cordialement';
 $string['contactf2f_subject'] = 'Discussion sur un entretien ProjetVet';
-$string['confirmdeleteactivity'] = 'Êtes-vous sûr de vouloir supprimer cette activité ?';
-$string['confirmdeletemember'] = 'Êtes-vous sûr de vouloir supprimer ce membre du groupe ?';
-$string['confirmsubmittotutor'] = '<h5>Projet soumis au tuteur</h5><p>Votre projet a été transmis à votre enseignante ou enseignant tuteur.</p><p>Nous vous recommandons de prendre rendez-vous avec elle ou lui afin d\'échanger sur l\'éligibilité du projet avant le début de l\'activité.</p>';
-$string['confirmvalidationfinal'] = '<strong>Projet validé – crédits ECTS attribués</strong><br><br>La validation finale du projet a bien été enregistrée. Le nombre définitif de crédits ECTS a été attribué et sera comptabilisé dans le parcours de l\'étudiant·e. Une notification a été envoyée à votre étudiant·e tutoré·e. Vous pouvez toujours rouvrir ce projet pour l\'éditer ultérieurement si nécessaire.';
 $string['conversion_heading'] = 'Conversion heures vers ECTS';
 $string['conversion_heading_desc'] = 'Configurer comment les heures sont converties en crédits ECTS';
 $string['creditsbyrank'] = 'Crédits par rang';
@@ -332,7 +332,7 @@ $string['secondary_tutor'] = 'Tuteur(s) secondaire(s)';
 $string['selectedstudents'] = 'Étudiants sélectionnés ({$a})';
 $string['selectstudent'] = 'Sélectionner un étudiant';
 $string['selecttags'] = 'Choisir';
-$string['selectteacher'] = 'Sélectionner un enseignant';
+$string['selectteacher'] = 'Sélectionner un enseignant secondaire';
 $string['selectuser'] = 'Sélectionner un utilisateur';
 $string['sendtoteacher'] = 'Envoyer au tuteur';
 $string['sendtoteacher_help'] = 'Lorsque ce commutateur est activé, votre entrée sera envoyée à votre tuteur pour évaluation';

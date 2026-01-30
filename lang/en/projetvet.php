@@ -81,6 +81,10 @@ $string['competency'] = 'Competency';
 $string['completed'] = 'Completed';
 $string['compte_rendu_intro_value'] = 'Enter the report of the interview with your tutor. This report will be shared with your tutor and visible to your future tutors or the DEVE.';
 $string['confirmacceptance'] = '<strong>Eligibility validated</strong><br><br>The validation of the project eligibility has been successfully recorded. A notification has been sent to your tutored student to inform them that they can start the activity within the defined framework.';
+$string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
+$string['confirmdeletemember'] = 'Are you sure you want to remove this member from the group?';
+$string['confirmsubmittotutor'] = '<h5>Project submitted to tutor</h5><p>Your project has been submitted to your tutor teacher.</p><p>We recommend that you schedule a meeting with them to discuss the project eligibility before the start of the activity.</p>';
+$string['confirmvalidationfinal'] = '<strong>Project validated – ECTS credits awarded</strong><br><br>The final validation of the project has been successfully recorded. The definitive number of ECTS credits has been awarded and will be counted in the student\'s academic record. A notification has been sent to your tutored student. You can still reopen this project to edit it later if necessary.';
 $string['contactactivity'] = 'Hello,
 
 I would like to discuss with you about your ProjetVet project.
@@ -93,10 +97,6 @@ I would like to discuss with you about our ProjetVet face2face.
 
 Best regards';
 $string['contactf2f_subject'] = 'Discussion about a ProjetVet face2face';
-$string['confirmdeleteactivity'] = 'Are you sure you want to delete this activity?';
-$string['confirmdeletemember'] = 'Are you sure you want to remove this member from the group?';
-$string['confirmsubmittotutor'] = '<h5>Project submitted to tutor</h5><p>Your project has been submitted to your tutor teacher.</p><p>We recommend that you schedule a meeting with them to discuss the project eligibility before the start of the activity.</p>';
-$string['confirmvalidationfinal'] = '<strong>Project validated – ECTS credits awarded</strong><br><br>The final validation of the project has been successfully recorded. The definitive number of ECTS credits has been awarded and will be counted in the student\'s academic record. A notification has been sent to your tutored student. You can still reopen this project to edit it later if necessary.';
 $string['conversion_heading'] = 'Hours to ECTS conversion';
 $string['conversion_heading_desc'] = 'Configure how hours are converted to ECTS credits';
 $string['creditsbyrank'] = 'Credits by rank';
@@ -341,7 +341,7 @@ $string['secondary_tutor'] = 'Secondary tutor(s)';
 $string['selectedstudents'] = 'Selected students ({$a})';
 $string['selectstudent'] = 'Select student';
 $string['selecttags'] = 'Select';
-$string['selectteacher'] = 'Select teacher';
+$string['selectteacher'] = 'Select secondary teacher';
 $string['sendtoteacher'] = 'Send to teacher';
 $string['sendtoteacher_help'] = 'When checked, your entry will be sent to your teacher for evaluation';
 $string['setsubject'] = 'Set subject';

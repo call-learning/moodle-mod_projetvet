@@ -36,6 +36,11 @@ use pix_icon;
  */
 class admin_teachers extends system_report {
     /**
+     * The name of the temporary table used to store teacher data
+     */
+    const TEACHER_TEMP_TABLE_NAME = 'temp_reportbuilder_teachers';
+
+    /**
      * Initialise report
      */
     protected function initialise(): void {
@@ -75,6 +80,9 @@ class admin_teachers extends system_report {
                 }
                 $teacherids = $teacherswithcapacity;
             }
+
+            // Initialize temp table with teacher data.
+            $this->init_temp_table($teacherids, $projetvetid);
 
             [$insql, $inparams] = $DB->get_in_or_equal($teacherids, SQL_PARAMS_NAMED, database::generate_param_name());
             $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
@@ -124,6 +132,15 @@ class admin_teachers extends system_report {
         $showcheckboxes = $this->get_parameter('showcheckboxes', false, PARAM_BOOL);
         $cm = get_coursemodule_from_id('projetvet', $cmid);
 
+        // Get alias for temp table.
+        $temptablealias = 'teacherdata';
+
+        // Add join to temp table.
+        $this->add_join(
+            "LEFT JOIN {" . self::TEACHER_TEMP_TABLE_NAME . "} {$temptablealias} " .
+            "ON {$temptablealias}.userid = {$entityuseralias}.id"
+        );
+
         // Checkbox column (only shown when parameter is set).
         if ($showcheckboxes) {
             $selectcolumn = (new column(
@@ -149,7 +166,7 @@ class admin_teachers extends system_report {
         // Fullname with picture.
         $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
 
-        // Rating column.
+        // Rating column - now sortable using temp table data.
         $ratingcolumn = (new column(
             'rating',
             new lang_string('teacher_rating', 'mod_projetvet'),
@@ -157,16 +174,12 @@ class admin_teachers extends system_report {
         ))
             ->add_joins($entityuser->get_joins())
             ->set_type(column::TYPE_TEXT)
-            ->add_fields("{$entityuseralias}.id")
-            ->set_is_sortable(true)
-            ->add_callback(static function ($value, $row) use ($projetvetid): string {
-                $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($row->id, $projetvetid);
-                return $rating->get_rating_string();
-            });
+            ->add_field("{$temptablealias}.rating")
+            ->set_is_sortable(true);
 
         $this->add_column($ratingcolumn);
 
-        // Target capacity (Cible).
+        // Target capacity (Cible) - now sortable using temp table data.
         $targetcolumn = (new column(
             'target',
             new lang_string('teacher_target', 'mod_projetvet'),
@@ -174,16 +187,12 @@ class admin_teachers extends system_report {
         ))
             ->add_joins($entityuser->get_joins())
             ->set_type(column::TYPE_INTEGER)
-            ->add_fields("{$entityuseralias}.id")
-            ->set_is_sortable(false)
-            ->add_callback(static function ($value, $row) use ($projetvetid): int {
-                $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($row->id, $projetvetid);
-                return $rating->get_capacity();
-            });
+            ->add_field("{$temptablealias}.target_capacity")
+            ->set_is_sortable(true);
 
         $this->add_column($targetcolumn);
 
-        // Current student count (Nombre actuel).
+        // Current student count (Nombre actuel) - now sortable using temp table data.
         $currentcolumn = (new column(
             'current',
             new lang_string('teacher_current', 'mod_projetvet'),
@@ -191,17 +200,12 @@ class admin_teachers extends system_report {
         ))
             ->add_joins($entityuser->get_joins())
             ->set_type(column::TYPE_INTEGER)
-            ->add_fields("{$entityuseralias}.id")
-            ->set_is_sortable(false)
-            ->add_callback(static function ($value, $row) use ($projetvetid): int {
-                // Get student count for groups where this teacher is PRIMARY owner only.
-                // This is used for capacity planning - doesn't count secondary tutor assignments.
-                return \mod_projetvet\local\api\groups::get_primary_student_count($row->id, $projetvetid, true);
-            });
+            ->add_field("{$temptablealias}.current_students")
+            ->set_is_sortable(true);
 
         $this->add_column($currentcolumn);
 
-        // Gap (Ecart) = Target - Current.
+        // Gap (Ecart) = Target - Current - now sortable using temp table data.
         $gapcolumn = (new column(
             'gap',
             new lang_string('teacher_gap', 'mod_projetvet'),
@@ -209,13 +213,8 @@ class admin_teachers extends system_report {
         ))
             ->add_joins($entityuser->get_joins())
             ->set_type(column::TYPE_INTEGER)
-            ->add_fields("{$entityuseralias}.id")
-            ->set_is_sortable(false)
-            ->add_callback(static function ($value, $row) use ($cm, $projetvetid): int {
-                // Get available capacity (target - current primary students).
-                // Only counts students in groups where teacher is PRIMARY owner.
-                return \mod_projetvet\local\api\groups::get_teacher_available_capacity($row->id, $projetvetid);
-            });
+            ->add_field("{$temptablealias}.gap")
+            ->set_is_sortable(true);
 
         $this->add_column($gapcolumn);
 
@@ -281,6 +280,62 @@ class admin_teachers extends system_report {
             return '';
         } else {
             return 'clickable-row';
+        }
+    }
+
+    /**
+     * Create and fill a temporary table with teacher data
+     *
+     * @param array $teacherids Array of teacher user IDs
+     * @param int $projetvetid The projetvet instance ID
+     */
+    private function init_temp_table(array $teacherids, int $projetvetid): void {
+        global $DB;
+        $dbman = $DB->get_manager();
+        $table = new \xmldb_table(self::TEACHER_TEMP_TABLE_NAME);
+
+        // If the table already exists, drop it first to ensure fresh data.
+        if ($dbman->table_exists(self::TEACHER_TEMP_TABLE_NAME)) {
+            $dbman->drop_table($table);
+        }
+
+        // Define the table structure.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('rating', XMLDB_TYPE_CHAR, '50', null, null, null, null);
+        $table->add_field('target_capacity', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('current_students', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('gap', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+
+        // Create the temporary table.
+        $dbman->create_temp_table($table);
+
+        // Fill the temporary table with teacher data.
+        foreach ($teacherids as $teacherid) {
+            // Get rating for this teacher.
+            $ratingobj = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($teacherid, $projetvetid);
+
+            // Get capacity.
+            $targetcapacity = $ratingobj->get_capacity();
+
+            // Get current primary student count.
+            $currentstudents = \mod_projetvet\local\api\groups::get_primary_student_count($teacherid, $projetvetid, true);
+
+            // Calculate gap.
+            $gap = $targetcapacity - $currentstudents;
+
+            // Insert into temp table.
+            $record = (object)[
+                'userid' => $teacherid,
+                'rating' => $ratingobj->get_rating_string(),
+                'target_capacity' => $targetcapacity,
+                'current_students' => $currentstudents,
+                'gap' => $gap,
+            ];
+
+            $DB->insert_record(self::TEACHER_TEMP_TABLE_NAME, $record);
         }
     }
 }
