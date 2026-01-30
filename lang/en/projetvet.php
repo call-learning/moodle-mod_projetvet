@@ -104,6 +104,7 @@ $string['creditsbytype'] = 'Credits by type';
 $string['currentyear'] = 'Current year';
 $string['currentyear_help'] = 'The current year description (e.g., 3ème année)';
 $string['deleteexistinggroups'] = 'Delete existing groups before import';
+$string['downloadgroupscsv'] = 'Download current groups as CSV';
 $string['draft'] = 'Draft';
 $string['ects_guide_pdf'] = 'ECTS attribution guide';
 $string['ects_guide_pdf_desc'] = 'Upload a PDF document explaining the ECTS attribution modalities. This document will be linked in the activity forms.';

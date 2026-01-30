@@ -103,6 +103,7 @@ $string['creditsbytype'] = 'Crédits par type';
 $string['currentyear'] = 'Année en cours';
 $string['currentyear_help'] = 'La description de l\'année en cours (par exemple, 3ème année)';
 $string['deleteexistinggroups'] = 'Supprimer les groupes existants avant l\'importation';
+$string['downloadgroupscsv'] = 'Télécharger les groupes actuels au format CSV';
 $string['deletemember'] = 'Supprimer le membre';
 $string['draft'] = 'Brouillon';
 $string['ects_guide_pdf'] = 'Guide d\'attribution des ECTS';

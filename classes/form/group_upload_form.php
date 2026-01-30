@@ -139,6 +139,15 @@ class group_upload_form extends dynamic_form {
         $mform->addElement('hidden', 'projetvetid', $projetvetid);
         $mform->setType('projetvetid', PARAM_INT);
 
+        // Add download link.
+        $downloadurl = new moodle_url('/mod/projetvet/download_groups.php', ['id' => $cmid]);
+        $downloadlink = \html_writer::link(
+            $downloadurl,
+            get_string('downloadgroupscsv', 'mod_projetvet'),
+            ['class' => 'btn btn-secondary mb-3', 'target' => '_blank']
+        );
+        $mform->addElement('static', 'downloadlink', '', $downloadlink);
+
         // Upload the CSV file.
         $mform->addElement('filepicker', 'csvfile', get_string('csvfile', 'mod_data'), null, [
             'maxbytes' => 0,
