@@ -66,45 +66,45 @@ $csvdata[] = $headers;
 // Build data rows.
 foreach ($groups as $group) {
     $row = [];
-    
+
     // Get teacher (owner).
     $owner = $DB->get_record('user', ['id' => $group->get('ownerid')]);
     $row[] = $owner ? $owner->username : '';
-    
+
     // Get teacher rating.
     $rating = teacher_rating::get_user_rating($group->get('ownerid'), $projetvet->id);
     $row[] = $rating ? $rating->get('rating') : teacher_rating::RATING_AVERAGE;
-    
+
     // Get secondary teacher and students.
     $members = group_member::get_records(['groupid' => $group->get('id')]);
     $secondaryteacher = '';
     $students = [];
-    
+
     foreach ($members as $member) {
         $user = $DB->get_record('user', ['id' => $member->get('userid')]);
         if (!$user) {
             continue;
         }
-        
+
         if ($member->get('membertype') === group_member::TYPE_SECONDARY_TUTOR) {
             $secondaryteacher = $user->username;
         } else if ($member->get('membertype') === group_member::TYPE_STUDENT) {
             $students[] = $user->username;
         }
     }
-    
+
     $row[] = $secondaryteacher;
-    
+
     // Add students.
     foreach ($students as $student) {
         $row[] = $student;
     }
-    
+
     // Fill remaining student columns with empty strings.
     while (count($row) < count($headers)) {
         $row[] = '';
     }
-    
+
     $csvdata[] = $row;
 }
 
