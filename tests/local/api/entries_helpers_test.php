@@ -106,5 +106,4 @@ final class entries_helpers_test extends advanced_testcase {
             '"alledit" always returns true' => ['nonaccess', 'alledit', false, true],
         ];
     }
-
 }
