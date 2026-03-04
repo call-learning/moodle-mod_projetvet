@@ -338,13 +338,6 @@ class behat_mod_projetvet extends behat_base {
     }
 
     /**
-     * Waits for pending JavaScript and AJAX to complete
-     */
-    public function wait_for_pending_js() {
-        $this->getSession()->wait(1000);
-    }
-
-    /**
      * Clicks the view activities link for a specific student
      *
      * @Given /^I view activities for student "(?P<studentname_string>(?:[^"]|\\")*)"$/
