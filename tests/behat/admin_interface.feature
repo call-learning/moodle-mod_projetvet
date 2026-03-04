@@ -131,3 +131,17 @@ Feature: Admin interface for managing groups
     And I should see "Student Fifteen" in the "#students-report-container" "css_element"
     But I should not see "Student One" in the "#students-report-container" "css_element"
     And I should not see "Student Six" in the "#students-report-container" "css_element"
+
+  Scenario: Filter teachers with capacity keeps toggle state after reload
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    And I click on "Show only teachers with capacity" "checkbox"
+    Then the checked attribute of "Show only teachers with capacity" "checkbox" should be set
+    And "#teachers-report-container" "css_element" should exist
+
+  Scenario: Open upload groups modal and see CSV controls
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    And I click on "upload-groups" buttonaction in the "#collapseteachers-section" "css_element"
+    Then I should see "Download current groups as CSV"
+    And I should see "Delete existing groups before import"
