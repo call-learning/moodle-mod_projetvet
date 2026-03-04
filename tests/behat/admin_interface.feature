@@ -71,12 +71,12 @@ Feature: Admin interface for managing groups
 
   Scenario: Navigate to admin page
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then I should see "Show only students without teachers"
 
   Scenario: View teachers report with ratings and capacity
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then "#teachers-report-container" "css_element" should exist
     And I should see "Teacher One" in the "#teachers-report-container" "css_element"
     And I should see "Teacher Two" in the "#teachers-report-container" "css_element"
@@ -91,7 +91,7 @@ Feature: Admin interface for managing groups
 
   Scenario: View students report with teacher assignments
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then "#students-report-container" "css_element" should exist
     And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
     # Check some assigned students
@@ -104,7 +104,7 @@ Feature: Admin interface for managing groups
 
   Scenario: Verify student teacher assignments in report
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then "#students-report-container" "css_element" should exist
     And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
     # Students 1-5 should be assigned to Teacher One
@@ -114,7 +114,7 @@ Feature: Admin interface for managing groups
 
   Scenario: Verify teacher capacity calculations
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then "#teachers-report-container" "css_element" should exist
     # Teacher table should have the required columns
     And "#teachers-report-container" "css_element" should contain "Rating"
@@ -124,7 +124,7 @@ Feature: Admin interface for managing groups
 
   Scenario: Filter students without teachers
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "Show only students without teachers" "checkbox"
     Then I should see "Student Eleven" in the "#students-report-container" "css_element"
     And I should see "Student Twelve" in the "#students-report-container" "css_element"
@@ -134,14 +134,14 @@ Feature: Admin interface for managing groups
 
   Scenario: Filter teachers with capacity keeps toggle state after reload
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "Show only teachers with capacity" "checkbox"
     Then the checked attribute of "Show only teachers with capacity" "checkbox" should be set
     And "#teachers-report-container" "css_element" should exist
 
   Scenario: Open upload groups modal and see CSV controls
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Admin" page
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "upload-groups" buttonaction in the "#collapseteachers-section" "css_element"
     Then I should see "Download current groups as CSV"
     And I should see "Delete existing groups before import"
