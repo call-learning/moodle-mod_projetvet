@@ -35,8 +35,10 @@ $string['activitiesinfobox'] = '<div class="d-flex align-items-center mb-1"><i c
 $string['activitytitle'] = 'Title';
 $string['addcompetence'] = 'Add a competence';
 $string['addentry'] = 'Add entry';
-$string['admin_page_heading'] = 'Administration';
-$string['admin_page_title'] = 'Administration - Students and Teachers';
+$string['admin_menu_label'] = 'Tutor assignments';
+$string['admin_page_heading'] = 'Assign users to tutor';
+$string['admin_page_intro'] = 'Use this page to assign students to tutors and manage tutor groups.';
+$string['admin_page_title'] = 'Assign users to tutor';
 $string['admin_students_heading'] = 'Students';
 $string['admin_teachers_heading'] = 'Teachers';
 $string['allow_edit_previous_status'] = 'Allow editing previous status submissions';

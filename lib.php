@@ -222,7 +222,7 @@ function projetvet_extend_settings_navigation($settingsnav, $projetvetnode = nul
     if (has_capability('mod/projetvet:admin', $PAGE->cm->context)) {
         $adminurl = new moodle_url('/mod/projetvet/admin.php', ['id' => $PAGE->cm->id]);
         $adminnode = navigation_node::create(
-            get_string('admin'),
+            get_string('admin_menu_label', 'mod_projetvet'),
             $adminurl,
             navigation_node::TYPE_SETTING,
             '',

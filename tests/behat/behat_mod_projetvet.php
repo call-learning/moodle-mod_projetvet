@@ -534,7 +534,7 @@ class behat_mod_projetvet extends behat_base {
      * Recognised page names are:
      * | pagetype          | name meaning | description                    |
      * | View              | Activity name | The activity view page        |
-     * | Admin             | Activity name | The admin page (admin.php)    |
+     * | Tutor assignments | Activity name | The admin page (admin.php)    |
      *
      * @param string $type identifies which type of page this is, e.g. 'Admin'.
      * @param string $identifier identifies the particular page, e.g. 'ProjetVet 1'.
@@ -549,7 +549,7 @@ class behat_mod_projetvet extends behat_base {
                     ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
                 );
 
-            case 'admin':
+            case 'tutor assignments':
                 return new moodle_url(
                     '/mod/projetvet/admin.php',
                     ['id' => $this->get_cm_by_projetvet_name($identifier)->id]

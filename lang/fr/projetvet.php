@@ -35,7 +35,10 @@ $string['activitiesinfobox'] = '<div class="d-flex align-items-center mb-1"><i c
 $string['activitytitle'] = 'Titre';
 $string['addcompetence'] = 'Ajouter une compétence';
 $string['addentry'] = 'Ajouter une entrée';
-$string['admin_page_title'] = 'Administration - Étudiants et enseignants';
+$string['admin_menu_label'] = 'Affectations tuteurs';
+$string['admin_page_heading'] = 'Affectations tuteurs';
+$string['admin_page_intro'] = 'Cette page permet d\'affecter les étudiants aux tuteurs et de gérer les groupes de tutorat.';
+$string['admin_page_title'] = 'Affectations tuteurs';
 $string['admin_students_heading'] = 'Étudiants';
 $string['admin_teachers_heading'] = 'Enseignants';
 $string['allow_edit_previous_status'] = 'Autoriser l\'édition des soumissions de statut précédent';

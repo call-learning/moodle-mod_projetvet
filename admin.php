@@ -49,6 +49,7 @@ $PAGE->set_pagelayout('incourse');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('admin_page_heading', 'mod_projetvet'));
+echo $OUTPUT->box(get_string('admin_page_intro', 'mod_projetvet'), 'generalbox mb-3');
 
 // Render admin page using renderer.
 $renderer = $PAGE->get_renderer('mod_projetvet');
