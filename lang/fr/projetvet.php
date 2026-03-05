@@ -104,6 +104,7 @@ $string['conversion_heading'] = 'Conversion heures vers ECTS';
 $string['conversion_heading_desc'] = 'Configurer comment les heures sont converties en crédits ECTS';
 $string['creditsbyrank'] = 'Crédits par rang';
 $string['creditsbytype'] = 'Crédits par type';
+$string['csvfile'] = 'Fichier CSV';
 $string['currentyear'] = 'Année en cours';
 $string['currentyear_help'] = 'La description de l\'année en cours (par exemple, 3ème année)';
 $string['dashboard'] = 'Tableau de bord';

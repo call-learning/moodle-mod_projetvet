@@ -104,6 +104,7 @@ $string['conversion_heading'] = 'Hours to ECTS conversion';
 $string['conversion_heading_desc'] = 'Configure how hours are converted to ECTS credits';
 $string['creditsbyrank'] = 'Credits by rank';
 $string['creditsbytype'] = 'Credits by type';
+$string['csvfile'] = 'CSV file';
 $string['currentyear'] = 'Current year';
 $string['currentyear_help'] = 'The current year description (e.g., 3ème année)';
 $string['dashboard'] = 'Dashboard';
