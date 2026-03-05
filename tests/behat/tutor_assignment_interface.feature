@@ -77,65 +77,65 @@ Feature: Tutor assignments interface for managing groups
   Scenario: View teachers report with ratings and capacity
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    Then "#teachers-report-container" "css_element" should exist
-    And I should see "Teacher One" in the "#teachers-report-container" "css_element"
-    And I should see "Teacher Two" in the "#teachers-report-container" "css_element"
-    And I should see "Teacher Three" in the "#teachers-report-container" "css_element"
+    Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should exist
+    And I should see "Teacher One" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    And I should see "Teacher Two" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    And I should see "Teacher Three" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     # Check Teacher One (average rating, 5 students, target 8)
-    And I should see "Average" in the "#teachers-report-container" "css_element"
-    And I should see "8" in the "#teachers-report-container" "css_element"
-    And I should see "5" in the "#teachers-report-container" "css_element"
+    And I should see "Average" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    And I should see "8" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    And I should see "5" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     # Check Teacher Two (expert rating, 5 students, target 12)
-    And I should see "Expert" in the "#teachers-report-container" "css_element"
-    And I should see "12" in the "#teachers-report-container" "css_element"
+    And I should see "Expert" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    And I should see "12" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
 
   Scenario: View students report with teacher assignments
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    Then "#students-report-container" "css_element" should exist
-    And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
+    Then "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should exist
+    And I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     # Check some assigned students
-    And I should see "Student One" in the "#students-report-container" "css_element"
-    And I should see "Student Two" in the "#students-report-container" "css_element"
-    And I should see "Student Six" in the "#students-report-container" "css_element"
+    And I should see "Student One" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I should see "Student Two" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I should see "Student Six" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     # Check some unassigned students
-    And I should see "Student Eleven" in the "#students-report-container" "css_element"
-    And I should see "Student Fifteen" in the "#students-report-container" "css_element"
+    And I should see "Student Eleven" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I should see "Student Fifteen" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
 
   Scenario: Verify student teacher assignments in report
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    Then "#students-report-container" "css_element" should exist
-    And I click on "showcount" buttonaction in the "#students-report-container" "css_element"
+    Then "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should exist
+    And I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     # Students 1-5 should be assigned to Teacher One
-    And "#students-report-container" "css_element" should contain "Teacher One"
+    And "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Teacher One"
     # Students 6-10 should be assigned to Teacher Two
-    And "#students-report-container" "css_element" should contain "Teacher Two"
+    And "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Teacher Two"
 
   Scenario: Verify teacher capacity calculations
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    Then "#teachers-report-container" "css_element" should exist
+    Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should exist
     # Teacher table should have the required columns
-    And "#teachers-report-container" "css_element" should contain "Rating"
-    And "#teachers-report-container" "css_element" should contain "Target"
-    And "#teachers-report-container" "css_element" should contain "Current"
-    And "#teachers-report-container" "css_element" should contain "Gap"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Rating"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Target"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Current"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Gap"
 
   Scenario: Update teacher rating changes target capacity
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    And I click on "update-teacher-rating" buttonaction in the "#teachers-report-container" "css_element"
+    And I click on "update-teacher-rating" buttonaction in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     Then I should see "Update capacity"
     And I should see "Teacher Rating and Capacity"
     When I set the field "Rating" to "novice"
     And I press "Save changes"
-    Then "#teachers-report-container" "css_element" should contain "Novice"
+    Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Novice"
 
   Scenario: Open assign students dialog from teacher report
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    And I click on "assign-students" buttonaction in the "#teachers-report-container" "css_element"
+    And I click on "assign-students" buttonaction in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     Then I should see "Assign students"
     And I should see "Select student"
     And I should not see "Select secondary teacher"
@@ -143,7 +143,7 @@ Feature: Tutor assignments interface for managing groups
   Scenario: Open assign secondary teacher dialog from teacher report
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    And I click on "assign-secondary-teacher" buttonaction in the "#teachers-report-container" "css_element"
+    And I click on "assign-secondary-teacher" buttonaction in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     Then I should see "Assign secondary teacher"
     And I should see "Select secondary teacher"
     And I should not see "Select student"
@@ -152,22 +152,22 @@ Feature: Tutor assignments interface for managing groups
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "Show only students without teachers" "checkbox"
-    Then I should see "Student Eleven" in the "#students-report-container" "css_element"
-    And I should see "Student Twelve" in the "#students-report-container" "css_element"
-    And I should see "Student Fifteen" in the "#students-report-container" "css_element"
-    But I should not see "Student One" in the "#students-report-container" "css_element"
-    And I should not see "Student Six" in the "#students-report-container" "css_element"
+    Then I should see "Student Eleven" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I should see "Student Twelve" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I should see "Student Fifteen" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    But I should not see "Student One" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I should not see "Student Six" in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
 
   Scenario: Filter teachers with capacity keeps toggle state after reload
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "Show only teachers with capacity" "checkbox"
     Then the checked attribute of "Show only teachers with capacity" "checkbox" should be set
-    And "#teachers-report-container" "css_element" should exist
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should exist
 
   Scenario: Open upload groups modal and see CSV controls
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    And I click on "upload-groups" buttonaction in the "#collapseteachers-section" "css_element"
+    And I click on "upload-groups" buttonaction in the "Tutor assignments teachers section" "mod_projetvet > Tutor assignments teachers section"
     Then I should see "Download current groups as CSV"
     And I should see "Delete existing groups before import"
