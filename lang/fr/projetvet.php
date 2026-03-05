@@ -250,6 +250,7 @@ $string['hours_student_intro_value'] = '<p>En fonction du <strong>volume horaire
 $string['insufficient'] = 'Objectifs partiellement atteints, compétences insuffisamment consolidées';
 $string['internationalmobility'] = 'Mobilité internationale';
 $string['invalid_hours'] = 'Veuillez saisir un nombre d\'heures valide';
+$string['invalidcsvstructure'] = 'Structure CSV invalide. Veuillez inclure une colonne teacher et des colonnes student.';
 $string['invaliddata'] = 'Données invalides pour {$a}';
 $string['max_ects'] = 'ECTS maximum par activité';
 $string['max_ects_desc'] = 'Le nombre maximum de crédits ECTS qu\'une activité peut attribuer (par défaut : 10)';

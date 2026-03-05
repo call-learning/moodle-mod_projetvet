@@ -86,10 +86,19 @@ final class group_importer_test extends \advanced_testcase {
      * Test import with semicolon delimiter and encoding parameter.
      */
     public function test_import_with_delimiter_and_encoding(): void {
-        global $CFG;
-
         $cm = get_coursemodule_from_instance('projetvet', $this->projetvet->id, $this->course->id, false, MUST_EXIST);
-        $filepath = $CFG->dirroot . '/mod/projetvet/tests/fixtures/groups_import_semicolon.csv';
+        $filepath = make_request_directory() . '/groups_import_semicolon.csv';
+        $csvcontent = implode(';', ['teacher', 'teacherrating', 'secondaryteacher', 'student1', 'student2'])
+            . "\n" .
+            implode(
+                ';',
+                [
+                    $this->teacher1->username, 'novice',
+                    $this->teacher2->username, $this->student1->username,
+                    $this->student2->username,
+                ]
+            ) . "\n";
+        file_put_contents($filepath, $csvcontent);
 
         $importer = new group_importer($this->course->id, $cm->id, $this->projetvet->id);
         $importer->import($filepath, 'semicolon', 'UTF-8');
@@ -106,8 +115,8 @@ final class group_importer_test extends \advanced_testcase {
         $studentids = array_map(static function ($member): int {
             return $member->get('userid');
         }, $students);
-        $this->assertContains($this->student1->id, $studentids);
-        $this->assertContains($this->student2->id, $studentids);
+        $this->assertContains((int) $this->student1->id, $studentids);
+        $this->assertContains((int) $this->student2->id, $studentids);
 
         $secondary = group_member::get_records([
             'groupid' => $group->get('id'),

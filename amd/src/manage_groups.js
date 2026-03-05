@@ -212,6 +212,7 @@ const showAssignStudentsModal = (cmid, teacherid, projetvetid) => {
         Str.get_string('assignstudents', 'mod_projetvet')
             .then((title) => {
                 modalForm.modal.setTitle(title);
+                return title;
             })
             .catch(Notification.exception);
     });
@@ -256,6 +257,7 @@ const showAssignSecondaryTeacherModal = (cmid, teacherid, projetvetid) => {
         Str.get_string('assignsecondaryteacher', 'mod_projetvet')
             .then((title) => {
                 modalForm.modal.setTitle(title);
+                return title;
             })
             .catch(Notification.exception);
     });
@@ -297,6 +299,7 @@ const showTeacherSettingsModal = (cmid, teacherid, projetvetid) => {
         Str.get_string('updateteacherrating', 'mod_projetvet')
             .then((title) => {
                 modalForm.modal.setTitle(title);
+                return title;
             })
             .catch(Notification.exception);
     });
@@ -392,6 +395,7 @@ const showUploadGroupsModal = (cmid, courseid, projetvetid) => {
         Str.get_string('uploadgroups', 'mod_projetvet')
             .then((title) => {
                 modalForm.modal.setTitle(title);
+                return title;
             })
             .catch(Notification.exception);
     });

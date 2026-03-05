@@ -251,6 +251,7 @@ $string['inactive'] = 'Inactive';
 $string['insufficient'] = 'Objectives partially achieved, skills insufficiently consolidated';
 $string['internationalmobility'] = 'International mobility';
 $string['invalid_hours'] = 'Please enter a valid number of hours';
+$string['invalidcsvstructure'] = 'Invalid CSV structure. Please include a teacher column and student columns.';
 $string['invaliddata'] = 'Invalid data for {$a}';
 $string['invalidmembertype'] = 'Invalid member type. Must be primary_tutor, secondary_tutor, or student';
 $string['max_ects'] = 'Maximum ECTS per activity';
