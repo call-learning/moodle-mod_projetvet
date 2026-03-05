@@ -387,6 +387,15 @@ const showUploadGroupsModal = (cmid, courseid, projetvetid) => {
         returnFocus: document.activeElement,
     });
 
+    modalForm.addEventListener(modalForm.events.LOADED, () => {
+        modalForm.modal.getModal().addClass('modal-dialog-centered');
+        Str.get_string('uploadgroups', 'mod_projetvet')
+            .then((title) => {
+                modalForm.modal.setTitle(title);
+            })
+            .catch(Notification.exception);
+    });
+
     modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (event) => {
         if (event.detail.message) {
             Notification.addNotification({

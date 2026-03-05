@@ -1,4 +1,4 @@
-@mod @mod_projetvet @javascript
+@mod @mod_projetvet @javascript @_file_upload
 Feature: Tutor assignments interface for managing groups
 
   In order to manage student groups and teacher assignments
@@ -165,9 +165,19 @@ Feature: Tutor assignments interface for managing groups
     Then the checked attribute of "Show only teachers with capacity" "checkbox" should be set
     And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should exist
 
-  Scenario: Open upload groups modal and see CSV controls
+  Scenario: Upload groups CSV and import assignments
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "upload-groups" buttonaction in the "Tutor assignments teachers section" "mod_projetvet > Tutor assignments teachers section"
     Then I should see "Download current groups as CSV"
+    And I should see "CSV separator"
+    And I should see "Encoding"
     And I should see "Delete existing groups before import"
+    When I upload "mod/projetvet/tests/fixtures/groups_upload.csv" file to "CSV file" filemanager
+    And I click on "Delete existing groups before import" "checkbox"
+    And I press "Save changes"
+    Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Teacher Three"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Novice"
+    When I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    Then "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Student Eleven"
+    And "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Teacher Three"
