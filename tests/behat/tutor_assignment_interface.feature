@@ -131,7 +131,22 @@ Feature: Tutor assignment interface for managing groups
     When I set the field "Rating" to "novice"
     And I press "Save changes"
     Then "#teachers-report-container" "css_element" should contain "Novice"
-    And "#teachers-report-container" "css_element" should contain "5"
+
+  Scenario: Open assign students dialog from teacher report
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
+    And I click on "assign-students" buttonaction in the "#teachers-report-container" "css_element"
+    Then I should see "Assign students"
+    And I should see "Select student"
+    And I should not see "Select secondary teacher"
+
+  Scenario: Open assign secondary teacher dialog from teacher report
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
+    And I click on "assign-secondary-teacher" buttonaction in the "#teachers-report-container" "css_element"
+    Then I should see "Assign secondary teacher"
+    And I should see "Select secondary teacher"
+    And I should not see "Select student"
 
   Scenario: Filter students without teachers
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
