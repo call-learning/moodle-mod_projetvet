@@ -23,6 +23,7 @@
 
 import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
+import * as Str from 'core/str';
 
 /**
  * Initialize module
@@ -223,6 +224,11 @@ const showTeacherSettingsModal = (cmid, teacherid, projetvetid) => {
     // Add custom class to modal after it's loaded.
     modalForm.addEventListener(modalForm.events.LOADED, () => {
         modalForm.modal.getModal().addClass('modal-dialog-centered');
+        Str.get_string('updateteacherrating', 'mod_projetvet')
+            .then((title) => {
+                modalForm.modal.setTitle(title);
+            })
+            .catch(Notification.exception);
     });
 
     modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (event) => {

@@ -240,10 +240,9 @@ class behat_mod_projetvet extends behat_base {
             );
         }
 
-        // Find the button with data-action within this container.
-        $button = $container->find('css', '[data-action="' . $action . '"]');
-
-        if (!$button) {
+        // Find all matching buttons and click the first visible one.
+        $buttons = $container->findAll('css', '[data-action="' . $action . '"]');
+        if (empty($buttons)) {
             throw new ElementNotFoundException(
                 $this->getSession(),
                 'Button with data-action="' . $action . '"',
@@ -252,12 +251,35 @@ class behat_mod_projetvet extends behat_base {
             );
         }
 
-        // Ensure button is visible before clicking.
-        if (!$button->isVisible()) {
-            throw new ExpectationException(
-                'Button with data-action="' . $action . '" is not visible',
-                $this->getSession()
-            );
+        $button = null;
+        foreach ($buttons as $candidate) {
+            if ($candidate->isVisible()) {
+                $button = $candidate;
+                break;
+            }
+        }
+
+        if (!$button) {
+            // Fallback for reportbuilder actions hidden until hover/menu interaction.
+            $script = '(function() {' .
+                'const container = document.querySelector(' . json_encode($selector) . ');' .
+                'if (!container) { return false; }' .
+                'const button = container.querySelector(\'[data-action="' . $action . '"]\');' .
+                'if (!button) { return false; }' .
+                'button.click();' .
+                'return true;' .
+            '})();';
+
+            $clicked = $this->getSession()->evaluateScript($script);
+            if (!$clicked) {
+                throw new ExpectationException(
+                    'No clickable button with data-action="' . $action . '" was found',
+                    $this->getSession()
+                );
+            }
+
+            $this->wait_for_pending_js();
+            return;
         }
 
         $button->click();

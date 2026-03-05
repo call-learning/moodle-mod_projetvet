@@ -1,5 +1,5 @@
 @mod @mod_projetvet @javascript
-Feature: Admin interface for managing groups
+Feature: Tutor assignment interface for managing groups
 
   In order to manage student groups and teacher assignments
   As an editing teacher
@@ -69,7 +69,7 @@ Feature: Admin interface for managing groups
       | student9  | Teacher2 Group |
       | student10 | Teacher2 Group |
 
-  Scenario: Navigate to admin page
+  Scenario: Navigate to Tutor assignment page
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then I should see "Show only students without teachers"
@@ -121,6 +121,17 @@ Feature: Admin interface for managing groups
     And "#teachers-report-container" "css_element" should contain "Target"
     And "#teachers-report-container" "css_element" should contain "Current"
     And "#teachers-report-container" "css_element" should contain "Gap"
+
+  Scenario: Update teacher rating changes target capacity
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
+    And I click on "update-teacher-rating" buttonaction in the "#teachers-report-container" "css_element"
+    Then I should see "Update capacity"
+    And I should see "Teacher Rating and Capacity"
+    When I set the field "Rating" to "novice"
+    And I press "Save changes"
+    Then "#teachers-report-container" "css_element" should contain "Novice"
+    And "#teachers-report-container" "css_element" should contain "5"
 
   Scenario: Filter students without teachers
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
