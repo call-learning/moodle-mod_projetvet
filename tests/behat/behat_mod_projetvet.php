@@ -556,9 +556,9 @@ class behat_mod_projetvet extends behat_base {
      * Recognised page names are:
      * | pagetype          | name meaning | description                    |
      * | View              | Activity name | The activity view page        |
-     * | Tutor assignments | Activity name | The admin page (admin.php)    |
+     * | Tutor assignments | Activity name | The assignments page (assignments.php)    |
      *
-     * @param string $type identifies which type of page this is, e.g. 'Admin'.
+     * @param string $type identifies which type of page this is, e.g. 'Tutor assignments'.
      * @param string $identifier identifies the particular page, e.g. 'ProjetVet 1'.
      * @return moodle_url the corresponding URL.
      * @throws Exception with a meaningful error message if the specified page cannot be found.
@@ -573,7 +573,7 @@ class behat_mod_projetvet extends behat_base {
 
             case 'tutor assignments':
                 return new moodle_url(
-                    '/mod/projetvet/admin.php',
+                    '/mod/projetvet/assignments.php',
                     ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
                 );
 

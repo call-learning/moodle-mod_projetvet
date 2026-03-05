@@ -28,13 +28,13 @@ use moodle_url;
 use pix_icon;
 
 /**
- * Admin teacher list system report for projetvet
+ * Assignments teachers list system report for projetvet
  *
  * @package    mod_projetvet
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class admin_teachers extends system_report {
+class assignments_teachers extends system_report {
     /**
      * The name of the temporary table used to store teacher data
      */

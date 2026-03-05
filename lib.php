@@ -220,15 +220,15 @@ function projetvet_extend_settings_navigation($settingsnav, $projetvetnode = nul
     global $PAGE;
 
     if (has_capability('mod/projetvet:admin', $PAGE->cm->context)) {
-        $adminurl = new moodle_url('/mod/projetvet/admin.php', ['id' => $PAGE->cm->id]);
-        $adminnode = navigation_node::create(
-            get_string('admin_menu_label', 'mod_projetvet'),
-            $adminurl,
+        $assignmenturl = new moodle_url('/mod/projetvet/assignments.php', ['id' => $PAGE->cm->id]);
+        $assignmentnode = navigation_node::create(
+            get_string('assignments_menu_label', 'mod_projetvet'),
+            $assignmenturl,
             navigation_node::TYPE_SETTING,
             '',
             'adminpage',
         );
-        $projetvetnode->add_node($adminnode);
+        $projetvetnode->add_node($assignmentnode);
 
         $dashboardurl = new moodle_url('/mod/projetvet/dashboard.php', ['id' => $PAGE->cm->id]);
         $dashboardnode = navigation_node::create(

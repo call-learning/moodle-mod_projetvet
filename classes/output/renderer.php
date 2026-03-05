@@ -57,7 +57,7 @@ class renderer extends plugin_renderer_base {
     }
 
     /**
-     * Render the admin page
+     * Render the assignments page
      *
      * @param \stdClass $moduleinstance The projetvet instance
      * @param \stdClass $cm The course module
@@ -66,9 +66,9 @@ class renderer extends plugin_renderer_base {
      * @param bool $filterteachers Whether to filter teachers with capacity
      * @return string HTML to output
      */
-    public function render_admin_page($moduleinstance, $cm, $context, $filterstudents = false, $filterteachers = false) {
-        $adminpage = new admin_page($moduleinstance, $cm, $context, $filterstudents, $filterteachers);
-        return $this->render_from_template('mod_projetvet/admin_page', $adminpage->export_for_template($this));
+    public function render_assignments_page($moduleinstance, $cm, $context, $filterstudents = false, $filterteachers = false) {
+        $assignmentspage = new assignments_page($moduleinstance, $cm, $context, $filterstudents, $filterteachers);
+        return $this->render_from_template('mod_projetvet/assignments_page', $assignmentspage->export_for_template($this));
     }
 
     /**
