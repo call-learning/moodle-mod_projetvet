@@ -29,7 +29,7 @@ import * as Str from 'core/str';
  * Initialize module
  */
 export const init = () => {
-    // Handle assign students button clicks in admin teachers report.
+    // Handle assign students button clicks in the teachers report.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action="assign-students"]');
         if (!button) {
@@ -50,7 +50,7 @@ export const init = () => {
         showAssignStudentsModal(cmid, teacherid, projetvetid);
     });
 
-    // Handle assign secondary teacher button clicks in admin teachers report.
+    // Handle assign secondary teacher button clicks in the teachers report.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action="assign-secondary-teacher"]');
         if (!button) {
@@ -71,7 +71,7 @@ export const init = () => {
         showAssignSecondaryTeacherModal(cmid, teacherid, projetvetid);
     });
 
-    // Handle update teacher rating button clicks in admin teachers report.
+    // Handle update teacher rating button clicks in the teachers report.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action="update-teacher-rating"]');
         if (!button) {
@@ -92,7 +92,7 @@ export const init = () => {
         showTeacherSettingsModal(cmid, teacherid, projetvetid);
     });
 
-    // Handle assign teacher button clicks in admin students report.
+    // Handle assign teacher button clicks in the students report.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action="assign-teacher"]');
         if (!button) {
@@ -162,7 +162,7 @@ export const init = () => {
         }
     });
 
-    // Handle upload groups button clicks in admin page.
+    // Handle upload groups button clicks in assignments page.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action="upload-groups"]');
         if (!button) {

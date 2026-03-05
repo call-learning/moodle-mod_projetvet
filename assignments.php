@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin view for Projetvet - Students and Teachers management
+ * Assignments view for Projetvet - students and teachers management
  *
  * @package    mod_projetvet
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
@@ -41,18 +41,18 @@ require_capability('mod/projetvet:admin', $context);
 
 \mod_projetvet\event\course_module_viewed::create_from_record($moduleinstance, $cm, $course)->trigger();
 
-$PAGE->set_url('/mod/projetvet/admin.php', ['id' => $cm->id]);
-$PAGE->set_title(get_string('admin_page_title', 'mod_projetvet'));
+$PAGE->set_url('/mod/projetvet/assignments.php', ['id' => $cm->id]);
+$PAGE->set_title(get_string('assignments_page_title', 'mod_projetvet'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('admin_page_heading', 'mod_projetvet'));
-echo $OUTPUT->box(get_string('admin_page_intro', 'mod_projetvet'), 'generalbox mb-3');
+echo $OUTPUT->heading(get_string('assignments_page_heading', 'mod_projetvet'));
+echo $OUTPUT->box(get_string('assignments_page_intro', 'mod_projetvet'), 'generalbox mb-3');
 
-// Render admin page using renderer.
+// Render assignments page using renderer.
 $renderer = $PAGE->get_renderer('mod_projetvet');
-echo $renderer->render_admin_page($moduleinstance, $cm, $context, (bool)$filterstudents, (bool)$filterteachers);
+echo $renderer->render_assignments_page($moduleinstance, $cm, $context, (bool)$filterstudents, (bool)$filterteachers);
 
 echo $OUTPUT->footer();

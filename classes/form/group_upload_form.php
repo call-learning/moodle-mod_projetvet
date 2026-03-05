@@ -82,7 +82,7 @@ class group_upload_form extends dynamic_form {
 
         return [
             'result' => true,
-            'returnurl' => new moodle_url('/mod/projetvet/admin.php', ['id' => $data->cmid]),
+            'returnurl' => new moodle_url('/mod/projetvet/assignments.php', ['id' => $data->cmid]),
         ];
     }
 
@@ -116,7 +116,7 @@ class group_upload_form extends dynamic_form {
      */
     protected function get_page_url_for_dynamic_submission(): moodle_url {
         $cmid = $this->optional_param('cmid', null, PARAM_INT);
-        return new moodle_url('/mod/projetvet/admin.php', ['id' => $cmid]);
+        return new moodle_url('/mod/projetvet/assignments.php', ['id' => $cmid]);
     }
 
     /**

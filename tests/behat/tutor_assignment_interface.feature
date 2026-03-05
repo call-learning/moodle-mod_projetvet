@@ -1,9 +1,9 @@
 @mod @mod_projetvet @javascript
-Feature: Tutor assignment interface for managing groups
+Feature: Tutor assignments interface for managing groups
 
   In order to manage student groups and teacher assignments
   As an editing teacher
-  I need to be able to access the admin interface
+  I need to be able to access the assignments interface
 
   Background:
     Given the following "users" exist:
@@ -69,7 +69,7 @@ Feature: Tutor assignment interface for managing groups
       | student9  | Teacher2 Group |
       | student10 | Teacher2 Group |
 
-  Scenario: Navigate to Tutor assignment page
+  Scenario: Navigate to Tutor assignments page
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then I should see "Show only students without teachers"
