@@ -40,6 +40,28 @@ use Behat\Mink\Exception\ExpectationException;
  */
 class behat_mod_projetvet extends behat_base {
     /**
+     * Return a list of exact named selectors for recurring ProjetVet areas.
+     *
+     * @return behat_component_named_selector[]
+     */
+    public static function get_exact_named_selectors(): array {
+        return [
+            new behat_component_named_selector('Tutor assignments students report', [
+                "//*[@id='students-report-container']",
+            ]),
+            new behat_component_named_selector('Tutor assignments teachers report', [
+                "//*[@id='teachers-report-container']",
+            ]),
+            new behat_component_named_selector('Tutor assignments teachers section', [
+                "//*[@id='collapseteachers-section']",
+            ]),
+            new behat_component_named_selector('Dashboard report container', [
+                "//*[@id='dashboard-report-container']",
+            ]),
+        ];
+    }
+
+    /**
      * Opens the activity entry form for creating a new entry
      *
      * @Given /^I click on create new activity entry for "(?P<formsetidnumber_string>(?:[^"]|\\")*)"$/
@@ -227,18 +249,7 @@ class behat_mod_projetvet extends behat_base {
      * @throws ExpectationException
      */
     public function i_click_on_buttonaction_in_region($action, $regionname, $selectortype) {
-        // Find the region/container.
-        $selector = $selectortype === 'region' ? '[data-region="' . $regionname . '"]' : $regionname;
-        $container = $this->find('css', $selector);
-
-        if (!$container) {
-            throw new ElementNotFoundException(
-                $this->getSession(),
-                ucfirst($selectortype) . ' ' . $regionname,
-                'css',
-                $selector
-            );
-        }
+        $container = $this->get_selected_node($selectortype, $regionname);
 
         // Find all matching buttons and click the first visible one.
         $buttons = $container->findAll('css', '[data-action="' . $action . '"]');
@@ -261,25 +272,28 @@ class behat_mod_projetvet extends behat_base {
 
         if (!$button) {
             // Fallback for reportbuilder actions hidden until hover/menu interaction.
-            $script = '(function() {' .
-                'const container = document.querySelector(' . json_encode($selector) . ');' .
-                'if (!container) { return false; }' .
-                'const button = container.querySelector(\'[data-action="' . $action . '"]\');' .
-                'if (!button) { return false; }' .
-                'button.click();' .
-                'return true;' .
-            '})();';
+            $containerid = $container->getAttribute('id');
+            if (!empty($containerid)) {
+                $script = '(function() {' .
+                    'const container = document.getElementById(' . json_encode($containerid) . ');' .
+                    'if (!container) { return false; }' .
+                    'const button = container.querySelector(\'[data-action="' . $action . '"]\');' .
+                    'if (!button) { return false; }' .
+                    'button.click();' .
+                    'return true;' .
+                '})();';
 
-            $clicked = $this->getSession()->evaluateScript($script);
-            if (!$clicked) {
-                throw new ExpectationException(
-                    'No clickable button with data-action="' . $action . '" was found',
-                    $this->getSession()
-                );
+                $clicked = $this->getSession()->evaluateScript($script);
+                if ($clicked) {
+                    $this->wait_for_pending_js();
+                    return;
+                }
             }
 
-            $this->wait_for_pending_js();
-            return;
+            throw new ExpectationException(
+                'No clickable button with data-action="' . $action . '" was found',
+                $this->getSession()
+            );
         }
 
         $button->click();
@@ -512,39 +526,28 @@ class behat_mod_projetvet extends behat_base {
     }
 
     /**
-     * Checks if a CSS element contains specific text
+     * Checks if an element contains specific text
      * // phpcs:disable moodle.Files.LineLength.TooLong
      * @Then /^"(?P<selector_string>(?:[^"]|\\")*)" "(?P<selectortype_string>(?:[^"]|\\")*)" should contain "(?P<text_string>(?:[^"]|\\")*)"$/
      * // phpcs:enable moodle.Files.LineLength.TooLong
-     * @param string $selector The CSS selector
-     * @param string $selectortype The type of selector (css_element, etc.)
+     * @param string $selector The selector locator
+     * @param string $selectortype The type of selector (css_element, named selector, etc.)
      * @param string $text The text to search for
      * @throws ExpectationException
      */
     public function element_should_contain_text($selector, $selectortype, $text) {
-        // For css_element type, use the selector directly as CSS.
-        if ($selectortype === 'css_element') {
-            $element = $this->find('css', $selector);
-
-            if (!$element) {
-                throw new ElementNotFoundException(
-                    $this->getSession(),
-                    'Element',
-                    'css',
-                    $selector
-                );
-            }
-
-            $elementtext = $element->getText();
-            if (stripos($elementtext, $text) === false) {
-                throw new ExpectationException(
-                    'Element "' . $selector . '" does not contain text "' . $text . '". Found: ' . substr($elementtext, 0, 100),
-                    $this->getSession()
-                );
-            }
-        } else {
+        $element = $this->get_selected_node($selectortype, $selector);
+        if (!$element) {
             throw new ExpectationException(
-                'Selector type "' . $selectortype . '" is not supported in this step. Use css_element.',
+                'Element "' . $selector . '" with selector type "' . $selectortype . '" was not found.',
+                $this->getSession()
+            );
+        }
+
+        $elementtext = $element->getText();
+        if (stripos($elementtext, $text) === false) {
+            throw new ExpectationException(
+                'Element "' . $selector . '" does not contain text "' . $text . '". Found: ' . substr($elementtext, 0, 100),
                 $this->getSession()
             );
         }
@@ -557,6 +560,7 @@ class behat_mod_projetvet extends behat_base {
      * | pagetype          | name meaning | description                    |
      * | View              | Activity name | The activity view page        |
      * | Tutor assignments | Activity name | The assignments page (assignments.php)    |
+     * | Dashboard         | Activity name | The dashboard page (dashboard.php)        |
      *
      * @param string $type identifies which type of page this is, e.g. 'Tutor assignments'.
      * @param string $identifier identifies the particular page, e.g. 'ProjetVet 1'.
@@ -574,6 +578,12 @@ class behat_mod_projetvet extends behat_base {
             case 'tutor assignments':
                 return new moodle_url(
                     '/mod/projetvet/assignments.php',
+                    ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
+                );
+
+            case 'dashboard':
+                return new moodle_url(
+                    '/mod/projetvet/dashboard.php',
                     ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
                 );
 

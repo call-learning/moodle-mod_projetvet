@@ -25,7 +25,7 @@ Feature: Dashboard page for DEVE overview
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Dashboard" page
     Then I should see "Dashboard"
-    And "#dashboard-report-container" "css_element" should exist
-    And "#dashboard-report-container" "css_element" should contain "Number of projects"
-    And "#dashboard-report-container" "css_element" should contain "Number of projects to validate"
-    And "#dashboard-report-container" "css_element" should contain "Median ECTS"
+    And "Dashboard report container" "mod_projetvet > Dashboard report container" should exist
+    And "Dashboard report container" "mod_projetvet > Dashboard report container" should contain "Number of projects"
+    And "Dashboard report container" "mod_projetvet > Dashboard report container" should contain "Number of projects to validate"
+    And "Dashboard report container" "mod_projetvet > Dashboard report container" should contain "Median ECTS"
