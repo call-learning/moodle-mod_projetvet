@@ -297,7 +297,7 @@ class utils {
             return 0.0;
         }
 
-        $sql = "SELECT fd.intvalue
+        $sql = "SELECT fd.id, fd.intvalue
                   FROM {projetvet_form_data} fd
                   JOIN {projetvet_form_entry} fe ON fe.id = fd.entryid
                   JOIN {projetvet_form_set} fs ON fs.id = fe.formsetid
@@ -307,7 +307,7 @@ class utils {
                    AND fe.entrystatus > :draftstatus
                    AND fd.fieldid = :fieldid
                    AND fd.intvalue IS NOT NULL
-                 ORDER BY fd.intvalue ASC";
+                 ORDER BY fd.intvalue ASC, fd.id ASC";
 
         $records = $DB->get_records_sql($sql, [
             'projetvetid' => $projetvetid,
