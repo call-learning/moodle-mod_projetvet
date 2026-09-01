@@ -232,25 +232,26 @@ class groups {
      * @return array Array of student options with 'uniqueid' and 'name' keys
      */
     public static function get_all_students(int $cmid): array {
-        $modcontext = \context_module::instance($cmid);
-        $coursecontext = $modcontext->get_course_context();
+        global $DB;
 
-        // Get students (users with submit capability but not approve).
-        $enrolledstudents = get_enrolled_users(
-            $coursecontext,
-            'mod/projetvet:submit',
-            0,
-            'u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
-            'u.lastname, u.firstname'
+        $studentsjoin = self::get_all_students_join($cmid, 'u.id');
+
+        if ($studentsjoin->cannotmatchanyrows) {
+            return [];
+        }
+
+        $users = $DB->get_records_sql(
+            "SELECT u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic,
+                    u.middlename, u.alternatename
+              FROM {user} u
+              {$studentsjoin->joins}
+             WHERE {$studentsjoin->wheres}
+             ORDER BY u.lastname, u.firstname",
+            $studentsjoin->params
         );
 
         $studentoptions = [];
-        foreach ($enrolledstudents as $user) {
-            // Skip teachers (users with approve capability).
-            if (has_capability('mod/projetvet:approve', $coursecontext, $user->id)) {
-                continue;
-            }
-
+        foreach ($users as $user) {
             $studentoptions[] = [
                 'uniqueid' => $user->id,
                 'name' => fullname($user),
@@ -261,25 +262,72 @@ class groups {
     }
 
     /**
+     * Get the SQL join fragment that restricts a query to the enrolled students in the course.
+     *
+     * A student is an enrolled user who has the submit capability but does not have the
+     * approve capability (i.e. is not a teacher). This is the single source of truth used by
+     * {@see self::get_all_students()} so the array and join variants never diverge.
+     *
+     * @param int $cmid Course module ID.
+     * @param string $useridcolumn The column reference of the user id in the target query
+     *     (e.g. "u.id" or "rbalias0.id").
+     * @return \core\dml\sql_join Joins, wheres and params to apply to the target query.
+     */
+    public static function get_all_students_join(int $cmid, string $useridcolumn): \core\dml\sql_join {
+        return self::get_enrolled_capability_join(
+            self::get_course_context_from_cmid($cmid),
+            'mod/projetvet:submit',
+            'mod/projetvet:approve',
+            $useridcolumn
+        );
+    }
+
+    /**
      * Get all teachers in the course with approve capability
      *
      * @param int $cmid Course module ID
      * @return array Array of teacher user IDs
      */
     public static function get_all_teachers(int $cmid): array {
-        $modcontext = \context_module::instance($cmid);
-        $coursecontext = $modcontext->get_course_context();
+        global $DB;
 
-        // Get teachers (users with approve capability).
-        $enrolledteachers = get_enrolled_users(
-            $coursecontext,
-            'mod/projetvet:approve',
-            0,
-            'u.id, u.lastname, u.firstname',
-            'u.lastname ASC, u.firstname ASC'
+        $teachersjoin = self::get_all_teachers_join($cmid, 'u.id');
+
+        if ($teachersjoin->cannotmatchanyrows) {
+            return [];
+        }
+
+        $users = $DB->get_records_sql(
+            "SELECT u.id
+              FROM {user} u
+              {$teachersjoin->joins}
+             WHERE {$teachersjoin->wheres}
+             ORDER BY u.lastname ASC, u.firstname ASC",
+            $teachersjoin->params
         );
 
-        return array_keys($enrolledteachers);
+        return array_column($users, 'id');
+    }
+
+    /**
+     * Get the SQL join fragment that restricts a query to the enrolled teachers in the course.
+     *
+     * A teacher is an enrolled user who has the approve capability. This is the single source
+     * of truth used by {@see self::get_all_teachers()} so the array and join variants never
+     * diverge.
+     *
+     * @param int $cmid Course module ID.
+     * @param string $useridcolumn The column reference of the user id in the target query
+     *     (e.g. "u.id" or "rbalias0.id").
+     * @return \core\dml\sql_join Joins, wheres and params to apply to the target query.
+     */
+    public static function get_all_teachers_join(int $cmid, string $useridcolumn): \core\dml\sql_join {
+        return self::get_enrolled_capability_join(
+            self::get_course_context_from_cmid($cmid),
+            'mod/projetvet:approve',
+            null,
+            $useridcolumn
+        );
     }
 
     /**
@@ -561,5 +609,58 @@ class groups {
 
         $records = $DB->get_records_sql($sql, $params);
         return array_keys($records);
+    }
+
+    /**
+     * Get the course context for a course module ID.
+     *
+     * @param int $cmid Course module ID
+     * @return \context_course
+     */
+    private static function get_course_context_from_cmid(int $cmid): \context_course {
+        return \context_module::instance($cmid)->get_course_context();
+    }
+
+    /**
+     * Build a SQL join fragment that restricts a query to enrolled users who have a capability
+     * and, optionally, do not have another capability.
+     *
+     * It is built from the core {@see get_enrolled_join()} and {@see get_with_capability_join()}
+     * fragments, so it stays consistent with the rest of Moodle. The optional negative capability
+     * is expressed as a NOT IN subquery on a separate alias (u2) so its internal role join does not
+     * collide with the main query scope.
+     *
+     * @param \context_course $coursecontext The course context.
+     * @param string $positivecapability Capability the user must have.
+     * @param string|null $negativecapability Capability the user must not have (optional).
+     * @param string $useridcolumn The column reference of the user id in the target query.
+     * @return \core\dml\sql_join Joins, wheres and params.
+     */
+    private static function get_enrolled_capability_join(
+        \context_course $coursecontext,
+        string $positivecapability,
+        ?string $negativecapability = null,
+        string $useridcolumn = 'u.id'
+    ): \core\dml\sql_join {
+        // Enrolled in the course (JOIN to user_enrolments + enrol).
+        $enrolledjoin = get_enrolled_join($coursecontext, $useridcolumn);
+
+        // Has the required capability (JOIN to the matching role assignments).
+        $positivejoin = get_with_capability_join($coursecontext, $positivecapability, $useridcolumn);
+
+        $joins  = trim(implode("\n", array_filter([$enrolledjoin->joins, $positivejoin->joins])));
+        $wheres = implode(' AND ', array_filter([$enrolledjoin->wheres, $positivejoin->wheres]));
+        $params = $enrolledjoin->params + $positivejoin->params;
+        $cannotmatchanyrows = $enrolledjoin->cannotmatchanyrows || $positivejoin->cannotmatchanyrows;
+
+        // Exclude users who have the negative capability (e.g. teachers) via a NOT IN subquery.
+        if ($negativecapability !== null) {
+            $negativejoin = get_with_capability_join($coursecontext, $negativecapability, 'u2.id');
+            $wheres .= " AND {$useridcolumn} NOT IN (SELECT u2.id FROM {user} u2 "
+                . $negativejoin->joins . ' WHERE ' . $negativejoin->wheres . ')';
+            $params += $negativejoin->params;
+        }
+
+        return new \core\dml\sql_join($joins, $wheres, $params, $cannotmatchanyrows);
     }
 }

@@ -525,4 +525,82 @@ final class groups_test extends \advanced_testcase {
         $studentids = array_column($students, 'uniqueid');
         $this->assertNotContains($data['teacher']->id, $studentids);
     }
+
+    /**
+     * Test get_all_students_join built against a custom user id column (as the reportbuilder
+     * report uses), proving the fragment is coherent, executable and consistent with the
+     * array-based source of truth.
+     */
+    public function test_get_all_students_join_with_custom_alias(): void {
+        global $DB;
+
+        $data = $this->create_test_data();
+        $cm = get_coursemodule_from_instance('projetvet', $data['projetvet']->id);
+
+        $join = groups::get_all_students_join($cm->id, 'rbalias0.id');
+
+        $this->assertNotSame('', $join->joins);
+        $this->assertStringContainsString('rbalias0', $join->joins);
+
+        // Every parameter referenced in the fragment must be provided (otherwise the query is broken).
+        preg_match_all('/:(\w+)/', $join->joins . ' ' . $join->wheres, $matches);
+        $missing = array_diff($matches[1], array_keys($join->params));
+        $this->assertSame([], array_values($missing));
+
+        // The fragment must run against a query that aliases {user} as rbalias0 (not "u").
+        $rows = $DB->get_records_sql(
+            "SELECT rbalias0.id
+               FROM {user} rbalias0
+               {$join->joins}
+              WHERE {$join->wheres}",
+            $join->params
+        );
+
+        $joinedids = array_keys($rows);
+        sort($joinedids);
+
+        $expected = [$data['student1']->id, $data['student2']->id, $data['student3']->id];
+        sort($expected);
+        $this->assertEquals($expected, $joinedids);
+        $this->assertNotContains($data['teacher']->id, $joinedids);
+
+        // Must be identical to the array-based source of truth.
+        $expectedfromarray = array_column(groups::get_all_students($cm->id), 'uniqueid');
+        sort($expectedfromarray);
+        $this->assertEquals($expectedfromarray, $joinedids);
+    }
+
+    /**
+     * Test get_all_teachers_join built against a custom user id column (as the reportbuilder
+     * report uses), proving the fragment is coherent and consistent with the array variant.
+     */
+    public function test_get_all_teachers_join_with_custom_alias(): void {
+        global $DB;
+
+        $data = $this->create_test_data();
+        $cm = get_coursemodule_from_instance('projetvet', $data['projetvet']->id);
+
+        $join = groups::get_all_teachers_join($cm->id, 'rbalias0.id');
+
+        $this->assertNotSame('', $join->joins);
+        $this->assertStringContainsString('rbalias0', $join->joins);
+
+        // The fragment must run against a query that aliases {user} as rbalias0 (not "u").
+        $rows = $DB->get_records_sql(
+            "SELECT rbalias0.id
+               FROM {user} rbalias0
+               {$join->joins}
+              WHERE {$join->wheres}",
+            $join->params
+        );
+
+        $joinedids = array_keys($rows);
+        $this->assertEquals([$data['teacher']->id], $joinedids);
+
+        // Must be identical to the array-based source of truth.
+        $teachers = groups::get_all_teachers($cm->id);
+        sort($teachers);
+        sort($joinedids);
+        $this->assertEquals($teachers, $joinedids);
+    }
 }

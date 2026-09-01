@@ -56,22 +56,29 @@ class students extends system_report {
         $this->add_base_fields("{$entityuseralias}.id, {$entityuseralias}.firstname, {$entityuseralias}.lastname,
             {$entityuseralias}.email");
 
-        // Check if current user is a tutor and get their students.
+        // Restrict the base user table to the students the current user may view.
+        // Admins can see every student in the course; tutors only their own students.
         if (has_capability('mod/projetvet:admin', $context)) {
-            $studentarrays = \mod_projetvet\local\api\groups::get_all_students($cmid);
-            $studentids = array_column($studentarrays, 'uniqueid');
+            // Scope to all enrolled students via a JOIN (no in-memory id list).
+            $studentsjoin = \mod_projetvet\local\api\groups::get_all_students_join($cmid, "{$entityuseralias}.id");
+
+            if ($studentsjoin->cannotmatchanyrows) {
+                // No students can match, add an impossible condition.
+                $this->add_base_condition_sql("1 = 0");
+            } else {
+                $this->add_student_scope_join($studentsjoin);
+            }
         } else {
             $studentids = \mod_projetvet\local\api\groups::get_students_for_tutor($USER->id, $projetvetid);
-        }
 
-        if (empty($studentids)) {
-            // No students for this tutor, add impossible condition.
-            $this->add_base_condition_sql("1 = 0");
-        } else {
-            // Show only students assigned to this tutor.
-            [$insql, $inparams] = $DB->get_in_or_equal($studentids, SQL_PARAMS_NAMED, database::generate_param_name());
-
-            $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
+            if (empty($studentids)) {
+                // No students for this tutor, add impossible condition.
+                $this->add_base_condition_sql("1 = 0");
+            } else {
+                // Show only students assigned to this tutor.
+                [$insql, $inparams] = $DB->get_in_or_equal($studentids, SQL_PARAMS_NAMED, database::generate_param_name());
+                $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
+            }
         }
 
         $this->add_columns();
@@ -82,6 +89,37 @@ class students extends system_report {
 
         // Set pagination (default is 30, you can change this).
         $this->set_default_per_page(30);
+    }
+
+    /**
+     * Apply a core {@see \core\dml\sql_join} fragment as the report student scope.
+     *
+     * Reportbuilder requires every parameter to carry a rbparam-style name, but the core join
+     * fragments use their own prefixes (ej1_*, eu1_*, ...). This helper renames the fragment's
+     * parameters to unique reportbuilder names and applies both the joins and the where clauses
+     * using that single consistent mapping.
+     *
+     * @param \core\dml\sql_join $join The core join fragment to apply.
+     */
+    private function add_student_scope_join(\core\dml\sql_join $join): void {
+        // Map each core parameter name to a unique reportbuilder parameter name.
+        $parammap = [];
+        $params = [];
+        foreach ($join->params as $name => $value) {
+            $newname = database::generate_param_name();
+            $parammap[$name] = $newname;
+            $params[$newname] = $value;
+        }
+
+        $rename = static function (string $name) use ($parammap): string {
+            return $parammap[$name] ?? $name;
+        };
+
+        $joinsql  = database::sql_replace_parameter_names($join->joins, array_keys($join->params), $rename);
+        $wheresql = database::sql_replace_parameter_names($join->wheres, array_keys($join->params), $rename);
+
+        $this->add_join($joinsql, $params);
+        $this->add_base_condition_sql($wheresql, $params);
     }
 
     /**
