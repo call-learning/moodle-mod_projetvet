@@ -70,6 +70,18 @@ if ($canviewall && !$studentid) {
     echo $OUTPUT->header();
     echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
 
+    // Make the tutor information form directly accessible to primary tutors.
+    if ($DB->record_exists('projetvet_groups', [
+        'projetvetid' => $moduleinstance->id,
+        'ownerid' => $USER->id,
+    ])) {
+        echo html_writer::link(
+            new moodle_url('/mod/projetvet/tutor_info.php'),
+            get_string('practicalinfo_settings', 'mod_projetvet'),
+            ['class' => 'btn btn-primary mb-3']
+        );
+    }
+
     // Load JavaScript for clickable rows.
     $PAGE->requires->js_call_amd('mod_projetvet/clickable_rows', 'init');
 

@@ -603,4 +603,90 @@ class behat_mod_projetvet extends behat_base {
         $projetvet = $DB->get_record('projetvet', ['name' => $name], '*', MUST_EXIST);
         return get_coursemodule_from_instance('projetvet', $projetvet->id, $projetvet->course, false, MUST_EXIST);
     }
+
+    /**
+     * Opens the student info sheet (view.php with a studentid) for a student in an activity.
+     *
+     * @Given /^I open the student info sheet for "(?P<studentusername_string>(?:[^"]|\\")*)" in "(?P<activityname_string>(?:[^"]|\\")*)"$/
+     * @param string $studentusername The student's username.
+     * @param string $activityname The projetvet activity name.
+     * @throws Exception
+     */
+    public function i_open_student_info_sheet($studentusername, $activityname) {
+        global $DB;
+
+        $student = $DB->get_record('user', ['username' => $studentusername], 'id', MUST_EXIST);
+        $cm = $this->get_cm_by_projetvet_name($activityname);
+
+        $url = new moodle_url('/mod/projetvet/view.php', ['id' => $cm->id, 'studentid' => $student->id]);
+        $this->getSession()->visit($url->out());
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Navigates directly to the tutor practical info page (URL-based, for access-control checks
+     * where no navigation link is available for the current user).
+     *
+     * @Given /^I am on the tutor practical info page$/
+     */
+    public function i_am_on_the_tutor_practical_info_page() {
+        $this->getSession()->visit((new moodle_url('/mod/projetvet/tutor_info.php'))->out());
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Asserts that a form field's current value contains the given text.
+     *
+     * @Then /^the field "(?P<label_string>(?:[^"]|\\")*)" should contain "(?P<value_string>(?:[^"]|\\")*)"$/
+     * @param string $label The field label.
+     * @param string $value The expected substring.
+     * @throws ExpectationException
+     */
+    public function the_field_should_contain($label, $value) {
+        $field = $this->getSession()->getPage()->findField($label);
+
+        if (!$field) {
+            throw new ExpectationException("Field '$label' was not found.", $this->getSession());
+        }
+
+        $current = $field->getValue();
+        if ($current === null || strpos($current, $value) === false) {
+            throw new ExpectationException(
+                "Field '$label' does not contain '$value'. Current value: '$current'",
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Asserts that the activity-entry-form button for a given formset exists on the page.
+     *
+     * @Then /^the "activity entry form" button for formset "(?P<formsetidnumber_string>(?:[^"]|\\")*)" should exist$/
+     * @param string $formsetidnumber The formset idnumber (e.g. teacherinfo).
+     * @throws ExpectationException
+     */
+    public function the_activity_entry_form_button_for_formset_should_exist($formsetidnumber) {
+        $button = $this->find('css', '[data-action="activity-entry-form"][data-formsetidnumber="' . $formsetidnumber . '"]');
+
+        if (!$button) {
+            throw new ExpectationException(
+                'The activity entry form button for formset "' . $formsetidnumber . '" was not found.',
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Asserts that a highlighted info row (tr.row-highlight) exists on the page.
+     *
+     * @Then /^a highlighted info row should exist$/
+     * @throws ExpectationException
+     */
+    public function a_highlighted_info_row_should_exist() {
+        $row = $this->find('css', 'tr.row-highlight');
+
+        if (!$row) {
+            throw new ExpectationException('A highlighted info row (tr.row-highlight) was not found.', $this->getSession());
+        }
+    }
 }

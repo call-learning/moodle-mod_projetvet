@@ -241,3 +241,47 @@ function projetvet_extend_settings_navigation($settingsnav, $projetvetnode = nul
         $projetvetnode->add_node($dashboardnode);
     }
 }
+
+/**
+ * Extends the user settings navigation with the tutor practical info settings.
+ *
+ * This function is called by core when building the user settings navigation tree.
+ * The node is only added for the logged-in user on their own preferences page,
+ * and only if the user is a tutor (primary owner of at least one projetvet group).
+ *
+ * @param navigation_node $usersetting The user settings navigation node.
+ * @param stdClass $user The user whose settings are being built.
+ * @param context_user $usercontext The user context.
+ * @param stdClass $course The course being displayed.
+ * @param context_course $coursecontext The course context.
+ * @return void
+ */
+function mod_projetvet_extend_navigation_user_settings(navigation_node $usersetting, $user, $usercontext, $course, $coursecontext) {
+    global $DB, $PAGE, $USER;
+
+    // Only inject the node on the user's own preferences page.
+    $onpreferencepage = $PAGE->url->compare(new moodle_url('/user/preferences.php'), URL_MATCH_BASE);
+    if (!$onpreferencepage || $user->id != $USER->id) {
+        return;
+    }
+
+    // Only tutors (primary owners of at least one projetvet group) get the node.
+    if (!$DB->record_exists('projetvet_groups', ['ownerid' => $user->id])) {
+        return;
+    }
+
+    // Add the entry under a dedicated "Projetvet" section so it does not fall
+    // into the default "Other" ("Divers") section (same pattern as core badges).
+    $section = $usersetting->add(
+        get_string('pluginname', 'mod_projetvet'),
+        null,
+        navigation_node::TYPE_CONTAINER,
+        null,
+        'projetvet'
+    );
+    $section->add(
+        get_string('practicalinfo_settings', 'mod_projetvet'),
+        new moodle_url('/mod/projetvet/tutor_info.php'),
+        navigation_node::TYPE_SETTING
+    );
+}

@@ -632,6 +632,7 @@ class projetvet_form extends dynamic_form {
                             'stringkey' => $stringkey,
                             'studentid' => $studentid,
                             'cmid' => $cmid,
+                            'projetvetid' => $projetvetid,
                         ];
 
                         // Add data-action attribute if present in configdata.

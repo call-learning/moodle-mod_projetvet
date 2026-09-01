@@ -57,10 +57,11 @@
         <table class="table table-borderless">
             <tbody>
             {{#infotable.rows}}
-                <tr>
+                <tr{{#rowhighlight}} class="row-highlight"{{/rowhighlight}}>
                     <td>{{label}}</td>
                     <td>
                         {{#value}}{{{value}}}{{/value}}
+                        {{#valueempty}}<span class="text-muted">{{{valueempty}}}</span>{{/valueempty}}
                         {{#haslink}}
                             <a href="#" class="btn btn-sm btn-link">{{linktext}}</a>
                         {{/haslink}}

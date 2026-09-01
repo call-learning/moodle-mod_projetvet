@@ -39,7 +39,9 @@ class provider implements
     // This plugin can determine which users have data in a context.
     \core_privacy\local\request\core_userlist_provider,
     // This plugin implements the core request provider.
-    \core_privacy\local\request\plugin\provider
+    \core_privacy\local\request\plugin\provider,
+    // This plugin stores a sitewide user preference.
+    \core_privacy\local\request\user_preference_provider
 {
     /**
      * Returns metadata about this system.
@@ -48,6 +50,11 @@ class provider implements
      * @return collection A listing of user data stored through this system.
      */
     public static function get_metadata(collection $items): collection {
+        $items->add_user_preference(
+            'projetvet_tutor_info',
+            'privacy:metadata:preference:projetvet_tutor_info'
+        );
+
         // The projetvet_form_entry table stores form entries created by users.
         $items->add_database_table('projetvet_form_entry', [
             'projetvetid' => 'privacy:metadata:projetvet_form_entry:projetvetid',
@@ -75,6 +82,24 @@ class provider implements
         ], 'privacy:metadata:projetvet_form_data');
 
         return $items;
+    }
+
+    /**
+     * Export the plugin's user preferences.
+     *
+     * @param int $userid The user whose preferences are being exported.
+     * @return void
+     */
+    public static function export_user_preferences(int $userid) {
+        $value = get_user_preferences('projetvet_tutor_info', null, $userid);
+        if ($value !== null) {
+            writer::export_user_preference(
+                'mod_projetvet',
+                'projetvet_tutor_info',
+                $value,
+                get_string('privacy:metadata:preference:projetvet_tutor_info', 'mod_projetvet')
+            );
+        }
     }
 
     /**

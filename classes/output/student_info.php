@@ -74,6 +74,8 @@ class student_info implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
+        global $USER;
+
         // Get chart data using the chart_data class.
         $totalects = chart_data::get_total_ects($this->moduleinstance->id, $this->studentid);
         $targetects = get_config('mod_projetvet', 'target_ects') ?: 20;
@@ -133,6 +135,7 @@ class student_info implements renderable, templatable {
         $teacherrow['formsetidnumber'] = 'teacherinfo';
         $teacherrow['readonly'] = $this->isteacher ? 0 : 1;
 
+        // Restore the per-student note entry so the teacher can edit it for this student.
         $teacherformset = form_set::get_record(['idnumber' => 'teacherinfo']);
         if ($teacherformset) {
             $teacherentry = form_entry::get_record([
@@ -146,6 +149,19 @@ class student_info implements renderable, templatable {
         }
 
         $data['infotable']['rows'][] = $teacherrow;
+
+        // Tutor profile info is private and is only shown to the assigned student.
+        if ($tutor && $this->studentid == $USER->id) {
+            $tutorinfo = get_user_preferences('projetvet_tutor_info', '', $tutor->id);
+            $tutorinforow = ['label' => get_string('practicalinfo_settings', 'mod_projetvet')];
+            if ($tutorinfo !== '') {
+                $tutorinforow['value'] = format_text($tutorinfo, FORMAT_PLAIN, ['newlines' => true]);
+                $tutorinforow['rowhighlight'] = true;
+            } else {
+                $tutorinforow['valueempty'] = get_string('practicalinfo_notyet', 'mod_projetvet');
+            }
+            $data['infotable']['rows'][] = $tutorinforow;
+        }
 
         // Thesis subject row.
         $thesisrow = ['label' => get_string('thesissubject', 'mod_projetvet')];
