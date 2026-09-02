@@ -164,8 +164,13 @@ class assignments_teachers extends system_report {
             $this->add_column($selectcolumn);
         }
 
-        // Fullname with picture.
-        $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
+        // Fullname with picture. Sort by the actual lastname field, rather than by the
+        // configured display order of the user's full name.
+        $fullnamecolumn = $entityuser->get_column('fullnamewithpicturelink');
+        $fullnamecolumn->add_field("{$entityuseralias}.lastname")
+            ->add_field("{$entityuseralias}.firstname")
+            ->set_is_sortable(true, ["{$entityuseralias}.lastname", "{$entityuseralias}.firstname"]);
+        $this->add_column($fullnamecolumn);
 
         // Rating column - now sortable using temp table data.
         $ratingcolumn = (new column(
@@ -219,7 +224,7 @@ class assignments_teachers extends system_report {
 
         $this->add_column($gapcolumn);
 
-        // Default sorting by lastname.
+        // Default sorting by the actual lastname field.
         $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
     }
 
