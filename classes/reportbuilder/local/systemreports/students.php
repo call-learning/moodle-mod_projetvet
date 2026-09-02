@@ -16,6 +16,7 @@
 
 namespace mod_projetvet\reportbuilder\local\systemreports;
 
+use core_cohort\reportbuilder\local\entities\cohort;
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
 use core_reportbuilder\local\report\action;
@@ -51,6 +52,16 @@ class students extends system_report {
 
         $this->set_main_table('user', $entityuseralias);
         $this->add_entity($entityuser);
+
+        // Join the cohort entity to the user through cohort membership.
+        $entitycohort = new cohort();
+        $cohortalias = $entitycohort->get_table_alias('cohort');
+        $cohortmemberalias = database::generate_alias('cohortmember');
+        $this->add_entity($entitycohort
+            ->add_join("LEFT JOIN {cohort_members} {$cohortmemberalias}
+                            ON {$cohortmemberalias}.userid = {$entityuseralias}.id")
+            ->add_join("LEFT JOIN {cohort} {$cohortalias}
+                            ON {$cohortalias}.id = {$cohortmemberalias}.cohortid"));
 
         // Base fields needed for actions.
         $this->add_base_fields("{$entityuseralias}.id, {$entityuseralias}.firstname, {$entityuseralias}.lastname,
@@ -150,43 +161,22 @@ class students extends system_report {
 
         $entityuser = $this->get_entity('user');
         $entityuseralias = $entityuser->get_table_alias('user');
+        $entitycohort = $this->get_entity('cohort');
         $projetvetid = $this->get_parameter('projetvetid', 0, PARAM_INT);
         $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
 
         // Fullname with picture.
         $this->add_column($entityuser->get_column('fullnamewithpicture'));
 
-        // Promotion (custom profile field) - column 2.
-        $promotioncolumn = (new \core_reportbuilder\local\report\column(
-            'promotion',
-            new lang_string('promoyear', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->add_field("{$entityuseralias}.id", 'userid_promotion')
-            ->set_type(\core_reportbuilder\local\report\column::TYPE_TEXT)
-            ->set_is_sortable(true)
-            ->add_callback(static function ($value, $row): string {
-                return \mod_projetvet\utils::get_user_profile_field($row->userid_promotion, 'promotion');
-            });
+        // Promotion custom profile field.
+        if (array_key_exists('profilefield_promotion', $entityuser->get_columns())) {
+            $this->add_column($entityuser->get_column('profilefield_promotion')
+                ->set_title(new lang_string('promotion', 'mod_projetvet')));
+        }
 
-        $this->add_column($promotioncolumn);
-
-        // Cohort (year in course) - column 3.
-        $cohortcolumn = (new \core_reportbuilder\local\report\column(
-            'cohort',
-            new lang_string('year', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->add_field("{$entityuseralias}.id", 'userid_cohort')
-            ->set_type(\core_reportbuilder\local\report\column::TYPE_TEXT)
-            ->set_is_sortable(true)
-            ->add_callback(static function ($value, $row): string {
-                return \mod_projetvet\utils::get_user_cohort($row->userid_cohort);
-            });
-
-        $this->add_column($cohortcolumn);
+        // Cohort name.
+        $this->add_column($entitycohort->get_column('name')
+            ->set_title(new lang_string('cohort', 'core_cohort')));
 
         // Email.
         $this->add_column($entityuser->get_column('email'));
@@ -309,6 +299,17 @@ class students extends system_report {
 
         // Email filter.
         $this->add_filter($entityuser->get_filter('email'));
+
+        // Promotion custom profile field filter.
+        if (array_key_exists('profilefield_promotion', $entityuser->get_filters())) {
+            $this->add_filter($entityuser->get_filter('profilefield_promotion')
+                ->set_header(new lang_string('promotion', 'mod_projetvet')));
+        }
+
+        // Cohort filter.
+        $entitycohort = $this->get_entity('cohort');
+        $this->add_filter($entitycohort->get_filter('name')
+            ->set_header(new lang_string('cohort', 'core_cohort')));
     }
 
     /**
