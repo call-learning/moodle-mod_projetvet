@@ -207,6 +207,40 @@ class students extends system_report {
 
         $this->add_column($totalectscolumn);
 
+        // Get the date of the latest validated tutor interview for each student.
+        $lastinterviewparam = database::generate_param_name();
+        $this->add_join(
+            "LEFT JOIN (
+                SELECT pfe.studentid, MAX(pfd.intvalue) AS lastinterviewdate
+                  FROM {projetvet_form_entry} pfe
+                  JOIN {projetvet_form_set} pfs ON pfs.id = pfe.formsetid
+                  JOIN {projetvet_form_field} pff ON pff.idnumber = 'date_facetoface'
+                  JOIN {projetvet_form_data} pfd ON pfd.entryid = pfe.id AND pfd.fieldid = pff.id
+                 WHERE pfe.projetvetid = :{$lastinterviewparam}
+                   AND pfs.idnumber = 'facetoface'
+                   AND pfe.entrystatus >= 2
+                 GROUP BY pfe.studentid
+            ) lastinterview ON lastinterview.studentid = {$entityuseralias}.id",
+            [$lastinterviewparam => $projetvetid]
+        );
+
+        $lastinterviewcolumn = (new \core_reportbuilder\local\report\column(
+            'lastinterviewdate',
+            new lang_string('lastinterviewdate', 'mod_projetvet'),
+            $entityuser->get_entity_name()
+        ))
+            ->add_field('lastinterview.lastinterviewdate')
+            ->set_type(\core_reportbuilder\local\report\column::TYPE_TIMESTAMP)
+            ->set_is_sortable(true)
+            ->add_callback(static function ($value): string {
+                if (empty($value)) {
+                    return get_string('lastinterviewdate_empty', 'mod_projetvet');
+                }
+                return userdate($value, get_string('strftimedatefullshort', 'core_langconfig'));
+            });
+
+        $this->add_column($lastinterviewcolumn);
+
         // Face-to-face count - create custom column.
         $facetofacecolumn = (new \core_reportbuilder\local\report\column(
             'facetofacesessions',
