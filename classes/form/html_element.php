@@ -18,7 +18,6 @@ namespace mod_projetvet\form;
 
 use MoodleQuickForm_static;
 use renderer_base;
-use mod_projetvet\local\api\groups;
 use mod_projetvet\utils;
 
 defined('MOODLE_INTERNAL') || die();
@@ -125,15 +124,6 @@ class html_element extends MoodleQuickForm_static {
         // Process filters in the content.
         $content = $this->process_filters($content);
 
-        // The tutor practical info field displays the tutor's real preference when it has been
-        // set, and only falls back to the placeholder string otherwise.
-        if ($this->stringkey === 'teacher_intro_value' && !empty($this->studentid) && !empty($this->projetvetid)) {
-            $tutorinfo = $this->get_tutor_practical_info();
-            if ($tutorinfo !== '') {
-                $content = $tutorinfo;
-            }
-        }
-
         // Convert data attributes to array format for Mustache.
         $dataattributeslist = [];
         foreach ($this->dataattributes as $key => $value) {
@@ -173,32 +163,5 @@ class html_element extends MoodleQuickForm_static {
         }
 
         return $content;
-    }
-
-    /**
-     * Returns the formatted practical info of the current student's primary tutor.
-     *
-     * @return string The formatted tutor practical info, or an empty string when the tutor
-     *               has not set any (in which case the caller falls back to the placeholder).
-     */
-    protected function get_tutor_practical_info(): string {
-        global $USER;
-
-        // This information is intended for the assigned student only.
-        if ($USER->id != $this->studentid) {
-            return '';
-        }
-
-        $tutor = groups::get_student_primary_tutor($this->studentid, $this->projetvetid);
-        if ($tutor === null) {
-            return '';
-        }
-
-        $tutorinfo = get_user_preferences('projetvet_tutor_info', '', $tutor->id);
-        if ($tutorinfo === '') {
-            return '';
-        }
-
-        return format_text($tutorinfo, FORMAT_PLAIN, ['newlines' => true]);
     }
 }

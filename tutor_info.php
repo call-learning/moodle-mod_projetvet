@@ -31,15 +31,15 @@ global $DB, $USER, $SITE, $PAGE, $OUTPUT;
 
 // Only tutors (primary owners of at least one projetvet group) can edit their practical info.
 if (!$DB->record_exists('projetvet_groups', ['ownerid' => $USER->id])) {
-    throw new moodle_exception('accessdenied');
+    throw new moodle_exception('accessdenied', 'error');
 }
 
 $PAGE->set_url('/mod/projetvet/tutor_info.php');
+$PAGE->set_context(context_user::instance($USER->id));
 $PAGE->set_title(get_string('practicalinfo_title', 'mod_projetvet'));
 $PAGE->set_heading($SITE->fullname);
-$PAGE->set_context(context_user::instance($USER->id));
 
-$saved = optional_param('saved', 0, PARAM_BOOL);
+$returnurl = optional_param('returnurl', null, PARAM_LOCALURL);
 
 /**
  * Form to edit the tutor's practical info.
@@ -53,8 +53,14 @@ class projetvet_tutor_info_form extends moodleform {
     protected function definition() {
         global $USER;
         $mform = $this->_form;
+        $customdata = $this->_customdata;
 
-        $current = get_user_preferences('projetvet_tutor_info', '', $USER->id);
+        // Carry the return url (if any) so that, once saved, the tutor is sent back to the
+        // page they came from (for example a student's detail page).
+        if (!empty($customdata['returnurl'])) {
+            $mform->addElement('hidden', 'returnurl', $customdata['returnurl']);
+            $mform->setType('returnurl', PARAM_LOCALURL);
+        }
 
         $mform->addElement(
             'textarea',
@@ -63,25 +69,29 @@ class projetvet_tutor_info_form extends moodleform {
             ['rows' => 8, 'cols' => 60]
         );
         $mform->setType('tutorinfo', PARAM_RAW);
-        $mform->setDefault('tutorinfo', $current);
-
-        $mform->addElement('submit', 'submitbutton', get_string('save'));
+        $this->add_action_buttons();
     }
 }
 
-$mform = new projetvet_tutor_info_form();
-
+$mform = new projetvet_tutor_info_form(null, ['returnurl' => $returnurl]);
+$current = get_user_preferences('projetvet_tutor_info', '', $USER->id);
+if ($mform->is_cancelled() && $returnurl) {
+    redirect($returnurl);
+}
+$mform->set_data(['tutorinfo' => $current]);
 if ($mform->is_submitted() && $mform->is_validated()) {
     $data = $mform->get_data();
     set_user_preference('projetvet_tutor_info', $data->tutorinfo, $USER->id);
-    redirect(new moodle_url('/mod/projetvet/tutor_info.php', ['saved' => 1]));
+    if (!empty($data->returnurl)) {
+        redirect(
+            new moodle_url($data->returnurl),
+            get_string('practicalinfo_savesuccess', 'mod_projetvet')
+        );
+    } else {
+        echo $OUTPUT->notification(get_string('practicalinfo_savesuccess', 'mod_projetvet'));
+    }
 }
-
 echo $OUTPUT->header();
-if ($saved) {
-    echo $OUTPUT->box(get_string('practicalinfo_savesuccess', 'mod_projetvet'), 'notifysuccess');
-    echo html_writer::empty_tag('br');
-}
 echo $OUTPUT->heading(get_string('practicalinfo_title', 'mod_projetvet'));
 echo html_writer::div(get_string('practicalinfo_hint', 'mod_projetvet'));
 $mform->display();

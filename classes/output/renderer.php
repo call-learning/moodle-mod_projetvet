@@ -36,7 +36,7 @@ class renderer extends plugin_renderer_base {
      * @return string HTML to output
      */
     public function render_student_info($moduleinstance, $cm, $context, $studentid, $isteacher) {
-        $studentinfo = new student_info($moduleinstance, $cm, $studentid, $isteacher);
+        $studentinfo = new student_info($moduleinstance, $cm, $context, $studentid, $isteacher);
         return $this->render_from_template('mod_projetvet/student_info', $studentinfo->export_for_template($this));
     }
 

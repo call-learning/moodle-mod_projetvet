@@ -59,6 +59,70 @@ class utils {
     }
 
     /**
+     * Check whether a user is a ProjetVet tutor.
+     *
+     * A tutor is the primary owner of at least one projetvet group, or a secondary
+     * tutor of at least one projetvet group.
+     *
+     * @param int $userid The user id to check.
+     * @return bool True if the user is a tutor (globally, in any project).
+     */
+    public static function is_tutor(int $userid): bool {
+        global $DB;
+
+        // Primary tutor: owner of at least one group.
+        if ($DB->record_exists('projetvet_groups', ['ownerid' => $userid])) {
+            return true;
+        }
+
+        // Secondary tutor: secondary tutor member of at least one group.
+        return $DB->record_exists_sql(
+            "SELECT 1
+               FROM {projetvet_group_members} m
+              WHERE m.userid = :userid
+                AND m.membertype = :membertype",
+            [
+                'userid' => $userid,
+                'membertype' => \mod_projetvet\local\persistent\group_member::TYPE_SECONDARY_TUTOR,
+            ]
+        );
+    }
+
+    /**
+     * Check whether a user is a ProjetVet tutor for a specific project.
+     *
+     * A tutor is the primary owner of at least one group in the given project, or a
+     * secondary tutor of at least one group in the given project.
+     *
+     * @param int $userid The user id to check.
+     * @param int $projetvetid The projetvet instance id.
+     * @return bool True if the user is a tutor in the given project.
+     */
+    public static function is_tutor_for_project(int $userid, int $projetvetid): bool {
+        global $DB;
+
+        // Primary tutor: owner of at least one group in the project.
+        if ($DB->record_exists('projetvet_groups', ['ownerid' => $userid, 'projetvetid' => $projetvetid])) {
+            return true;
+        }
+
+        // Secondary tutor: secondary tutor member of at least one group in the project.
+        return $DB->record_exists_sql(
+            "SELECT 1
+               FROM {projetvet_group_members} m
+               JOIN {projetvet_groups} g ON g.id = m.groupid
+              WHERE m.userid = :userid
+                AND m.membertype = :membertype
+                AND g.projetvetid = :projetvetid",
+            [
+                'userid' => $userid,
+                'membertype' => \mod_projetvet\local\persistent\group_member::TYPE_SECONDARY_TUTOR,
+                'projetvetid' => $projetvetid,
+            ]
+        );
+    }
+
+    /**
      * Get the URL for the ECTS attribution guide PDF file.
      *
      * @return string The URL to the PDF file or empty string if not set

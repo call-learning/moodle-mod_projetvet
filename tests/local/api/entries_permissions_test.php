@@ -356,9 +356,13 @@ final class entries_permissions_test extends advanced_testcase {
 
         // Student can edit entry at status 0.
         $this->setUser($this->student);
-        $this->expectNotToPerformAssertions();
-
         entries::update_entry($this->entries[0]->id, [$field->id => 'Test value'], null);
+
+        $formdata = \mod_projetvet\local\persistent\form_data::get_record([
+            'entryid' => $this->entries[0]->id,
+            'fieldid' => $field->id,
+        ]);
+        $this->assertNotNull($formdata);
     }
 
     /**

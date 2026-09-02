@@ -63,7 +63,8 @@
                         {{#value}}{{{value}}}{{/value}}
                         {{#valueempty}}<span class="text-muted">{{{valueempty}}}</span>{{/valueempty}}
                         {{#haslink}}
-                            <a href="#" class="btn btn-sm btn-link">{{linktext}}</a>
+                            <a href="{{linkurl}}" class="btn btn-sm btn-link"
+                               {{#linktitle}}title="{{linktitle}}" aria-label="{{linktitle}}"{{/linktitle}}>{{#linkicon}}<i class="fa {{linkicon}}"></i> {{/linkicon}}{{linktext}}</a>
                         {{/haslink}}
                         {{#hasbutton}}
                             <button class="btn btn-link btn-sm"

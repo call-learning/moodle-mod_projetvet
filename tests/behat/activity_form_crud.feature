@@ -335,17 +335,3 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I view activities for student "Student One"
     And I click on "View" "button" in the "International mobility" "table_row"
     Then the "field_mobilitylocation" "field" should be disabled
-
-  Scenario: Practical info is editable by teacher and readonly for student
-    Given I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
-    When I view activities for student "Student One"
-    And I click on "Practical Info" "button"
-    Then the "field_teacher_info" "field" should be enabled
-    And I set the following fields to these values:
-      | field_teacher_info | Teacher-only practical notes |
-    And I click on form button "Save"
-    And I log out
-
-    When I am on the "My Activities" "projetvet activity" page logged in as "student1"
-    And I click on "Practical Info" "button"
-    Then the "field_teacher_info" "field" should be readonly

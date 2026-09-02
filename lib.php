@@ -285,3 +285,27 @@ function mod_projetvet_extend_navigation_user_settings(navigation_node $usersett
         navigation_node::TYPE_SETTING
     );
 }
+
+/**
+ * Check whether a user may view a specific student's data in a Projetvet activity.
+ *
+ * A user may always view their own data. Viewing another student's data requires the
+ * viewallactivities capability, held by teachers, tutors and managers. This is the privacy
+ * boundary that prevents a student from opening another student's page by guessing the
+ * studentid parameter.
+ *
+ * @param int $viewerid The id of the user attempting to view the data.
+ * @param int $studentid The id of the student whose data is to be viewed.
+ * @param context_module $context The module context of the activity.
+ * @return bool True if the viewer may view the student's data.
+ */
+function projetvet_user_can_view_student(int $viewerid, int $studentid, context_module $context): bool {
+    // A user may always view their own data.
+    if ($viewerid === $studentid) {
+        return true;
+    }
+
+    // Viewing another student's data requires the viewallactivities capability
+    // (teachers, tutors and managers).
+    return has_capability('mod/projetvet:viewallactivities', $context, $viewerid);
+}

@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+global $DB, $USER, $OUTPUT, $PAGE;
 
 // Course module id.
 $id = optional_param('id', 0, PARAM_INT);
@@ -49,11 +50,29 @@ $context = context_module::instance($cm->id);
 $studentid = optional_param('studentid', 0, PARAM_INT);
 
 \mod_projetvet\event\course_module_viewed::create_from_record($moduleinstance, $cm, $course)->trigger();
-
-$PAGE->set_url('/mod/projetvet/view.php', ['id' => $cm->id]);
+$currenturl = new moodle_url('/mod/projetvet/view.php', ['id' => $cm->id]);
+if (!empty($studentid)) {
+    $currenturl->param('studentid', $studentid);
+}
+$PAGE->set_url($currenturl);
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
+
+// Make the tutor information form directly accessible to primary tutors.
+if (
+    $DB->record_exists('projetvet_groups', [
+        'projetvetid' => $moduleinstance->id,
+        'ownerid' => $USER->id,
+    ])
+) {
+    $button = html_writer::link(
+        new moodle_url('/mod/projetvet/tutor_info.php', ['returnurl' => $currenturl]),
+        get_string('practicalinfo_settings', 'mod_projetvet'),
+        ['class' => 'btn btn-primary mb-3']
+    );
+    $PAGE->set_button($button);
+}
 
 // Determine if user can view all activities (teacher or manager).
 $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
@@ -69,18 +88,6 @@ if ($canviewall && !$studentid) {
     // Teacher/Manager view: show list of students with submitted entries.
     echo $OUTPUT->header();
     echo $OUTPUT->box(format_module_intro('projetvet', $moduleinstance, $cm->id), 'generalbox', 'intro');
-
-    // Make the tutor information form directly accessible to primary tutors.
-    if ($DB->record_exists('projetvet_groups', [
-        'projetvetid' => $moduleinstance->id,
-        'ownerid' => $USER->id,
-    ])) {
-        echo html_writer::link(
-            new moodle_url('/mod/projetvet/tutor_info.php'),
-            get_string('practicalinfo_settings', 'mod_projetvet'),
-            ['class' => 'btn btn-primary mb-3']
-        );
-    }
 
     // Load JavaScript for clickable rows.
     $PAGE->requires->js_call_amd('mod_projetvet/clickable_rows', 'init');
@@ -98,6 +105,12 @@ if ($canviewall && !$studentid) {
 } else {
     // Student view or teacher/manager viewing a specific student.
     $viewingstudentid = $studentid ? $studentid : $USER->id;
+
+    // Privacy: a user may only view another student's page if they can view all activities
+    // (teachers, tutors and managers). Students may only view their own page.
+    if (!projetvet_user_can_view_student($USER->id, $viewingstudentid, $context)) {
+        throw new moodle_exception('invalidaccess', 'error');
+    }
 
     // Load JavaScript for activity forms.
     $PAGE->requires->js_call_amd('mod_projetvet/projetvet_form', 'init');

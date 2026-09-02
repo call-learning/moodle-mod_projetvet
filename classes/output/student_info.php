@@ -43,6 +43,11 @@ class student_info implements renderable, templatable {
     protected $cm;
 
     /**
+     * @var \context_module The course module context.
+     */
+    protected $context;
+
+    /**
      * @var int $studentid The student ID.
      */
     protected $studentid;
@@ -57,12 +62,14 @@ class student_info implements renderable, templatable {
      *
      * @param object $moduleinstance The module instance
      * @param object $cm The course module
+     * @param \context_module $context The course module context
      * @param int $studentid The student ID
      * @param bool $isteacher Whether the user is a teacher
      */
-    public function __construct($moduleinstance, $cm, $studentid, $isteacher) {
+    public function __construct($moduleinstance, $cm, $context, $studentid, $isteacher) {
         $this->moduleinstance = $moduleinstance;
         $this->cm = $cm;
+        $this->context = $context;
         $this->studentid = $studentid;
         $this->isteacher = $isteacher;
     }
@@ -126,40 +133,44 @@ class student_info implements renderable, templatable {
         // Teacher row.
         $teacherrow = ['label' => get_string('tutor', 'mod_projetvet')];
         $teacherrow['value'] = $tutorname;
-        $teacherrow['hasbutton'] = true;
-        $teacherrow['buttontext'] = get_string('practicalinfo', 'mod_projetvet');
-        $teacherrow['buttonaction'] = 'activity-entry-form';
-        $teacherrow['cmid'] = $this->cm->id;
-        $teacherrow['projetvetid'] = $this->moduleinstance->id;
-        $teacherrow['studentid'] = $this->studentid;
-        $teacherrow['formsetidnumber'] = 'teacherinfo';
-        $teacherrow['readonly'] = $this->isteacher ? 0 : 1;
-
-        // Restore the per-student note entry so the teacher can edit it for this student.
-        $teacherformset = form_set::get_record(['idnumber' => 'teacherinfo']);
-        if ($teacherformset) {
-            $teacherentry = form_entry::get_record([
-                'projetvetid' => $this->moduleinstance->id,
-                'studentid' => $this->studentid,
-                'formsetid' => $teacherformset->get('id'),
-            ]);
-            if ($teacherentry) {
-                $teacherrow['entryid'] = $teacherentry->get('id');
-            }
-        }
 
         $data['infotable']['rows'][] = $teacherrow;
 
-        // Tutor profile info is private and is only shown to the assigned student.
-        if ($tutor && $this->studentid == $USER->id) {
+        // Show the tutor's info to the assigned student, the tutor, or a ProjetVet admin.
+        $canviewtutorinfo = $tutor && ($this->studentid == $USER->id || $tutor->id == $USER->id ||
+                has_capability('mod/projetvet:admin', $this->context));
+        if ($canviewtutorinfo) {
             $tutorinfo = get_user_preferences('projetvet_tutor_info', '', $tutor->id);
-            $tutorinforow = ['label' => get_string('practicalinfo_settings', 'mod_projetvet')];
+            $tutorinforow = ['label' => get_string('tutorinfo', 'mod_projetvet')];
             if ($tutorinfo !== '') {
                 $tutorinforow['value'] = format_text($tutorinfo, FORMAT_PLAIN, ['newlines' => true]);
                 $tutorinforow['rowhighlight'] = true;
             } else {
                 $tutorinforow['valueempty'] = get_string('practicalinfo_notyet', 'mod_projetvet');
             }
+
+            // The tutor can (re)define their practical info from this student view. The link
+            // carries a return url so that, once saved, the tutor is sent back to this page.
+            if ($tutor->id == $USER->id) {
+                $returnurl = (string) new moodle_url('/mod/projetvet/view.php', [
+                    'id' => $this->cm->id,
+                    'studentid' => $this->studentid,
+                ]);
+                $tutorinforow['haslink'] = true;
+                $tutorinforow['linkurl'] = (string) new moodle_url('/mod/projetvet/tutor_info.php', [
+                    'returnurl' => $returnurl,
+                ]);
+                if ($tutorinfo !== '') {
+                    // Info already set: offer a subtle edit affordance (pencil icon).
+                    $tutorinforow['linkicon'] = 'fa-pencil';
+                    $tutorinforow['linktitle'] = get_string('edit', 'moodle');
+                } else {
+                    // Info not set yet: offer a clear link to define it.
+                    $tutorinforow['linktext'] = get_string('practicalinfo_notyet_link', 'mod_projetvet');
+                    $tutorinforow['linktitle'] = get_string('practicalinfo_notyet_link', 'mod_projetvet');
+                }
+            }
+
             $data['infotable']['rows'][] = $tutorinforow;
         }
 
@@ -267,7 +278,7 @@ class student_info implements renderable, templatable {
         }
 
         $data['infotable']['rows'][] = $mobilityrow;
-                // Show back link for teachers viewing a student.
+        // Show back link for teachers viewing a student.
         if ($this->isteacher) {
             $data['showbacklink'] = true;
             $data['backurl'] = new moodle_url('/mod/projetvet/view.php', ['id' => $this->cm->id]);
