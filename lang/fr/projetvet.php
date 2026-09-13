@@ -44,6 +44,7 @@ $string['assignments_page_title'] = 'Affectations tuteurs';
 $string['assignments_students_heading'] = 'Étudiants';
 $string['assignments_teachers_heading'] = 'Enseignants';
 $string['assignsecondaryteacher'] = 'Affecter un tuteur secondaire';
+$string['assignselectteacher'] = 'Veuillez sélectionner un enseignant';
 $string['assignstudents'] = 'Affecter des étudiants';
 $string['assignteacher'] = 'Affecter un enseignant';
 $string['backtolist'] = 'Retour à la liste des étudiants';

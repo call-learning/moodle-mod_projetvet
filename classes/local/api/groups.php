@@ -562,6 +562,36 @@ class groups {
     }
 
     /**
+     * Assign students to a teacher as their primary tutor.
+     *
+     * Gets the teacher's group (creating it, together with the primary tutor
+     * membership, when it does not exist yet) and assigns the students to it.
+     *
+     * @param int $teacherid The teacher's user ID
+     * @param int[] $studentids The student user IDs to assign
+     * @param int $projetvetid The projetvet instance ID
+     * @return int Number of students newly assigned
+     */
+    public static function assign_students_to_teacher(int $teacherid, array $studentids, int $projetvetid): int {
+        $groups = projetvet_group::get_by_owner($teacherid, $projetvetid);
+        if (empty($groups)) {
+            $teacher = \core_user::get_user($teacherid, '*', MUST_EXIST);
+            $group = new projetvet_group(0, (object)[
+                'projetvetid' => $projetvetid,
+                'name' => get_string('tutorgroupname', 'mod_projetvet', fullname($teacher)),
+                'description' => '',
+                'ownerid' => $teacherid,
+            ]);
+            $group->create();
+            $group->add_member($teacherid, group_member::TYPE_PRIMARY_TUTOR);
+        } else {
+            $group = reset($groups);
+        }
+
+        return self::assign_students_to_group($group->get('id'), $studentids, $projetvetid);
+    }
+
+    /**
      * Get all students for a specific tutor
      *
      * Returns array of student user IDs that are in groups where the specified user

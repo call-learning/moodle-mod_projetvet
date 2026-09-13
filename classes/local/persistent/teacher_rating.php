@@ -198,6 +198,29 @@ class teacher_rating extends persistent {
     }
 
     /**
+     * Get the localized string for a raw rating value
+     *
+     * An empty string is returned for unknown values so callers rendering report
+     * data can safely pass through values they did not compute themselves.
+     *
+     * @param string $rating
+     * @return string
+     */
+    public static function get_rating_string_for(string $rating): string {
+        $validratings = [
+            self::RATING_EXPERT,
+            self::RATING_AVERAGE,
+            self::RATING_NOVICE,
+        ];
+
+        if (!in_array($rating, $validratings, true)) {
+            return '';
+        }
+
+        return get_string('rating_' . $rating, 'mod_projetvet');
+    }
+
+    /**
      * Get capacity for a specific rating value
      *
      * @param string $rating

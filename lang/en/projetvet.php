@@ -44,6 +44,7 @@ $string['assignments_page_title'] = 'Tutor assignments';
 $string['assignments_students_heading'] = 'Students';
 $string['assignments_teachers_heading'] = 'Teachers';
 $string['assignsecondaryteacher'] = 'Assign secondary teacher';
+$string['assignselectteacher'] = 'Please select a teacher';
 $string['assignstudents'] = 'Assign students';
 $string['assignteacher'] = 'Assign teacher';
 $string['backtolist'] = 'Back to student list';

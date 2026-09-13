@@ -50,4 +50,20 @@ $functions = [
         'ajax'          => true,
         'capabilities'  => 'mod/projetvet:view',
     ],
+    'mod_projetvet_get_assign_teacher_modal' => [
+        'classname'     => 'mod_projetvet\external\get_assign_teacher_modal',
+        'methodname'    => 'execute',
+        'description'   => 'Get the HTML body of the assign a teacher selection popup',
+        'type'          => 'read',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:admin',
+    ],
+    'mod_projetvet_assign_teacher' => [
+        'classname'     => 'mod_projetvet\external\assign_teacher',
+        'methodname'    => 'execute',
+        'description'   => 'Assign a teacher (primary tutor) to a set of students',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:admin',
+    ],
 ];

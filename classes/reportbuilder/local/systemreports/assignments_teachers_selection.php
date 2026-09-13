@@ -3,8 +3,7 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 or later.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,24 +17,28 @@ namespace mod_projetvet\reportbuilder\local\systemreports;
 
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
-use core_reportbuilder\local\report\action;
+use core_reportbuilder\local\report\column;
 use core_reportbuilder\system_report;
 use lang_string;
 use context_module;
-use context_course;
-use moodle_url;
-use pix_icon;
-use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\reportbuilder\local\entities\teacher;
 
 /**
- * Assignments teachers list system report for projetvet
+ * Assignments teachers selection system report for projetvet
+ *
+ * Standalone variant of the assignments teachers report used in the "assign a teacher"
+ * popup. It builds on the very same teacher capacity entity (see
+ * {@see \mod_projetvet\reportbuilder\local\entities\teacher}) but presents the teachers as
+ * selectable radio buttons, has no row actions and is not clickable via JavaScript.
+ *
+ * Because it is a dedicated report class it gets its own report ID and therefore its
+ * own persisted filter state, fully independent from the main page report.
  *
  * @package    mod_projetvet
- * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
+ * @copyright  2026 Laurent David <laurent@call-learning.fr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class assignments_teachers extends system_report {
+class assignments_teachers_selection extends system_report {
     /**
      * Initialise report
      */
@@ -44,11 +47,9 @@ class assignments_teachers extends system_report {
 
         $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
         $projetvetid = $this->get_parameter('projetvetid', 0, PARAM_INT);
-        $filterwithcapacity = $this->get_parameter('filterwithcapacity', 0, PARAM_BOOL);
 
-        // Get course module and context.
+        // Get course module.
         $cm = get_coursemodule_from_id('projetvet', $cmid, 0, false, MUST_EXIST);
-        $context = context_course::instance($cm->course);
 
         // Main user entity.
         $entityuser = new user();
@@ -72,32 +73,17 @@ class assignments_teachers extends system_report {
         if (!empty($teacherids)) {
             [$insql, $inparams] = $DB->get_in_or_equal($teacherids, SQL_PARAMS_NAMED, database::generate_param_name());
             $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
-
-            // Only show teachers who still have capacity when requested.
-            if ($filterwithcapacity) {
-                $capacitypvparam = database::generate_param_name();
-                $groupspvparam = database::generate_param_name();
-                $mtparam = database::generate_param_name();
-                $this->add_base_condition_sql(
-                    '(' . $entityteacher->get_gap_sql($capacitypvparam, $groupspvparam, $mtparam) . ') > 0',
-                    [
-                        $capacitypvparam => $projetvetid,
-                        $groupspvparam => $projetvetid,
-                        $mtparam => group_member::TYPE_STUDENT,
-                    ]
-                );
-            }
         } else {
             $this->add_base_condition_sql("1 = 0");
         }
 
         $this->add_columns();
         $this->add_filters();
-        $this->add_actions();
 
         $this->set_downloadable(false);
         $this->set_default_per_page(30);
     }
+
     /**
      * Validates access to view this report
      *
@@ -125,6 +111,28 @@ class assignments_teachers extends system_report {
         $entityuser = $this->get_entity('user');
         $entityuseralias = $entityuser->get_table_alias('user');
         $entityteacher = $this->get_entity('teacher');
+        $selectedteacherid = $this->get_parameter('selectedteacherid', 0, PARAM_INT);
+
+        // Radio column used by the form to select a teacher.
+        $selectcolumn = (new column(
+            'select',
+            new lang_string('select', 'core'),
+            $entityuser->get_entity_name()
+        ))
+            ->add_joins($entityuser->get_joins())
+            ->add_field("{$entityuseralias}.id", 'userid_select')
+            ->set_type(column::TYPE_TEXT)
+            ->set_is_sortable(false)
+            ->add_attributes(['class' => 'w-30'])
+            ->add_callback(static function ($value, $row) use ($selectedteacherid): string {
+                global $OUTPUT;
+                return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [
+                    'teacherid' => $row->userid_select,
+                    'checked' => ($selectedteacherid > 0 && (int)$row->userid_select === $selectedteacherid),
+                ]);
+            });
+
+        $this->add_column($selectcolumn);
 
         // Fullname with picture. Sort by the actual lastname field, rather than by the
         // configured display order of the user's full name.
@@ -152,65 +160,5 @@ class assignments_teachers extends system_report {
 
         // Fullname filter.
         $this->add_filter($entityuser->get_filter('fullname'));
-    }
-
-    /**
-     * Add actions to the report
-     */
-    protected function add_actions(): void {
-        $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
-        $projetvetid = $this->get_parameter('projetvetid', 0, PARAM_INT);
-
-        // Assign students action.
-        $this->add_action((new action(
-            new moodle_url('#', []),
-            new pix_icon('i/assignroles', ''),
-            [
-                'data-action' => 'assign-students',
-                'data-teacherid' => ':id',
-                'data-projetvetid' => $projetvetid,
-                'data-cmid' => $cmid,
-            ],
-            false,
-            new lang_string('assignstudents', 'mod_projetvet'),
-        )));
-
-        // Assign secondary teacher action.
-        $this->add_action((new action(
-            new moodle_url('#', []),
-            new pix_icon('i/users', ''),
-            [
-                'data-action' => 'assign-secondary-teacher',
-                'data-teacherid' => ':id',
-                'data-projetvetid' => $projetvetid,
-                'data-cmid' => $cmid,
-            ],
-            false,
-            new lang_string('assignsecondaryteacher', 'mod_projetvet'),
-        )));
-
-        // Update teacher rating action.
-        $this->add_action((new action(
-            new moodle_url('#', []),
-            new pix_icon('i/settings', ''),
-            [
-                'data-action' => 'update-teacher-rating',
-                'data-teacherid' => ':id',
-                'data-projetvetid' => $projetvetid,
-                'data-cmid' => $cmid,
-            ],
-            false,
-            new lang_string('updateteacherrating', 'mod_projetvet'),
-        )));
-    }
-
-    /**
-     * Get CSS class for each row to make it clickable via JavaScript.
-     *
-     * @param \stdClass $row
-     * @return string
-     */
-    public function get_row_class(\stdClass $row): string {
-        return 'clickable-row';
     }
 }

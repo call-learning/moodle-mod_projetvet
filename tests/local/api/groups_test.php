@@ -462,6 +462,63 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
+     * Test assign_students_to_teacher creates the teacher group when it does not exist yet.
+     */
+    public function test_assign_students_to_teacher_creates_group(): void {
+        $data = $this->create_test_data();
+
+        $assigned = groups::assign_students_to_teacher(
+            $data['teacher']->id,
+            [$data['student1']->id, $data['student2']->id],
+            $data['projetvet']->id
+        );
+
+        $this->assertEquals(2, $assigned);
+
+        // The teacher now owns a group containing the two students.
+        $groups = projetvet_group::get_by_owner($data['teacher']->id, $data['projetvet']->id);
+        $this->assertCount(1, $groups);
+        $group = reset($groups);
+        $members = array_values($group->get_members(group_member::TYPE_STUDENT));
+        $this->assertCount(2, $members);
+        $memberids = array_map(fn($m) => (int) $m->get('userid'), $members);
+        $this->assertContains((int) $data['student1']->id, $memberids);
+        $this->assertContains((int) $data['student2']->id, $memberids);
+
+        // The students resolve to this teacher as their primary tutor.
+        $tutor = groups::get_student_primary_tutor($data['student1']->id, $data['projetvet']->id);
+        $this->assertNotNull($tutor);
+        $this->assertEquals($data['teacher']->id, $tutor->id);
+    }
+
+    /**
+     * Test assign_students_to_teacher reuses the teacher's existing group.
+     */
+    public function test_assign_students_to_teacher_reuses_group(): void {
+        $data = $this->create_test_data();
+
+        // Pre-create the teacher group with one student.
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+
+        // Assign another student to the same teacher.
+        groups::assign_students_to_teacher($data['teacher']->id, [$data['student2']->id], $data['projetvet']->id);
+
+        // Still a single group, now containing both students.
+        $groups = projetvet_group::get_by_owner($data['teacher']->id, $data['projetvet']->id);
+        $this->assertCount(1, $groups);
+        $group = new projetvet_group($group->get('id'));
+        $memberids = array_map(fn($m) => (int) $m->get('userid'), array_values($group->get_members(group_member::TYPE_STUDENT)));
+        $this->assertContains((int) $data['student1']->id, $memberids);
+        $this->assertContains((int) $data['student2']->id, $memberids);
+    }
+
+    /**
      * Test get_students_for_tutor as primary tutor
      */
     public function test_get_students_for_tutor_as_primary(): void {
