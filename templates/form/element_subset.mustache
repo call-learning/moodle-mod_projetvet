@@ -61,6 +61,8 @@
         }
     }
 }}
+{{< core_form/element-template }}
+    {{$element}}
 <div class="form-subset" id="{{elementid}}_container">
     {{^isfrozen}}
     <button type="button"
@@ -80,3 +82,5 @@
         {{>mod_projetvet/form/element_subset_entries}}
     </div>
 </div>
+    {{/element}}
+{{/ core_form/element-template }}

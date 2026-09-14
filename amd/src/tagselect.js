@@ -30,10 +30,12 @@ class TagSelect {
      *
      * @param {string} elementId The ID of the select element
      * @param {number} maxTags Maximum number of tags (0 = unlimited)
+     * @param {number} minTags Minimum number of tags (0 = no minimum)
      */
-    constructor(elementId, maxTags) {
+    constructor(elementId, maxTags, minTags) {
         this.elementId = elementId;
         this.maxTags = maxTags || 0;
+        this.minTags = minTags || 0;
         this.selectElement = document.getElementById(elementId);
         this.wrapper = document.querySelector(`[data-element-id="${elementId}"]`);
 
@@ -134,6 +136,11 @@ class TagSelect {
      * Save tags and close popup.
      */
     saveTags() {
+        const selectedCount = this.selectElement.querySelectorAll('option:checked').length;
+        if (this.minTags > 0 && selectedCount < this.minTags) {
+            this.updateWarnings(false, true);
+            return;
+        }
         this.updateDisplay();
         this.closePopup();
     }
@@ -276,14 +283,18 @@ class TagSelect {
      * Update warnings display.
      *
      * @param {boolean} showMaxWarning
+     * @param {boolean} showMinWarning
      */
-    updateWarnings(showMaxWarning) {
+    updateWarnings(showMaxWarning, showMinWarning = false) {
         if (!this.warningsRegion) {
             return;
         }
 
         if (showMaxWarning && this.maxTags > 0) {
             this.warningsRegion.textContent = `Maximum of ${this.maxTags} selections allowed.`;
+            this.warningsRegion.classList.remove('d-none');
+        } else if (showMinWarning && this.minTags > 0) {
+            this.warningsRegion.textContent = this.warningsRegion.dataset.minWarning;
             this.warningsRegion.classList.remove('d-none');
         } else {
             this.warningsRegion.textContent = '';

@@ -121,6 +121,7 @@
           "description": "",
           "configdata": {
             "required": true,
+            "mintags": 2,
             "maxtags": 500,
             "helptext": true
           },

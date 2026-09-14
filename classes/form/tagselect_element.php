@@ -41,6 +41,9 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
     /** @var int Maximum number of tags that can be selected */
     protected $maxtags = 0;
 
+    /** @var int Minimum number of tags that must be selected */
+    protected $mintags = 0;
+
     /** @var string Row name for display */
     protected $rowname = '';
 
@@ -59,6 +62,7 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
      * @param array $attributes Element attributes. Special options:
      *                          - 'groupedoptions': Array of grouped options [['name' => 'Group', 'items' => [...]]]
      *                          - 'maxtags': Maximum number of selections allowed (0 = unlimited)
+     *                          - 'mintags': Minimum number of selections required (0 = no minimum)
      *                          - 'rowname': Display name for the row
      *                          - 'showtoggleall': Whether to show the toggle-all button (default: false)
      *                          - 'helptext': Help text to display in the popup
@@ -82,6 +86,11 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
         if (isset($attributes['maxtags'])) {
             $this->maxtags = (int) $attributes['maxtags'];
             unset($attributes['maxtags']);
+        }
+
+        if (isset($attributes['mintags'])) {
+            $this->mintags = (int) $attributes['mintags'];
+            unset($attributes['mintags']);
         }
 
         if (isset($attributes['rowname'])) {
@@ -198,6 +207,7 @@ class tagselect_element extends MoodleQuickForm_autocomplete {
         // Add our custom context.
         $context['groupedoptions'] = $this->groupedoptions;
         $context['maxtags'] = $this->maxtags;
+        $context['mintags'] = $this->mintags;
         $context['rowname'] = $this->rowname ?: $this->getLabel();
         $context['showtoggleall'] = $this->showtoggleall;
         $context['helptext'] = $this->helptext;

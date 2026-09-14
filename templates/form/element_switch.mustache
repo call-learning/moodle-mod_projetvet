@@ -33,18 +33,9 @@
         "error": ""
     }
 }}
-<div id="fitem_{{element.id}}" class="mb-3 row fitem {{#advanced}}advanced{{/advanced}} {{#error}}has-danger{{/error}}">
-    <div class="col-md-3 col-form-label d-flex pb-0 pe-md-0">
-        <label for="{{element.id}}" class="d-inline word-break {{#required}}required{{/required}}">
-            {{label}}
-            {{#required}}
-                <abbr class="text-danger" title="{{#str}}required{{/str}}">*</abbr>
-            {{/required}}
-        </label>
-        {{{helpbutton}}}
-    </div>
-    <div class="col-md-9 d-flex align-items-center align-items-start felement" data-fieldtype="switch">
-        <div class="form-check form-switch">
+{{< core_form/element-template }}
+    {{$element}}
+        <div class="form-check form-switch" data-fieldtype="switch">
             {{! Hidden field to ensure 0 is sent when checkbox is unchecked }}
             <input type="hidden" name="{{element.name}}" value="0">
             <input type="checkbox"
@@ -53,16 +44,12 @@
                    id="{{element.id}}"
                    name="{{element.name}}"
                    value="{{element.value}}"
+                   {{#element.frozen}}disabled{{/element.frozen}}
                    {{#element.checked}}checked{{/element.checked}}
                    {{#element.dataattributes}}data-{{name}}="{{value}}" {{/element.dataattributes}}>
             <label class="form-check-label" for="{{element.id}}">
                 {{element.text}}
             </label>
         </div>
-        {{#error}}
-            <div class="form-control-feedback invalid-feedback" id="{{element.id}}_error">
-                {{{error}}}
-            </div>
-        {{/error}}
-    </div>
-</div>
+    {{/element}}
+{{/ core_form/element-template }}

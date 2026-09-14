@@ -41,20 +41,34 @@
         "extraattributes": ""
     }
 }}
-<input type="number"
-       class="form-control"
-       name="{{name}}"
-       id="{{id}}"
-       {{#frozen}}disabled{{/frozen}}
-       {{#value}}value="{{value}}"{{/value}}
-       {{#min}}min="{{min}}"{{/min}}
-       {{#max}}max="{{max}}"{{/max}}
-       {{#step}}step="{{step}}"{{/step}}
-       {{! Use a plugin-specific attribute name instead of data-action because core_form/modalform's
+{{< core_form/element-template }}
+    {{$element}}
+    <input type="number"
+        class="form-control {{#error}}is-invalid{{/error}}"
+        name="{{element.name}}"
+        {{#element.frozen}}
+            readonly {{#element.hardfrozen}}disabled{{/element.hardfrozen}}
+        {{/element.frozen}}
+        id="{{element.id}}"
+        value="{{element.value}}"
+        {{#element.min}}min="{{element.min}}"{{/element.min}}
+        {{#element.max}}max="{{element.max}}"{{/element.max}}
+        {{#element.step}}step="{{element.step}}"{{/element.step}}
+        {{! Use a plugin-specific attribute name instead of data-action because core_form/modalform's
            disableButtons() selector "[data-action]" would otherwise match this input and set
            disabled="true" right before form.serialize(), causing the field to be dropped from the
            submitted data and triggering "You must supply a value here." on every submit. }}
-       {{#action}}data-projetvet-action="{{action}}"{{/action}}
-       {{#string}}data-projetvet-string="{{string}}"{{/string}}
-       {{{extraattributes}}}>
-{{#action}}<div class="mt-1 text-muted" id="{{id}}_suggestion"></div>{{/action}}
+        {{#element.action}}data-projetvet-action="{{element.action}}"{{/element.action}}
+        {{#element.string}}data-projetvet-string="{{element.string}}"{{/element.string}}
+        {{#error}}
+           autofocus aria-describedby="{{element.iderror}}"
+        {{/error}}
+        {{#required}}
+           aria-required="true"
+        {{/required}}
+        {{{element.attributes}}} >
+        {{#element.action}}
+            <div class="mt-1 text-muted" id="{{element.id}}_suggestion"></div>
+        {{/element.action}}
+    {{/element}}
+{{/ core_form/element-template }}

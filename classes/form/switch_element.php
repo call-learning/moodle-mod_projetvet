@@ -126,9 +126,16 @@ class switch_element extends HTML_QuickForm_static {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
+        $this->_generateId();
+        $elementid = $this->getAttribute('id');
         $context = [
-            'id' => $this->getAttribute('id'),
+            'id' => $elementid,
+            'wrapperid' => 'fitem_' . $elementid,
+            'iderror' => 'id_error_' . $elementid,
             'name' => $this->getName(),
+            'type' => $this->getType(),
+            'frozen' => !empty($this->_flagFrozen),
+            'hardfrozen' => !empty($this->_flagFrozen) && empty($this->_persistantFreeze),
             'value' => '1', // Checkbox value is always 1 when checked.
             'checked' => $this->getChecked(),
             'frozenvalue' => $this->getFrozenHtml(),

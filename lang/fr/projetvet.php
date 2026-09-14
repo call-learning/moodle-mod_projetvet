@@ -282,6 +282,7 @@ $string['membertype_student'] = 'Étudiant';
 $string['memberupdated'] = 'Membre mis à jour avec succès';
 $string['messageprovider:entry_action_required'] = 'Action requise sur une entrée';
 $string['min_hours'] = 'Heures minimum par activité';
+$string['mincompetencies'] = 'Veuillez sélectionner au moins {$a} compétences.';
 $string['min_hours_desc'] = 'Le nombre minimum d\'heures qu\'une activité doit représenter pour être éligible (par défaut : 20)';
 $string['min_hours_error'] = 'Pour être éligible au CPP, une activité doit représenter un volume minimal de {$a}h pour pouvoir être convertie en ECTS';
 $string['mobilityformtitle'] = 'Mobilité internationale';

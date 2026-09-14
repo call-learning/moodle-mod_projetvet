@@ -158,7 +158,8 @@
                         </div>
                         <div class="row g-0">
                             <div class="col-12 p-0">
-                                <div data-region="warnings" class="text-danger">
+                                <div data-region="warnings" class="text-danger"
+                                     data-min-warning="{{#str}}mincompetencies, mod_projetvet, {{element.mintags}}{{/str}}">
                                     {{#element.hasmaxtags}}
                                         {{#str}}maxselections, mod_projetvet, {{element.maxtags}}{{/str}}
                                     {{/element.hasmaxtags}}
@@ -196,6 +197,6 @@
 {{/ core_form/element-template }}
 {{#js}}
 require(['mod_projetvet/tagselect'], function(tagselect) {
-    tagselect.init('{{element.id}}', {{element.maxtags}});
+    tagselect.init('{{element.id}}', {{element.maxtags}}, {{element.mintags}});
 });
 {{/js}}

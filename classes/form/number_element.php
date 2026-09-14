@@ -51,23 +51,49 @@ class number_element extends MoodleQuickForm_text {
     }
 
     /**
-     * Returns the HTML for this form element.
+     * Accepts a renderer.
      *
-     * @return string
+     * Rendering the complete form item here, rather than relying on
+     * toHtml(), gives the element access to the renderer's required and error
+     * state so that core_form/element-template can render it consistently.
+     *
+     * @param object $renderer An HTML_QuickForm_Renderer object
+     * @param bool $required Whether an element is required
+     * @param string|null $error An error message associated with an element
+     * @return void
      */
-    public function toHtml() { // @codingStandardsIgnoreLine
+    public function accept(&$renderer, $required = false, $error = null) {
         global $OUTPUT;
 
-        // Use our custom template for both frozen and unfrozen states.
+        $elementname = $this->getName();
+        $this->_generateId();
         $context = $this->export_for_template($OUTPUT);
+
+        $helpbutton = method_exists($this, 'getHelpButton') ? $this->getHelpButton() : '';
+        $context = [
+            'element' => $context,
+            'label' => $this->getLabel(),
+            'required' => $required,
+            'advanced' => isset($renderer->_advancedElements[$elementname]),
+            'helpbutton' => $helpbutton,
+            'error' => $error,
+        ];
         $html = $OUTPUT->render_from_template('mod_projetvet/form/element_number', $context);
 
-        // Add hidden field for frozen state to preserve value on submit.
-        if ($this->_flagFrozen) {
-            $html .= $this->_getPersistantData();
+        if ($renderer->_inGroup) {
+            $this->_groupElementTemplate = $html;
+        }
+        if (($renderer->_inGroup) && !empty($this->_groupElementTemplate)) {
+            $renderer->_groupElementTemplate = $html;
+        } else if (!isset($renderer->_templates[$elementname])) {
+            $renderer->_templates[$elementname] = $html;
         }
 
-        return $html;
+        if (in_array($elementname, $renderer->_stopFieldsetElements) && $renderer->_fieldsetsOpen > 0) {
+            $renderer->_html .= $renderer->_closeFieldsetTemplate;
+            $renderer->_fieldsetsOpen--;
+        }
+        $renderer->_html .= $html;
     }
 
     /**
@@ -78,12 +104,8 @@ class number_element extends MoodleQuickForm_text {
      */
     public function export_for_template(renderer_base $output) {
         $this->_generateId();
-
-        $context = [
-            'name' => $this->getName(),
-            'id' => $this->getAttribute('id'),
-            'value' => $this->getValue(),
-            'frozen' => $this->_flagFrozen,
+        $context = parent::export_for_template($output);
+        $context = $context + [
             'min' => $this->getAttribute('min'),
             'max' => $this->getAttribute('max'),
             'step' => $this->getAttribute('step') ?: '1', // Default to 1 for whole numbers.
@@ -91,14 +113,23 @@ class number_element extends MoodleQuickForm_text {
             'string' => $this->getAttribute('data-string'),
         ];
 
-        // Add any additional attributes.
-        $extraattributes = [];
+        // The wrapper id is required by the core_form/element-template partial.
+        $context['wrapperid'] = 'fitem_' . $context['id'];
+
+        if ($this->getAttribute('required')) {
+            $context['required'] = true;
+        }
+
+        // Add attributes not rendered explicitly by the template. This also
+        // prevents data-action from being picked up by modal form's button
+        // disabling selector.
+        $attributes = [];
         foreach ($this->_attributes as $name => $value) {
             if (!in_array($name, ['type', 'name', 'id', 'value', 'min', 'max', 'step', 'class', 'data-action', 'data-string'])) {
-                $extraattributes[] = $name . '="' . s($value) . '"';
+                $attributes[] = $name . '="' . s($value) . '"';
             }
         }
-        $context['extraattributes'] = implode(' ', $extraattributes);
+        $context['attributes'] = implode(' ', $attributes);
 
         return $context;
     }
@@ -108,13 +139,10 @@ class number_element extends MoodleQuickForm_text {
      *
      * Only accepts whole numbers (integers).
      *
-     * @param array $submitvalues Submitted values
-     * @param array $files Uploaded files
+     * @param mixed $value Submitted value
      * @return string|null Error message or null if valid
      */
-    public function validate($submitvalues, $files) {
-        $value = $this->_findValue($submitvalues);
-
+    public function validateSubmitValue($value) {
         // Allow empty values if not required.
         if ($value === '' || $value === null) {
             return null;

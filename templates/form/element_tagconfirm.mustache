@@ -46,6 +46,8 @@
         ]
     }
 }}
+{{< core_form/element-template }}
+    {{$element}}
 <div class="tagconfirm-wrapper" data-element-id="{{elementid}}">
     <div class="tagconfirm-element" id="{{elementid}}_container" data-region="tagconfirm-table">
         <table class="table table-striped table-sm">
@@ -147,6 +149,8 @@
     </div>
     {{/frozen}}
 </div>
+    {{/element}}
+{{/ core_form/element-template }}
 {{#js}}
 require(['mod_projetvet/tagconfirm'], function(tagconfirm) {
     tagconfirm.init('{{elementid}}', '{{elementname}}');

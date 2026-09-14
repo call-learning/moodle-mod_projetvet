@@ -33,9 +33,13 @@
         "hasaction": true
     }
 }}
-<div class="form-html-display" id="{{id}}" {{#dataattributes}}{{key}}="{{value}}" {{/dataattributes}}>
-    <div class="form-html-content">
-        {{{content}}}
-    </div>
-    {{#hasaction}}<div class="mt-1 text-muted" id="{{id}}_suggestion"></div>{{/hasaction}}
-</div>
+{{< core_form/element-template }}
+    {{$element}}
+        <div class="form-html-display" id="{{id}}" {{#dataattributes}}{{key}}="{{value}}" {{/dataattributes}}>
+            <div class="form-html-content">
+                {{{content}}}
+            </div>
+            {{#hasaction}}<div class="mt-1 text-muted" id="{{id}}_suggestion"></div>{{/hasaction}}
+        </div>
+    {{/element}}
+{{/ core_form/element-template }}
