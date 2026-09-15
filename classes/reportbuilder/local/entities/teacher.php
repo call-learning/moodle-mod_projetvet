@@ -39,13 +39,15 @@ use mod_projetvet\local\persistent\teacher_rating;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class teacher extends base {
-
     /**
      * Constructor.
      *
      * @param int $projetvetid The projetvet instance id the teacher data is scoped to.
      */
-    public function __construct(private readonly int $projetvetid) {
+    public function __construct(
+        /** @var int $projetvetid The projetvet instance id the teacher data is scoped to. */
+        private readonly int $projetvetid,
+    ) {
     }
 
     /**

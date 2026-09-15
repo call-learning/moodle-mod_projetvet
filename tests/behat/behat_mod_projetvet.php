@@ -606,8 +606,9 @@ class behat_mod_projetvet extends behat_base {
 
     /**
      * Opens the student info sheet (view.php with a studentid) for a student in an activity.
-     *
+     * // phpcs:disable moodle.Files.LineLength.TooLong
      * @Given /^I open the student info sheet for "(?P<studentusername_string>(?:[^"]|\\")*)" in "(?P<activityname_string>(?:[^"]|\\")*)"$/
+     * // phpcs:enable moodle.Files.LineLength.TooLong
      * @param string $studentusername The student's username.
      * @param string $activityname The projetvet activity name.
      * @throws Exception

@@ -301,6 +301,22 @@ const showTeacherSettingsModal = (cmid, teacherid, projetvetid) => {
 };
 
 /**
+ * Fetch the HTML and JavaScript for the assign teacher modal body.
+ *
+ * @param {number} cmid Course module ID
+ * @param {Array} studentids Array of student user IDs
+ * @param {number} projetvetid Projetvet instance ID
+ * @return {Promise} Resolves to an object with html and js properties
+ */
+const fetchAssignTeacherBody = (cmid, studentids, projetvetid) => Ajax.call([{
+    methodname: 'mod_projetvet_get_assign_teacher_modal',
+    args: {cmid, projetvetid, studentids},
+}])[0].then((response) => ({
+    html: response.html,
+    js: Fragment.processCollectedJavascript(response.javascript),
+}));
+
+/**
  * Show a modal to assign a teacher to students.
  *
  * This dialog intentionally uses a plain save/cancel modal rather than a form,
@@ -323,57 +339,68 @@ const showAssignTeacherModal = (cmid, studentids, projetvetid) => {
     })
         .then((modal) => {
             modal.getModal().addClass('modal-fullscreen-form');
-            return Str.get_string('assignteacher', 'mod_projetvet')
-                .then((title) => {
-                    modal.setTitle(title);
+
+            // Fetch the popup body (selected students + teachers selection report)
+            // and set the modal title.
+            const bodyPromise = fetchAssignTeacherBody(cmid, studentids, projetvetid);
+
+            // eslint-disable-next-line promise/no-nesting
+            return Promise.all([modal.setBodyContent(bodyPromise), Str.get_string('assignteacher', 'mod_projetvet')])
+                .then((results) => {
+                    modal.setTitle(results[1]);
                     return modal;
                 });
         })
         .then((modal) => {
-            // Fetch the popup body (selected students + teachers selection report).
-            const bodyPromise = Ajax.call([{
-                methodname: 'mod_projetvet_get_assign_teacher_modal',
-                args: {cmid, projetvetid, studentids},
-            }])[0]
-                .then((response) => ({
-                    html: response.html,
-                    js: Fragment.processCollectedJavascript(response.javascript),
-                }));
-            return modal.setBodyContent(bodyPromise).then(() => modal);
-        })
-        .then((modal) => {
             // Intercept the save button to perform the assignment.
             modal.getRoot().on(ModalEvents.save, (event) => {
-                event.preventDefault();
-
-                const radio = modal.getRoot().find('.teacher-select-radio:checked');
-                if (radio.length === 0) {
-                    Str.get_string('assignselectteacher', 'mod_projetvet')
-                        .then((message) => Notification.addNotification({message, type: 'error'}))
-                        .catch(Notification.exception);
-                    return;
-                }
-
-                const teacherid = Number(radio.first().data('teacherid'));
-                Ajax.call([{
-                    methodname: 'mod_projetvet_assign_teacher',
-                    args: {cmid, projetvetid, studentids, teacherid},
-                }])[0]
-                    .then((response) => {
-                        if (response.message) {
-                            Notification.addNotification({
-                                message: response.message,
-                                type: 'success',
-                            });
-                        }
-                        modal.hide();
-                        // Reload the page to refresh the reports.
-                        window.location.reload();
-                    })
-                    .catch(Notification.exception);
+                handleAssignTeacherSave(event, modal, cmid, studentids, projetvetid);
             });
 
             return modal.show();
+        })
+        .catch(Notification.exception);
+};
+
+/**
+ * Handle the save button of the assign teacher modal.
+ *
+ * @param {object} event The save event
+ * @param {object} modal The modal save/cancel instance
+ * @param {number} cmid Course module ID
+ * @param {Array} studentids Array of student user IDs
+ * @param {number} projetvetid Projetvet instance ID
+ */
+const handleAssignTeacherSave = (event, modal, cmid, studentids, projetvetid) => {
+    event.preventDefault();
+
+    const radio = modal.getRoot().find('.teacher-select-radio:checked');
+    if (radio.length === 0) {
+        Str.get_string('assignselectteacher', 'mod_projetvet')
+            .then((message) => {
+                Notification.addNotification({message, type: 'error'});
+                return message;
+            })
+            .catch(Notification.exception);
+        return;
+    }
+
+    const teacherid = Number(radio.first().data('teacherid'));
+    Ajax.call([{
+        methodname: 'mod_projetvet_assign_teacher',
+        args: {cmid, projetvetid, studentids, teacherid},
+    }])[0]
+        .then((response) => {
+            if (response.message) {
+                Notification.addNotification({
+                    message: response.message,
+                    type: 'success',
+                });
+            }
+            modal.hide();
+            // Reload the page to refresh the reports.
+            window.location.reload();
+            return response;
         })
         .catch(Notification.exception);
 };

@@ -20,44 +20,66 @@
     Subset form element - button to add sub-entries and list of existing entries
 
     Context variables required for this template:
-    * elementname - Element name
-    * elementid - Element ID
     * label - Field label
-    * buttontext - Button text
-    * subsetformsetidnumber - Formset idnumber for subset
-    * parententryid - Parent entry ID
-    * studentid - Student ID
-    * cmid - Course module ID
-    * projetvetid - Projetvet instance ID
-    * hasentries - Whether there are existing entries
-    * entries - Existing entries data with headers and rows
+    * required - Whether the element is required
+    * advanced - Whether the element is marked as advanced
+    * helpbutton - Help button HTML
+    * error - Error message, if any
+    * element - Element context from subset_element::export_for_template()
+        * elementname - Element name
+        * elementid - Element ID
+        * id - Element ID (same as elementid)
+        * wrapperid - Element wrapper ID
+        * iderror - Error message container ID
+        * staticlabel - Display the label as a span instead of a label element
+        * buttontext - Button text
+        * subsetformsetidnumber - Formset idnumber for subset
+        * parententryid - Parent entry ID
+        * studentid - Student ID
+        * cmid - Course module ID
+        * projetvetid - Projetvet instance ID
+        * isfrozen - Whether the form is frozen (read-only)
+        * hasentries - Whether there are existing entries
+        * entries - Existing entries data with headers and rows
 
     Example context (json):
     {
-        "elementname": "field_123",
-        "elementid": "id_field_123",
         "label": "Carnet de cas",
-        "buttontext": "Ajouter un carnet de cas",
-        "subsetformsetidnumber": "carnet_cas",
-        "parententryid": 42,
-        "studentid": 5,
-        "cmid": 10,
-        "projetvetid": 3,
-        "hasentries": true,
-        "entries": {
-            "headers": [
-                {"name": "Date"},
-                {"name": "Animal"}
-            ],
-            "rows": [
-                {
-                    "id": 1,
-                    "fields": [
-                        {"value": "2025-11-19"},
-                        {"value": "Rex"}
-                    ]
-                }
-            ]
+        "required": false,
+        "advanced": false,
+        "helpbutton": "",
+        "error": null,
+        "element": {
+            "elementname": "field_123",
+            "elementid": "id_field_123",
+            "id": "id_field_123",
+            "wrapperid": "fitem_id_field_123",
+            "iderror": "id_error_field_123",
+            "type": "subset",
+            "staticlabel": true,
+            "buttontext": "Ajouter un carnet de cas",
+            "subsetformsetidnumber": "carnet_cas",
+            "parententryid": 42,
+            "studentid": 5,
+            "cmid": 10,
+            "projetvetid": 3,
+            "isfrozen": false,
+            "hasentries": true,
+            "entries": {
+                "headers": [
+                    {"name": "Date"},
+                    {"name": "Animal"}
+                ],
+                "rows": [
+                    {
+                        "id": 1,
+                        "fields": [
+                            {"value": "2025-11-19"},
+                            {"value": "Rex"}
+                        ]
+                    }
+                ]
+            }
         }
     }
 }}

@@ -20,30 +20,65 @@
     Tag confirmation form element template.
 
     Context variables:
-    * elementname - The name of the form element
-    * elementid - The ID of the form element
     * label - The label for the element
-    * groups - Array of grouped items with headings
-    * hasgroups - Whether there are any groups to display
+    * required - Whether the element is required
+    * advanced - Whether the element is marked as advanced
+    * helpbutton - Help button HTML
+    * error - Error message, if any
+    * element - Element context from tagconfirm_element::export_for_template()
+        * elementname - The name of the form element
+        * elementid - The ID of the form element
+        * id - The element ID (same as elementid)
+        * wrapperid - The element wrapper ID
+        * iderror - The error message container ID
+        * staticlabel - Display the label as a span instead of a label element
+        * frozen - Whether the element is frozen
+        * groups - Array of grouped items with headings
+        * hasgroups - Whether there are any groups to display
+        * groupedoptions - The options for the popup selection
 
     Example context (json):
     {
-        "elementname": "field_123",
-        "elementid": "id_field_123",
         "label": "Compétences pratiquées",
-        "hasgroups": true,
-        "groups": [
-            {
-                "heading": "Compétences techniques",
-                "items": [
-                    {
-                        "uniqueid": 1,
-                        "name": "Programmation",
-                        "checked": true
-                    }
-                ]
-            }
-        ]
+        "required": false,
+        "advanced": false,
+        "helpbutton": "",
+        "error": null,
+        "element": {
+            "elementname": "field_123",
+            "elementid": "id_field_123",
+            "id": "id_field_123",
+            "wrapperid": "fitem_id_field_123",
+            "iderror": "id_error_field_123",
+            "type": "tagconfirm",
+            "staticlabel": true,
+            "frozen": false,
+            "hasgroups": true,
+            "groups": [
+                {
+                    "heading": "Compétences techniques",
+                    "items": [
+                        {
+                            "uniqueid": 1,
+                            "name": "Programmation",
+                            "checked": true
+                        }
+                    ]
+                }
+            ],
+            "groupedoptions": [
+                {
+                    "name": "Compétences techniques",
+                    "items": [
+                        {
+                            "uniqueid": 1,
+                            "name": "Programmation",
+                            "isSelected": true
+                        }
+                    ]
+                }
+            ]
+        }
     }
 }}
 {{< core_form/element-template }}

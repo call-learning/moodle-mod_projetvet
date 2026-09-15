@@ -20,25 +20,49 @@
     Number input form element.
 
     Context variables required for this template:
-    * name - The element name
-    * id - The element id
-    * value - The current value
-    * frozen - Whether the element is frozen
-    * min - Minimum value (optional)
-    * max - Maximum value (optional)
-    * step - Step increment (optional)
-    * extraattributes - Any additional HTML attributes
+    * label - The element label
+    * required - Whether the element is required
+    * advanced - Whether the element is marked as advanced
+    * helpbutton - Help button HTML
+    * error - Error message, if any
+    * element - Element context from number_element::export_for_template()
+        * id - The element id
+        * wrapperid - The element wrapper id
+        * iderror - The error message container id
+        * name - The element name
+        * value - The current value
+        * frozen - Whether the element is frozen
+        * hardfrozen - Whether the element is hard frozen
+        * min - Minimum value (optional)
+        * max - Maximum value (optional)
+        * step - Step increment (optional)
+        * action - Suggestion action (optional)
+        * string - String identifier for suggestions (optional)
+        * attributes - Any additional HTML attributes
 
     Example context (json):
     {
-        "name": "field_123",
-        "id": "id_field_123",
-        "value": "42",
-        "frozen": false,
-        "min": "0",
-        "max": "100",
-        "step": "1",
-        "extraattributes": ""
+        "label": "Number of hours",
+        "required": true,
+        "advanced": false,
+        "helpbutton": "",
+        "error": null,
+        "element": {
+            "id": "id_field_123",
+            "wrapperid": "fitem_id_field_123",
+            "iderror": "id_error_field_123",
+            "name": "field_123",
+            "type": "number",
+            "value": "42",
+            "frozen": false,
+            "hardfrozen": false,
+            "min": "0",
+            "max": "100",
+            "step": "1",
+            "action": "suggestedects",
+            "string": "suggestedects_hours",
+            "attributes": ""
+        }
     }
 }}
 {{< core_form/element-template }}

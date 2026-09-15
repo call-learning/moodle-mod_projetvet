@@ -134,10 +134,14 @@ class number_element extends MoodleQuickForm_text {
         return $context;
     }
 
+    // phpcs:disable moodle.NamingConventions.ValidFunctionName.LowercaseMethod
     /**
      * Validate the submitted value.
      *
      * Only accepts whole numbers (integers).
+     *
+     * The name is mandated by the core form API: MoodleQuickForm_group dispatches
+     * validation through method_exists($element, 'validateSubmitValue').
      *
      * @param mixed $value Submitted value
      * @return string|null Error message or null if valid
@@ -172,4 +176,5 @@ class number_element extends MoodleQuickForm_text {
 
         return null;
     }
+    // phpcs:enable moodle.NamingConventions.ValidFunctionName.LowercaseMethod
 }
