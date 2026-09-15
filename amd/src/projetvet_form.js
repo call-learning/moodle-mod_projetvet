@@ -260,6 +260,38 @@ const initEctsSuggestion = () => {
 
 export const init = async() => {
 
+    // Pending promise tracking an in-flight form submission.
+    // The core ModalForm does not register a pending promise around its AJAX
+    // submission, so register one when a submission starts and resolve it when
+    // the submission ends, so that automated tests can wait for it to finish.
+    let formSubmitPending = null;
+
+    /**
+     * Resolve the in-flight form submission pending promise.
+     */
+    const finishFormSubmitTracking = () => {
+        if (formSubmitPending) {
+            formSubmitPending.resolve();
+            formSubmitPending = null;
+        }
+    };
+
+    /**
+     * Track the AJAX submission of a modal form.
+     *
+     * @param {object} modalForm The modal form instance
+     */
+    const trackFormSubmission = (modalForm) => {
+        modalForm.addEventListener(modalForm.events.SUBMIT_BUTTON_PRESSED, () => {
+            formSubmitPending = new Pending('mod_projetvet/projetvet_form_submit');
+        });
+
+        modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, finishFormSubmitTracking);
+        modalForm.addEventListener(modalForm.events.CLIENT_VALIDATION_ERROR, finishFormSubmitTracking);
+        modalForm.addEventListener(modalForm.events.SERVER_VALIDATION_ERROR, finishFormSubmitTracking);
+        modalForm.addEventListener(modalForm.events.ERROR, finishFormSubmitTracking);
+    };
+
     // Check if there's a stored submitpopup message to display after page reload.
     const storedPopup = sessionStorage.getItem('projetvet_submitpopup');
     if (storedPopup) {
@@ -274,6 +306,9 @@ export const init = async() => {
     }
 
     const submitEventHandler = async(event) => {
+        // Finish the submission tracking before the page reloads.
+        finishFormSubmitTracking();
+
         // Check if there's a submitpopup message to display.
         const submitpopup = event.detail?.submitpopup || null;
 
@@ -311,8 +346,7 @@ export const init = async() => {
             });
         });
 
-        // Intercept form submission to show dialog only if switch is not checked.
-
+        trackFormSubmission(modalForm);
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
     });
@@ -358,6 +392,7 @@ export const init = async() => {
             });
         });
 
+        trackFormSubmission(modalForm);
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
     });
@@ -377,6 +412,8 @@ export const init = async() => {
                 ...button.dataset,
             },
         });
+
+        trackFormSubmission(modalForm);
 
         // After form submission, reload the subset entries list via AJAX.
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, async() => {

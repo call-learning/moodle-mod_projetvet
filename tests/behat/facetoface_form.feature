@@ -72,7 +72,6 @@ Feature: Face-to-face session form operations in mod_projetvet
       | Interview date                                                      | ##21 March 2025 14:00## |
 
     And I submit the projetvet form
-    And I wait until the page is ready
     Then I should see "Interview submitted to tutor"
     And I close the notification alert
 
