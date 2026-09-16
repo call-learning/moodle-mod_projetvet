@@ -26,11 +26,10 @@ namespace mod_projetvet;
  */
 final class lib_test extends \advanced_testcase {
     /**
-     * Test create and delete module
+     * Test create and delete module.
      *
      * @covers ::projetvet_add_instance
      * @covers ::projetvet_delete_instance
-     * @return void
      */
     public function test_create_delete_module(): void {
         global $DB;
@@ -58,11 +57,10 @@ final class lib_test extends \advanced_testcase {
     }
 
     /**
-     * Test module backup and restore by duplicating it
+     * Test module backup and restore by duplicating it.
      *
      * @covers \backup_projetvet_activity_structure_step
      * @covers \restore_projetvet_activity_structure_step
-     * @return void
      */
     public function test_backup_restore(): void {
         global $DB;
@@ -96,7 +94,6 @@ final class lib_test extends \advanced_testcase {
      * capability (teachers, tutors and managers) may view any student's data.
      *
      * @covers ::projetvet_user_can_view_student
-     * @return void
      */
     public function test_user_can_view_student(): void {
         $this->resetAfterTest();
@@ -133,7 +130,6 @@ final class lib_test extends \advanced_testcase {
      *
      * @covers \mod_projetvet\utils::is_tutor
      * @covers \mod_projetvet\utils::is_tutor_for_project
-     * @return void
      */
     public function test_utils_is_tutor(): void {
         $this->resetAfterTest();

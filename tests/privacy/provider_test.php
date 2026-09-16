@@ -27,11 +27,10 @@ use core_privacy\local\metadata\types\user_preference;
  * @copyright  2026 Laurent David <laurent@call-learning.fr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(provider::class)]
 final class provider_test extends \advanced_testcase {
     /**
      * The tutor information preference is declared in the privacy metadata.
-     *
-     * @covers ::get_metadata
      */
     public function test_tutor_info_preference_is_declared(): void {
         $collection = new collection('mod_projetvet');
@@ -50,8 +49,6 @@ final class provider_test extends \advanced_testcase {
 
     /**
      * The tutor information preference is exported through the Privacy API.
-     *
-     * @covers ::export_user_preferences
      */
     public function test_tutor_info_preference_is_exported(): void {
         $this->resetAfterTest();

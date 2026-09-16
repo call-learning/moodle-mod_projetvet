@@ -30,15 +30,13 @@ use test_data_definition;
  * @package     mod_projetvet
  * @copyright   2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers      \mod_projetvet\external\entry_list
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(entry_list::class)]
 final class entry_list_test extends advanced_testcase {
     use test_data_definition;
 
     /**
-     * Setup test data
-     *
-     * @return void
+     * Setup test data.
      */
     public function setUp(): void {
         parent::setUp();
@@ -48,9 +46,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test successful retrieval of entry list
-     *
-     * @return void
+     * Test successful retrieval of entry list.
      */
     public function test_get_entry_list_success(): void {
         global $DB;
@@ -103,9 +99,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list filters by student
-     *
-     * @return void
+     * Test entry list filters by student.
      */
     public function test_get_entry_list_filters_by_student(): void {
         global $DB;
@@ -131,9 +125,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list validates context
-     *
-     * @return void
+     * Test entry list validates context.
      */
     public function test_get_entry_list_validates_context(): void {
         global $DB;
@@ -151,9 +143,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list with default parent entry ID
-     *
-     * @return void
+     * Test entry list with default parent entry ID.
      */
     public function test_get_entry_list_default_parententryid(): void {
         global $DB;
@@ -172,9 +162,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list with specific parent entry ID
-     *
-     * @return void
+     * Test entry list with specific parent entry ID.
      */
     public function test_get_entry_list_with_parententryid(): void {
         global $DB;
@@ -193,9 +181,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list includes permission flags
-     *
-     * @return void
+     * Test entry list includes permission flags.
      */
     public function test_get_entry_list_includes_permissions(): void {
         global $DB;
@@ -219,9 +205,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list field values are properly formatted
-     *
-     * @return void
+     * Test entry list field values are properly formatted.
      */
     public function test_get_entry_list_field_formatting(): void {
         global $DB;
@@ -250,9 +234,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list returns empty for student with no entries
-     *
-     * @return void
+     * Test entry list returns empty for student with no entries.
      */
     public function test_get_entry_list_empty_for_no_entries(): void {
         global $DB;
@@ -273,9 +255,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test entry list with different formset
-     *
-     * @return void
+     * Test entry list with different formset.
      */
     public function test_get_entry_list_different_formset(): void {
         global $DB;
@@ -297,9 +277,7 @@ final class entry_list_test extends advanced_testcase {
     }
 
     /**
-     * Test teacher can view student entries
-     *
-     * @return void
+     * Test teacher can view student entries.
      */
     public function test_teacher_can_view_student_entries(): void {
         global $DB;

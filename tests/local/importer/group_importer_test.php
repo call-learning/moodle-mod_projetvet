@@ -27,8 +27,8 @@ use mod_projetvet\local\persistent\teacher_rating;
  * @category  test
  * @copyright 2026 Bas Brands <bas@sonsbeekmedia.nl>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers    \mod_projetvet\local\importer\group_importer::import
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(group_importer::class)]
 final class group_importer_test extends \advanced_testcase {
     /**
      * @var \stdClass

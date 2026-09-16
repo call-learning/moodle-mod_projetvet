@@ -26,8 +26,8 @@ use context_module;
  * @category   test
  * @copyright  2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_projetvet\local\api\entries
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(entries::class)]
 final class entries_permissions_test extends advanced_testcase {
     /** @var \stdClass Course object */
     private $course;
@@ -179,11 +179,11 @@ final class entries_permissions_test extends advanced_testcase {
     /**
      * Test that structure is hydrated with correct canview permissions.
      *
-     * @dataProvider canview_provider
-     * @param int $entrystatus The entry status
-     * @param int $userid The user ID
-     * @param array $expectedcanview The expected canview values
+     * @param int $entrystatus The entry status.
+     * @param int $userid The user ID.
+     * @param array $expectedcanview The expected canview values.
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('canview_provider')]
     public function test_canview_permissions(int $entrystatus, int $userid, array $expectedcanview): void {
         $this->setUser($userid);
 
@@ -201,36 +201,32 @@ final class entries_permissions_test extends advanced_testcase {
 
     /**
      * Data provider for canview tests.
-     *
-     * @return array
      */
-    public static function canview_provider(): array {
-        return [
-            'Status 0 - all users see only status 0' => [
-                0,
-                0, // Will be replaced with actual user ID.
-                [0 => true, 1 => false, 2 => false, 3 => false, 4 => false],
-            ],
-            'Status 1 - all users see status 0-1' => [
-                1,
-                0,
-                [0 => true, 1 => true, 2 => false, 3 => false, 4 => false],
-            ],
-            'Status 2 - all users see status 0-2' => [
-                2,
-                0,
-                [0 => true, 1 => true, 2 => true, 3 => false, 4 => false],
-            ],
-            'Status 3 - all users see status 0-3' => [
-                3,
-                0,
-                [0 => true, 1 => true, 2 => true, 3 => true, 4 => false],
-            ],
-            'Status 4 - all users see all statuses' => [
-                4,
-                0,
-                [0 => true, 1 => true, 2 => true, 3 => true, 4 => true],
-            ],
+    public static function canview_provider(): \Generator {
+        yield 'Status 0 - all users see only status 0' => [
+            'entrystatus' => 0,
+            'userid' => 0,
+            'expectedcanview' => [0 => true, 1 => false, 2 => false, 3 => false, 4 => false],
+        ];
+        yield 'Status 1 - all users see status 0-1' => [
+            'entrystatus' => 1,
+            'userid' => 0,
+            'expectedcanview' => [0 => true, 1 => true, 2 => false, 3 => false, 4 => false],
+        ];
+        yield 'Status 2 - all users see status 0-2' => [
+            'entrystatus' => 2,
+            'userid' => 0,
+            'expectedcanview' => [0 => true, 1 => true, 2 => true, 3 => false, 4 => false],
+        ];
+        yield 'Status 3 - all users see status 0-3' => [
+            'entrystatus' => 3,
+            'userid' => 0,
+            'expectedcanview' => [0 => true, 1 => true, 2 => true, 3 => true, 4 => false],
+        ];
+        yield 'Status 4 - all users see all statuses' => [
+            'entrystatus' => 4,
+            'userid' => 0,
+            'expectedcanview' => [0 => true, 1 => true, 2 => true, 3 => true, 4 => true],
         ];
     }
 

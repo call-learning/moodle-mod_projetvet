@@ -37,11 +37,11 @@ require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
  * @copyright 2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_projetvet_activity_structure_step::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_projetvet_activity_structure_step::class)]
 final class backup_restore_test extends advanced_testcase {
     /**
      * Test backup and restore of a projetvet activity.
-     * @covers \backup_projetvet_activity_structure_step
-     * @covers \restore_projetvet_activity_structure_step
      */
     public function test_backup_restore(): void {
         global $DB;
@@ -102,9 +102,6 @@ final class backup_restore_test extends advanced_testcase {
 
     /**
      * Test backup and restore with user data.
-     *
-     * @covers ::backup_projetvet_activity_structure_step
-     * @covers ::restore_projetvet_activity_structure_step
      */
     public function test_backup_restore_with_userdata(): void {
         global $DB;

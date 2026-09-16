@@ -31,15 +31,13 @@ use test_data_definition;
  * @package     mod_projetvet
  * @copyright   2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers      \mod_projetvet\local\api\entries
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(entries::class)]
 final class entries_crud_test extends advanced_testcase {
     use test_data_definition;
 
     /**
-     * Setup the test
-     *
-     * @return void
+     * Setup the test.
      */
     public function setUp(): void {
         parent::setUp();
@@ -49,10 +47,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test get_entry
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::get_entry
+     * Test get_entry.
      */
     public function test_get_entry(): void {
         global $DB;
@@ -106,10 +101,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test create_entry
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::create_entry
+     * Test create_entry.
      */
     public function test_create_entry(): void {
         global $DB;
@@ -150,10 +142,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test update_entry
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::update_entry
+     * Test update_entry.
      */
     public function test_update_entry(): void {
         global $DB;
@@ -189,10 +178,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test delete_entry
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::delete_entry
+     * Test delete_entry.
      */
     public function test_delete_entry(): void {
         global $DB;
@@ -219,10 +205,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test get_entries
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::get_entries
+     * Test get_entries.
      */
     public function test_get_entries(): void {
         global $DB;
@@ -251,10 +234,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test get_entry_list
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::get_entry_list
+     * Test get_entry_list.
      */
     public function test_get_entry_list(): void {
         global $DB;
@@ -288,10 +268,7 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Test get_form_structure
-     *
-     * @return void
-     * @covers \mod_projetvet\local\api\entries::get_form_structure
+     * Test get_form_structure.
      */
     public function test_get_form_structure(): void {
         $structure = entries::get_form_structure('activities');
@@ -323,8 +300,8 @@ final class entries_crud_test extends advanced_testcase {
     }
 
     /**
-     * Helper method to get field value from entry
-     *
+     * Helper method to get field value from entry.
+     \*
      * @param object $entry
      * @param string $fieldidnumber
      * @return mixed

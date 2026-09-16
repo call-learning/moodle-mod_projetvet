@@ -25,16 +25,14 @@ use mod_projetvet\local\api\groups;
  * @package   mod_projetvet
  * @copyright 2026 Laurent David <laurent@call-learning.fr>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers    \mod_projetvet\external\get_assign_teacher_modal
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(get_assign_teacher_modal::class)]
 final class get_assign_teacher_modal_test extends \advanced_testcase {
     /** @var array Test data (course, users, module). */
     protected array $data = [];
 
     /**
      * Test setup.
-     *
-     * @return void
      */
     protected function setUp(): void {
         parent::setUp();
@@ -60,8 +58,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test the popup body is returned with no preselection for unassigned students.
-     *
-     * @return void
      */
     public function test_get_modal_no_preselection(): void {
         $this->setAdminUser();
@@ -87,8 +83,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test the teacher already assigned to the students is preselected.
-     *
-     * @return void
      */
     public function test_get_modal_preselects_assigned_teacher(): void {
         $this->setAdminUser();
@@ -116,8 +110,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test no teacher is preselected when only some selected students are assigned.
-     *
-     * @return void
      */
     public function test_get_modal_does_not_preselect_for_mixed_assignment(): void {
         $this->setAdminUser();
@@ -139,8 +131,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test users outside the course cannot be included in the modal.
-     *
-     * @return void
      */
     public function test_get_modal_requires_eligible_students(): void {
         $this->setAdminUser();
@@ -156,8 +146,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test the course module and projetvet instance must match for the modal.
-     *
-     * @return void
      */
     public function test_get_modal_requires_matching_instance(): void {
         $this->setAdminUser();
@@ -175,8 +163,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test a user without mod/projetvet:admin is rejected.
-     *
-     * @return void
      */
     public function test_get_modal_requires_capability(): void {
         // A student does not hold mod/projetvet:admin.
@@ -196,8 +182,6 @@ final class get_assign_teacher_modal_test extends \advanced_testcase {
 
     /**
      * Test the manager archetype (holder of mod/projetvet:admin) can fetch the body.
-     *
-     * @return void
      */
     public function test_get_modal_as_manager(): void {
         $this->setUser($this->data['manager']);

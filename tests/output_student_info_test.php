@@ -34,15 +34,13 @@ use test_data_definition;
  * @package     mod_projetvet
  * @copyright   2026 Laurent David <laurent@call-learning.fr>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers      \mod_projetvet\output\student_info
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(student_info::class)]
 final class output_student_info_test extends advanced_testcase {
     use test_data_definition;
 
     /**
      * Setup the test.
-     *
-     * @return void
      */
     public function setUp(): void {
         parent::setUp();
@@ -83,7 +81,6 @@ final class output_student_info_test extends advanced_testcase {
      * @param int $tutorid The tutor user id
      * @param int $studentid The student user id
      * @param int $projetvetid The projetvet instance id
-     * @return void
      */
     private function assign_tutor(int $tutorid, int $studentid, int $projetvetid): void {
         $group = new \mod_projetvet\local\persistent\projetvet_group(0, (object)[
@@ -103,8 +100,6 @@ final class output_student_info_test extends advanced_testcase {
 
     /**
      * The tutor sees a link to define their practical info when it is empty.
-     *
-     * @return void
      */
     public function test_tutor_sees_set_link_when_info_empty(): void {
         global $DB;
@@ -137,8 +132,6 @@ final class output_student_info_test extends advanced_testcase {
 
     /**
      * The tutor sees an edit link when the practical info is already set.
-     *
-     * @return void
      */
     public function test_tutor_sees_edit_link_when_info_set(): void {
         global $DB;
@@ -165,8 +158,6 @@ final class output_student_info_test extends advanced_testcase {
 
     /**
      * A student does not see the tutor link because they are not the tutor.
-     *
-     * @return void
      */
     public function test_student_does_not_see_tutor_link(): void {
         global $DB;

@@ -26,8 +26,8 @@ use mod_projetvet\local\persistent\teacher_rating;
  * @package   mod_projetvet
  * @copyright 2026 Bas Brands <bas@sonsbeekmedia.nl>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers    \mod_projetvet\local\api\groups
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(groups::class)]
 final class groups_test extends \advanced_testcase {
     /**
      * Test setup - create course, users, module

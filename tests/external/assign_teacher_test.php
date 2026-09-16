@@ -27,16 +27,14 @@ use mod_projetvet\local\persistent\projetvet_group;
  * @package   mod_projetvet
  * @copyright 2026 Laurent David <laurent@call-learning.fr>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers    \mod_projetvet\external\assign_teacher
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(assign_teacher::class)]
 final class assign_teacher_test extends \advanced_testcase {
     /** @var array Test data (course, users, module). */
     protected array $data = [];
 
     /**
      * Test setup.
-     *
-     * @return void
      */
     protected function setUp(): void {
         parent::setUp();
@@ -62,8 +60,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test successful assignment of students to a teacher.
-     *
-     * @return void
      */
     public function test_assign_teacher_success(): void {
         $this->setAdminUser();
@@ -89,8 +85,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test the manager archetype (holder of mod/projetvet:admin) can assign.
-     *
-     * @return void
      */
     public function test_assign_teacher_as_manager(): void {
         $this->setUser($this->data['manager']);
@@ -107,8 +101,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test a user without mod/projetvet:admin is rejected.
-     *
-     * @return void
      */
     public function test_assign_teacher_requires_capability(): void {
         // The editingteacher role does not hold mod/projetvet:admin (only manager does).
@@ -129,8 +121,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test an empty student list is rejected.
-     *
-     * @return void
      */
     public function test_assign_teacher_requires_studentids(): void {
         $this->setAdminUser();
@@ -145,8 +135,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test a missing teacher is rejected.
-     *
-     * @return void
      */
     public function test_assign_teacher_requires_teacherid(): void {
         $this->setAdminUser();
@@ -166,8 +154,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test a teacher outside the course cannot be selected through the web service.
-     *
-     * @return void
      */
     public function test_assign_teacher_requires_eligible_teacher(): void {
         $this->setAdminUser();
@@ -184,8 +170,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test a user outside the course cannot be selected as a student through the web service.
-     *
-     * @return void
      */
     public function test_assign_teacher_requires_eligible_students(): void {
         $this->setAdminUser();
@@ -202,8 +186,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test the course module and projetvet instance must match.
-     *
-     * @return void
      */
     public function test_assign_teacher_requires_matching_instance(): void {
         $this->setAdminUser();
@@ -222,8 +204,6 @@ final class assign_teacher_test extends \advanced_testcase {
 
     /**
      * Test the assigned students land in a single group owned by the teacher.
-     *
-     * @return void
      */
     public function test_assign_teacher_creates_single_group(): void {
         $this->setAdminUser();
