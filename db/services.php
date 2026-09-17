@@ -66,4 +66,12 @@ $functions = [
         'ajax'          => true,
         'capabilities'  => 'mod/projetvet:admin',
     ],
+    'mod_projetvet_send_message' => [
+        'classname'     => 'mod_projetvet\external\send_message',
+        'methodname'    => 'execute',
+        'description'   => 'Send a contact message to students through the Moodle messaging system',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:approve',
+    ],
 ];
