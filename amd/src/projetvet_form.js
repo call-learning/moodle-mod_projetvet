@@ -24,6 +24,7 @@
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import Notification from 'core/notification';
+import {saveCancelPromise} from 'core/notification';
 import Repository from 'mod_projetvet/repository';
 import Templates from 'core/templates';
 import Pending from 'core/pending';
@@ -258,6 +259,71 @@ const initEctsSuggestion = () => {
     });
 };
 
+/**
+ * Send a contact message to the student from a modal form.
+ *
+ * The message is delivered by the server through the standard Moodle
+ * messaging subsystem (via the mod_projetvet_send_message webservice and an
+ * adhoc task), so no student email address is exposed in the client.
+ *
+ * @param {object} args The modal form args (cmid, projetvetid, studentid, ...).
+ * @param {string} emailAction The emailaction string key (contactactivity|contactf2f).
+ * @return {Promise} A promise resolved when the send request finishes.
+ */
+const sendContactMessage = async(args, emailAction) => {
+    const cmid = parseInt(args.cmid, 10);
+    const projetvetid = parseInt(args.projetvetid, 10);
+    const studentid = parseInt(args.studentid, 10);
+
+    if (!cmid || !projetvetid) {
+        Notification.exception(new Error('Missing cmid or projetvetid for contact message'));
+        return;
+    }
+
+    if (!studentid) {
+        Notification.addNotification({
+            type: 'warning',
+            message: await getString('nomessagerecipients', 'mod_projetvet'),
+        });
+        return;
+    }
+
+    // Ask the user to confirm before sending. The promise resolves when the
+    // user confirms and rejects when the user cancels, so no further action is
+    // taken in the latter case.
+    try {
+        await saveCancelPromise(
+            await getString('confirmcontactstudent', 'mod_projetvet'),
+            await getString('confirmcontactstudent_body', 'mod_projetvet'),
+            await getString('sendcontact', 'mod_projetvet')
+        );
+    } catch (error) {
+        // The user cancelled the confirmation: do nothing.
+        return;
+    }
+
+    // Send the message through the webservice.
+    const pending = new Pending('mod_projetvet/projetvet_form_send_message');
+    try {
+        await Repository.sendMessage({
+            cmid: cmid,
+            projetvetid: projetvetid,
+            studentids: [studentid],
+            subjectkey: emailAction,
+            bodykey: emailAction,
+        });
+
+        Notification.addNotification({
+            type: 'success',
+            message: await getString('messagesent', 'mod_projetvet', {count: 1}),
+        });
+    } catch (error) {
+        Notification.exception(error);
+    } finally {
+        pending.resolve();
+    }
+};
+
 export const init = async() => {
 
     // Pending promise tracking an in-flight form submission.
@@ -482,17 +548,17 @@ export const init = async() => {
         const emailAction = button.dataset.emailaction;
         const form = button.closest('form');
 
-        // Handle email action.
+        // Handle email action: send a contact message through the Moodle
+        // messaging system (server-side), never a mailto: link.
         if (emailAction && form) {
-            const studentEmailInput = form.querySelector('input[name="studentemail"]');
-            if (studentEmailInput && studentEmailInput.value) {
-                const email = studentEmailInput.value;
-                const subjectString = await getString(emailAction + '_subject', 'mod_projetvet');
-                const bodyString = await getString(emailAction, 'mod_projetvet');
-                const subject = encodeURIComponent(subjectString);
-                const body = encodeURIComponent(bodyString);
-                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-            }
+            const cmidField = form.querySelector('input[name="cmid"]');
+            const projetvetidField = form.querySelector('input[name="projetvetid"]');
+            const studentidField = form.querySelector('input[name="studentid"]');
+            await sendContactMessage({
+                cmid: cmidField ? cmidField.value : '',
+                projetvetid: projetvetidField ? projetvetidField.value : '',
+                studentid: studentidField ? studentidField.value : '',
+            }, emailAction);
             return;
         }
 

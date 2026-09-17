@@ -278,25 +278,14 @@ class projetvet_form extends dynamic_form {
         $formsetidnumber = $this->optional_param('formsetidnumber', 'activities', PARAM_ALPHANUMEXT);
         $readonly = $this->optional_param('readonly', 0, PARAM_INT);
 
-        // Get student email for contact button.
-        $studentemail = '';
-        if ($studentid) {
-            $student = \core_user::get_user($studentid);
-            if ($student) {
-                $studentemail = $student->email;
-            }
-        }
-
         $mform->addElement('hidden', 'cmid', $cmid);
         $mform->addElement('hidden', 'projetvetid', $projetvetid);
         $mform->addElement('hidden', 'studentid', $studentid);
-        $mform->addElement('hidden', 'studentemail', $studentemail);
         $mform->addElement('hidden', 'entryid', $entryid);
         $mform->addElement('hidden', 'parententryid', $parententryid);
         $mform->setType('parententryid', PARAM_INT);
         $mform->addElement('hidden', 'formsetidnumber', $formsetidnumber);
         $mform->setType('formsetidnumber', PARAM_ALPHANUMEXT);
-        $mform->setType('studentemail', PARAM_EMAIL);
         $mform->addElement('hidden', 'entrystatus');
         $mform->setType('entrystatus', PARAM_INT);
         $mform->addElement('hidden', 'button_entrystatus');
