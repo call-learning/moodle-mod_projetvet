@@ -33,9 +33,13 @@ $messageproviders = [
             'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
         ],
     ],
-    // Contact message sent by a teacher to their students (one or several).
+    // Contact message sent by a tutor to their students (one or several).
+    // The capability is checked against the *recipient*, so it must be a
+    // capability the student has (view), not the tutor-only approve capability.
+    // The sending side is already restricted in broadcast.php to tutors with
+    // mod/projetvet:approve.
     'contact' => [
-        'capability' => 'mod/projetvet:approve',
+        'capability' => 'mod/projetvet:view',
         'defaults' => [
             'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
             'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,

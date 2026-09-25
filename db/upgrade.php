@@ -205,5 +205,25 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026092501, 'projetvet');
     }
 
+    if ($oldversion < 2026092502) {
+        // Fix the contact message provider capability. The capability on a
+        // message provider is checked against the *recipient*, so it must be a
+        // capability the student has. The tutor-only mod/projetvet:approve meant
+        // students (the recipients) never had the provider enabled and the
+        // contact/broadcast messages were silently dropped.
+        //
+        // db/messages.php is only read at install time to seed this table, so the
+        // live row has to be updated here as well.
+        $DB->set_field(
+            'message_providers',
+            'capability',
+            'mod/projetvet:view',
+            ['component' => 'mod_projetvet', 'name' => 'contact']
+        );
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092502, 'projetvet');
+    }
+
     return true;
 }
