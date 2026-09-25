@@ -273,5 +273,18 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026092900, 'projetvet');
     }
 
+    if ($oldversion < 2026100200) {
+        // Fix #917: Pre-fill the final ECTS field with the tutor-agreed credits.
+        //
+        // Merge the prefillfrom flag into the stored configdata of the final_ects
+        // field, preserving site-specific values, then purge the structure cache.
+        // The merge is idempotent.
+        require_once($CFG->dirroot . '/mod/projetvet/lib.php');
+        projetvet_merge_final_ects_prefill();
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026100200, 'projetvet');
+    }
+
     return true;
 }

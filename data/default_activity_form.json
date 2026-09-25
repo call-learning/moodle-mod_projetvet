@@ -606,6 +606,7 @@
           "description": "",
           "configdata": {
             "required": true,
+            "prefillfrom": "credits",
             "data-action": "validateects",
             "data-string": "validateects"
           },

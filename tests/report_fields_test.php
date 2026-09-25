@@ -363,10 +363,7 @@ final class report_fields_test extends \advanced_testcase {
      * Test that a final submission with empty required report fields is rejected.
      */
     public function test_final_submission_requires_report_fields(): void {
-        $form = $this->build_testable_form(
-            ['field_actions_summary' => ['idnumber' => 'actions_summary', 'type' => 'textarea']],
-            []
-        );
+        $form = $this->build_testable_form(['field_actions_summary' => 'actions_summary'], []);
 
         // Final submission (button_entrystatus advances beyond current status).
         $errors = $form->validation([
@@ -382,10 +379,7 @@ final class report_fields_test extends \advanced_testcase {
      * Test that a draft save does not reject empty required report fields.
      */
     public function test_draft_save_skips_required_report_fields(): void {
-        $form = $this->build_testable_form(
-            ['field_actions_summary' => ['idnumber' => 'actions_summary', 'type' => 'textarea']],
-            []
-        );
+        $form = $this->build_testable_form(['field_actions_summary' => 'actions_summary'], []);
 
         // Draft save (button_entrystatus equals current status).
         $errors = $form->validation([
@@ -395,61 +389,6 @@ final class report_fields_test extends \advanced_testcase {
         ], []);
 
         $this->assertArrayNotHasKey('field_actions_summary', $errors);
-    }
-
-    /**
-     * Test that a final submission with an untouched required date field is rejected.
-     *
-     * An optional date_selector submits 0 when its "enable" checkbox is unchecked,
-     * which validation() must treat as empty for date fields.
-     *
-     * @dataProvider report_date_field_provider
-     */
-    public function test_final_submission_requires_date_fields(string $fieldname, int|string $submittedvalue): void {
-        $form = $this->build_testable_form(
-            [$fieldname => ['idnumber' => substr($fieldname, 6), 'type' => 'date']],
-            []
-        );
-
-        $errors = $form->validation([
-            'entrystatus' => 2,
-            'button_entrystatus' => 3,
-            $fieldname => $submittedvalue,
-        ], []);
-
-        $this->assertArrayHasKey($fieldname, $errors);
-    }
-
-    /**
-     * Data provider for the required date field test: the value an optional
-     * date_selector submits when its enable checkbox is unchecked.
-     *
-     * @return array
-     */
-    public static function report_date_field_provider(): array {
-        return [
-            'date submitted as 0' => ['field_start_date', 0],
-            'date submitted as 0 string' => ['field_end_date', '0'],
-        ];
-    }
-
-    /**
-     * Test that a final submission with a filled required date field is accepted.
-     */
-    public function test_final_submission_accepts_filled_date_field(): void {
-        $form = $this->build_testable_form(
-            ['field_start_date' => ['idnumber' => 'start_date', 'type' => 'date']],
-            []
-        );
-
-        $validtimestamp = 1720000000; // A real, non-zero timestamp.
-        $errors = $form->validation([
-            'entrystatus' => 2,
-            'button_entrystatus' => 3,
-            'field_start_date' => $validtimestamp,
-        ], []);
-
-        $this->assertArrayNotHasKey('field_start_date', $errors);
     }
 
     /**

@@ -149,7 +149,6 @@ const initEctsSuggestion = () => {
         const updateSuggestion = async() => {
             const pending = new Pending('mod_projetvet/projetvet_form_get_ects');
             const hours = hoursInput ? parseFloat(hoursInput.value) : 0;
-            const finalects = finalInput ? parseFloat(finalInput.value) : 0;
 
             if (isNaN(hours) || hours <= 0) {
                 suggestionDiv.innerHTML = '';
@@ -177,7 +176,7 @@ const initEctsSuggestion = () => {
                     hours: hours,
                     stringidentifier: stringIdentifier,
                     rangvalue: rangvalue,
-                    finalects: finalects,
+                    finalects: 0,
                 });
 
                 // Handle error.
@@ -195,8 +194,9 @@ const initEctsSuggestion = () => {
 
                 suggestionDiv.innerHTML = html;
 
-                // Set finalInput to suggestedects if it doesn't have a value yet.
-                if (finalInput && !finalInput.value) {
+                // Seed finalInput with the estimate only when nothing was
+                // pre-filled from the tutor-agreed credits value.
+                if (finalInput && !finalInput.value.trim()) {
                     finalInput.value = result.suggestedects;
                 }
             } catch (error) {
@@ -332,6 +332,38 @@ export const init = async() => {
     // the submission ends, so that automated tests can wait for it to finish.
     let formSubmitPending = null;
 
+    // Pending promise tracking an in-flight modal-form open (the form-body
+    // AJAX). The core ModalForm resolves its init promise before the form body
+    // has been rendered, so register our own promise when the modal starts to
+    // open and resolve it once the body (and therefore the form fields) has
+    // been rendered. This lets automated tests reliably wait for the form to
+    // be interactable.
+    let formOpenPending = null;
+
+    /**
+     * Resolve the in-flight form open pending promise.
+     */
+    const finishFormOpenTracking = () => {
+        if (formOpenPending) {
+            formOpenPending.resolve();
+            formOpenPending = null;
+        }
+    };
+
+    /**
+     * Track the open of a modal form, signalling when its form body has been
+     * rendered and the form fields are available.
+     *
+     * @param {object} modalForm The modal form instance
+     */
+    const trackFormOpen = (modalForm) => {
+        formOpenPending = new Pending('mod_projetvet/projetvet_form_open');
+        modalForm.addEventListener(modalForm.events.LOADED, () => {
+            modalForm.modal.getRoot().on('modal:bodyRendered', finishFormOpenTracking);
+        });
+        modalForm.addEventListener(modalForm.events.ERROR, finishFormOpenTracking);
+    };
+
     /**
      * Resolve the in-flight form submission pending promise.
      */
@@ -412,6 +444,7 @@ export const init = async() => {
             });
         });
 
+        trackFormOpen(modalForm);
         trackFormSubmission(modalForm);
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
@@ -458,6 +491,7 @@ export const init = async() => {
             });
         });
 
+        trackFormOpen(modalForm);
         trackFormSubmission(modalForm);
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();

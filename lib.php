@@ -365,3 +365,35 @@ function projetvet_merge_report_field_configdata(): void {
     // Purge the activitystructures cache so the new flags take effect immediately.
     \cache::make('mod_projetvet', 'activitystructures')->purge();
 }
+
+/**
+ * Pre-fill the final ECTS field with the tutor-agreed credits value.
+ *
+ * This is used by the 2026100200 upgrade savepoint (ticket #917). It merges the
+ * prefillfrom flag into the stored configdata of the final_ects field, preserving
+ * any site-specific values and tolerating missing or invalid JSON. The step is
+ * idempotent: re-running it on already-merged rows is a no-op.
+ *
+ * @return void
+ */
+function projetvet_merge_final_ects_prefill(): void {
+    global $DB;
+
+    $record = $DB->get_record('projetvet_form_field', ['idnumber' => 'final_ects']);
+    if (!$record) {
+        return;
+    }
+    $configdata = json_decode($record->configdata ?? '', true);
+    if (!is_array($configdata)) {
+        $configdata = [];
+    }
+    if (($configdata['prefillfrom'] ?? null) === 'credits') {
+        return;
+    }
+    $configdata['prefillfrom'] = 'credits';
+    $newconfig = json_encode($configdata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $DB->set_field('projetvet_form_field', 'configdata', $newconfig, ['id' => $record->id]);
+
+    // Purge the activitystructures cache so the new flag takes effect immediately.
+    \cache::make('mod_projetvet', 'activitystructures')->purge();
+}
