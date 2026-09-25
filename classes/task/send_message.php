@@ -43,8 +43,13 @@ class send_message extends adhoc_task {
      *   - cmid (int): the course module id
      *   - userfromid (int): the sender user id
      *   - recipientids (int[]): the recipient user ids
-     *   - subjectkey (string): the language string key for the subject
-     *   - bodykey (string): the language string key for the body
+     *   - subjectkey (string): the language string key for the subject (key-based path)
+     *   - bodykey (string): the language string key for the body (key-based path)
+     *   - subject (string): the custom subject (broadcast path)
+     *   - body (string): the custom body HTML (broadcast path)
+     *
+     * Either the key-based pair (subjectkey/bodykey) or the custom pair
+     * (subject/body) must be present.
      *
      * @return void
      */
@@ -57,12 +62,17 @@ class send_message extends adhoc_task {
         $userfromid = (int) ($customdata->userfromid ?? 0);
         $subjectkey = (string) ($customdata->subjectkey ?? '');
         $bodykey = (string) ($customdata->bodykey ?? '');
+        $customsubject = (string) ($customdata->subject ?? '');
+        $custombody = (string) ($customdata->body ?? '');
         $recipientids = array_map(
             'intval',
             (array) ($customdata->recipientids ?? [])
         );
 
-        if (!$cmid || !$userfromid || !$subjectkey || !$bodykey || empty($recipientids)) {
+        // Validate: either key-based or custom, but not both or neither.
+        $iskeybased = ($subjectkey !== '' && $bodykey !== '');
+        $isbroadcast = ($customsubject !== '' && $custombody !== '');
+        if (!$cmid || !$userfromid || empty($recipientids) || !$iskeybased && !$isbroadcast) {
             // The request was invalid before it was queued; nothing to do.
             return;
         }
@@ -106,8 +116,13 @@ class send_message extends adhoc_task {
                 $GLOBALS['USER']->lang = $recipient->lang;
             }
 
-            $subject = get_string($subjectkey, 'mod_projetvet');
-            $body = get_string($bodykey, 'mod_projetvet', ['link' => $linkurl->out(false)]);
+            if ($iskeybased) {
+                $subject = get_string($subjectkey, 'mod_projetvet');
+                $body = get_string($bodykey, 'mod_projetvet', ['link' => $linkurl->out(false)]);
+            } else {
+                $subject = $customsubject;
+                $body = $custombody . '<br><a href="' . $linkurl->out(false) . '">' . $contexturlname . '</a>';
+            }
 
             $message = new \core\message\message();
             $message->component = 'mod_projetvet';

@@ -59,6 +59,15 @@ $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+// Get the renderer.
+$renderer = $PAGE->get_renderer('mod_projetvet');
+
+// Determine if user can view all activities (teacher or manager).
+$canviewall = has_capability('mod/projetvet:viewallactivities', $context);
+
+// Assemble the page actions (buttons rendered in the page header, side by side).
+$pagebuttons = '';
+
 // Make the tutor information form directly accessible to primary tutors.
 if (
     $DB->record_exists('projetvet_groups', [
@@ -66,22 +75,35 @@ if (
         'ownerid' => $USER->id,
     ])
 ) {
-    $button = html_writer::link(
+    $pagebuttons .= $renderer->single_button(
         new moodle_url('/mod/projetvet/tutor_info.php', ['returnurl' => $currenturl]),
-        get_string('practicalinfo_settings', 'mod_projetvet'),
-        ['class' => 'btn btn-primary mb-3']
+        get_string('practicalinfo_settings', 'mod_projetvet')
     );
-    $PAGE->set_button($button);
 }
 
-// Determine if user can view all activities (teacher or manager).
-$canviewall = has_capability('mod/projetvet:viewallactivities', $context);
+// Add the broadcast button for tutors who can contact their students, only on
+// the overview (student list) view, not when a specific student is being shown.
+// It links to the dedicated broadcast page (protected with a session key there).
+if (
+    $canviewall
+    && !$studentid
+    && has_capability('mod/projetvet:approve', $context)
+    && \mod_projetvet\utils::is_tutor($USER->id)
+) {
+    $pagebuttons .= $renderer->single_button(
+        new moodle_url('/mod/projetvet/broadcast.php', ['id' => $cm->id]),
+        get_string('broadcast_button', 'mod_projetvet'),
+        'get',
+        ['sesskey' => sesskey(), 'returnurl' => $currenturl]
+    );
+}
+
+if ($pagebuttons !== '') {
+    $PAGE->set_button($pagebuttons);
+}
 
 // Get the current group for this activity.
 $currentgroup = groups_get_activity_group($cm, true);
-
-// Get the renderer.
-$renderer = $PAGE->get_renderer('mod_projetvet');
 
 // Display appropriate view based on capability and context.
 if ($canviewall && !$studentid) {
