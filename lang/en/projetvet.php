@@ -297,6 +297,7 @@ $string['min_hours'] = 'Minimum hours per activity';
 $string['min_hours_desc'] = 'The minimum number of hours an activity must represent to be eligible (default: 20)';
 $string['min_hours_error'] = 'To be eligible for CPP, an activity must represent a minimum workload of {$a} hours to be converted to ECTS';
 $string['mincompetencies'] = 'Please select at least {$a} competencies.';
+$string['mincompetencies_practiced'] = 'Please confirm at least {$a} competencies.';
 $string['mobilityformtitle'] = 'International Mobility';
 $string['mobilityinfo_value'] = 'The international criterion will be automatically validated when a project containing the "International Mobility" option is validated by your tutor. <br><br>If you completed your mobility through a long-term mobility program (ERASMUS type) outside CCP or during the FMP of A5, please check one of the boxes below and specify the location of this mobility.';
 $string['mobilitynotrealizedyet'] = '<i class="fa fa-sm text-warning fa-exclamation-triangle"></i> Not realized yet';

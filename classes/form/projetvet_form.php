@@ -41,7 +41,13 @@ require_once($CFG->libdir . '/formslib.php');
  */
 class projetvet_form extends dynamic_form {
     /** @var array<string, int> Tagselect fields and their minimum selections */
-    private array $minimumtagselectfields = [];
+    protected array $minimumtagselectfields = [];
+
+    /** @var array<string, int> Tagconfirm fields and their minimum selections */
+    protected array $minimumtagconfirmfields = [];
+
+    /** @var array<string, int> Required fields that should only validate on final submission (not draft saves) */
+    protected array $requiredfinalfields = [];
 
     /**
      * Process the form submission
@@ -489,6 +495,11 @@ class projetvet_form extends dynamic_form {
                             'sourcetags' => $sourcetags,
                             'lookupfieldid' => $lookupfieldid,
                         ]);
+
+                        $mintags = (int) ($configdata['mintags'] ?? 0);
+                        if ($mintags > 0 && $caneditfield) {
+                            $this->minimumtagconfirmfields[$fieldname] = $mintags;
+                        }
                         break;
 
                     case 'checkbox':
@@ -664,7 +675,13 @@ class projetvet_form extends dynamic_form {
                 }
 
                 if ($isrequired && $caneditfield && $field->type !== 'button') {
-                    $mform->addRule($fieldname, null, 'required', null);
+                    // For report-stage fields (entrystatus 2), defer required validation
+                    // to validation() so that draft saves are not blocked.
+                    if ($category->entrystatus == 2) {
+                        $this->requiredfinalfields[$fieldname] = $field->idnumber;
+                    } else {
+                        $mform->addRule($fieldname, null, 'required', null);
+                    }
                 }
 
                 if (!empty($field->description) && $field->type !== 'button') {
@@ -913,7 +930,8 @@ class projetvet_form extends dynamic_form {
     }
 
     /**
-     * Validate minimum selections for tagselect fields.
+     * Validate minimum selections for tagselect and tagconfirm fields,
+     * and required report fields on final submission.
      *
      * @param array $data Submitted form data
      * @param array $files Submitted files
@@ -921,6 +939,27 @@ class projetvet_form extends dynamic_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
+        // Determine whether this is a final submission or a draft save.
+        // A draft save keeps the current entrystatus; a final submission advances it.
+        $currententrystatus = (int) ($data['entrystatus'] ?? 0);
+        $buttonentrystatus = isset($data['button_entrystatus']) ? (int) $data['button_entrystatus'] : null;
+        $isfinalsubmission = $buttonentrystatus !== null && $buttonentrystatus > $currententrystatus;
+
+        // Enforce required report fields only on final submission.
+        if ($isfinalsubmission) {
+            foreach ($this->requiredfinalfields as $fieldname => $idnumber) {
+                $value = $data[$fieldname] ?? '';
+                if (is_array($value)) {
+                    $value = implode('', array_map('trim', $value));
+                }
+                if (trim((string) $value) === '') {
+                    $errors[$fieldname] = get_string('required', 'moodle');
+                }
+            }
+        }
+
+        // Validate minimum selections for tagselect fields.
         foreach ($this->minimumtagselectfields as $fieldname => $minimum) {
             $value = $data[$fieldname] ?? [];
             if (!is_array($value)) {
@@ -930,6 +969,20 @@ class projetvet_form extends dynamic_form {
                 $errors[$fieldname] = get_string('mincompetencies', 'mod_projetvet', $minimum);
             }
         }
+
+        // Validate minimum selections for tagconfirm fields, only on final submission.
+        if ($isfinalsubmission) {
+            foreach ($this->minimumtagconfirmfields as $fieldname => $minimum) {
+                $value = $data[$fieldname] ?? [];
+                if (!is_array($value)) {
+                    $value = $value === '' || $value === null ? [] : [$value];
+                }
+                if (count($value) < $minimum) {
+                    $errors[$fieldname] = get_string('mincompetencies_practiced', 'mod_projetvet', $minimum);
+                }
+            }
+        }
+
         return $errors;
     }
 

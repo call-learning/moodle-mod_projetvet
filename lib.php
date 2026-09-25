@@ -309,3 +309,59 @@ function projetvet_user_can_view_student(int $viewerid, int $studentid, context_
     // (teachers, tutors and managers).
     return has_capability('mod/projetvet:viewallactivities', $context, $viewerid);
 }
+
+/**
+ * Merge required/mintags flags into the stored configdata of report-stage fields.
+ *
+ * This is used by the 2026092501 upgrade savepoint (ticket #912). It merges the
+ * new flags into the existing configdata JSON of the affected fields, preserving
+ * any site-specific values (e.g. textarea rows) and tolerating missing or invalid
+ * JSON. The step is idempotent: re-running it on already-merged rows is a no-op.
+ *
+ * @return void
+ */
+function projetvet_merge_report_field_configdata(): void {
+    global $DB;
+
+    $requiredfields = [
+        'start_date',
+        'end_date',
+        'actions_summary',
+        'progress_on',
+        'must_still_progress_on',
+    ];
+    $mintagsfields = [
+        'practiced_competencies',
+    ];
+
+    foreach ($requiredfields as $idnumber) {
+        $record = $DB->get_record('projetvet_form_field', ['idnumber' => $idnumber]);
+        if (!$record) {
+            continue;
+        }
+        $configdata = json_decode($record->configdata ?? '', true);
+        if (!is_array($configdata)) {
+            $configdata = [];
+        }
+        $configdata['required'] = true;
+        $newconfig = json_encode($configdata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $DB->set_field('projetvet_form_field', 'configdata', $newconfig, ['id' => $record->id]);
+    }
+
+    foreach ($mintagsfields as $idnumber) {
+        $record = $DB->get_record('projetvet_form_field', ['idnumber' => $idnumber]);
+        if (!$record) {
+            continue;
+        }
+        $configdata = json_decode($record->configdata ?? '', true);
+        if (!is_array($configdata)) {
+            $configdata = [];
+        }
+        $configdata['mintags'] = 2;
+        $newconfig = json_encode($configdata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $DB->set_field('projetvet_form_field', 'configdata', $newconfig, ['id' => $record->id]);
+    }
+
+    // Purge the activitystructures cache so the new flags take effect immediately.
+    \cache::make('mod_projetvet', 'activitystructures')->purge();
+}
