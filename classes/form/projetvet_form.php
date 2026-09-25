@@ -41,7 +41,13 @@ require_once($CFG->libdir . '/formslib.php');
  */
 class projetvet_form extends dynamic_form {
     /** @var array<string, int> Tagselect fields and their minimum selections */
-    private array $minimumtagselectfields = [];
+    protected array $minimumtagselectfields = [];
+
+    /** @var array<string, int> Tagconfirm fields and their minimum selections */
+    protected array $minimumtagconfirmfields = [];
+
+    /** @var array<string, int> Required fields that should only validate on final submission (not draft saves) */
+    protected array $requiredfinalfields = [];
 
     /**
      * Process the form submission
@@ -366,8 +372,23 @@ class projetvet_form extends dynamic_form {
                             'startyear' => $currentyear - 5,
                             'stopyear' => $currentyear + 1,
                         ];
+                        // A required date field must be able to represent "no date". The
+                        // default (non-optional) date_selector renders day/month/year <select>
+                        // elements that always submit a value (e.g. 01/01/<startyear>), so an
+                        // untouched field would never be empty and required validation would
+                        // be defeated. Use the optional variant, which adds an "enable" checkbox
+                        // (off by default) so an untouched field submits empty and validation()
+                        // can block the final submission.
+                        $daterquired = !empty($configdata['required']) && $configdata['required'] == true;
+                        if ($daterquired) {
+                            $dateoptions['optional'] = true;
+                        }
                         $mform->addElement('date_selector', $fieldname, $field->name, $dateoptions);
-                        $mform->setDefault($fieldname, time());
+                        // Only prefill non-required date fields. Required fields default to the
+                        // "disabled" state so the student must explicitly enable and pick a date.
+                        if (!$daterquired) {
+                            $mform->setDefault($fieldname, time());
+                        }
                         break;
 
                     case 'datetime':
@@ -375,8 +396,14 @@ class projetvet_form extends dynamic_form {
                             'startyear' => $currentyear - 5,
                             'stopyear' => $currentyear + 1,
                         ];
+                        $datetimerequired = !empty($configdata['required']) && $configdata['required'] == true;
+                        if ($datetimerequired) {
+                            $datetimeoptions['optional'] = true;
+                        }
                         $mform->addElement('date_time_selector', $fieldname, $field->name, $datetimeoptions);
-                        $mform->setDefault($fieldname, time());
+                        if (!$datetimerequired) {
+                            $mform->setDefault($fieldname, time());
+                        }
                         break;
 
                     case 'textarea':
@@ -489,6 +516,11 @@ class projetvet_form extends dynamic_form {
                             'sourcetags' => $sourcetags,
                             'lookupfieldid' => $lookupfieldid,
                         ]);
+
+                        $mintags = (int) ($configdata['mintags'] ?? 0);
+                        if ($mintags > 0 && $caneditfield) {
+                            $this->minimumtagconfirmfields[$fieldname] = $mintags;
+                        }
                         break;
 
                     case 'checkbox':
@@ -664,7 +696,17 @@ class projetvet_form extends dynamic_form {
                 }
 
                 if ($isrequired && $caneditfield && $field->type !== 'button') {
-                    $mform->addRule($fieldname, null, 'required', null);
+                    // For report-stage fields (entrystatus 2), defer required validation
+                    // to validation() so that draft saves are not blocked. Store the field
+                    // type so validation() can apply date-specific emptiness rules.
+                    if ($category->entrystatus == 2) {
+                        $this->requiredfinalfields[$fieldname] = [
+                            'idnumber' => $field->idnumber,
+                            'type' => $field->type,
+                        ];
+                    } else {
+                        $mform->addRule($fieldname, null, 'required', null);
+                    }
                 }
 
                 if (!empty($field->description) && $field->type !== 'button') {
@@ -827,8 +869,21 @@ class projetvet_form extends dynamic_form {
                         }
                         $fieldvalue = $draftitemid;
                     } else {
+                        // For empty date fields:
+                        // - non-required dates are prefilled with today;
+                        // - required dates with no stored value are left in the "disabled"
+                        // state (enable checkbox off) so the student must explicitly enable
+                        // the field and pick a date. The value is an empty day/month/year
+                        // array so the optional date_selector renders unchecked and, when
+                        // submitted, produces an empty value that validation() blocks on
+                        // final submission. Passing a numeric timestamp or '' here would
+                        // either prefill a date or trigger getdate() (TypeError in PHP 8).
+                        $fieldconfigdata = (array) $fieldobj->configdata;
+                        $fieldrequired = !empty($fieldconfigdata['required']) && $fieldconfigdata['required'] == true;
                         if ($fieldobj->type == 'date' && $field->value == '') {
-                            $fieldvalue = time();
+                            $fieldvalue = $fieldrequired
+                                ? ['day' => '', 'month' => '', 'year' => '']
+                                : time();
                         } else {
                             $fieldvalue = $field->value;
                         }
@@ -913,7 +968,8 @@ class projetvet_form extends dynamic_form {
     }
 
     /**
-     * Validate minimum selections for tagselect fields.
+     * Validate minimum selections for tagselect and tagconfirm fields,
+     * and required report fields on final submission.
      *
      * @param array $data Submitted form data
      * @param array $files Submitted files
@@ -921,6 +977,34 @@ class projetvet_form extends dynamic_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
+        // Determine whether this is a final submission or a draft save.
+        // A draft save keeps the current entrystatus; a final submission advances it.
+        $currententrystatus = (int) ($data['entrystatus'] ?? 0);
+        $buttonentrystatus = isset($data['button_entrystatus']) ? (int) $data['button_entrystatus'] : null;
+        $isfinalsubmission = $buttonentrystatus !== null && $buttonentrystatus > $currententrystatus;
+
+        // Enforce required report fields only on final submission.
+        if ($isfinalsubmission) {
+            foreach ($this->requiredfinalfields as $fieldname => $fieldinfo) {
+                $value = $data[$fieldname] ?? '';
+                if (is_array($value)) {
+                    $value = implode('', array_map('trim', $value));
+                }
+                // Date fields submitted via the optional date_selector come back as 0 when the
+                // "enable" checkbox is unchecked. Treat 0 (and '0') as empty for date fields
+                // only, so an untouched required date is rejected on final submission without
+                // flagging a legitimate zero for non-date fields.
+                $fieldtype = is_array($fieldinfo) ? ($fieldinfo['type'] ?? '') : '';
+                $isdatefield = in_array($fieldtype, ['date', 'datetime'], true);
+                $isempty = trim((string) $value) === '' || ($isdatefield && (string) $value === '0');
+                if ($isempty) {
+                    $errors[$fieldname] = get_string('required', 'moodle');
+                }
+            }
+        }
+
+        // Validate minimum selections for tagselect fields.
         foreach ($this->minimumtagselectfields as $fieldname => $minimum) {
             $value = $data[$fieldname] ?? [];
             if (!is_array($value)) {
@@ -930,6 +1014,20 @@ class projetvet_form extends dynamic_form {
                 $errors[$fieldname] = get_string('mincompetencies', 'mod_projetvet', $minimum);
             }
         }
+
+        // Validate minimum selections for tagconfirm fields, only on final submission.
+        if ($isfinalsubmission) {
+            foreach ($this->minimumtagconfirmfields as $fieldname => $minimum) {
+                $value = $data[$fieldname] ?? [];
+                if (!is_array($value)) {
+                    $value = $value === '' || $value === null ? [] : [$value];
+                }
+                if (count($value) < $minimum) {
+                    $errors[$fieldname] = get_string('mincompetencies_practiced', 'mod_projetvet', $minimum);
+                }
+            }
+        }
+
         return $errors;
     }
 

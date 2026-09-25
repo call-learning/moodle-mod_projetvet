@@ -29,7 +29,7 @@
  * @return bool
  */
 function xmldb_projetvet_upgrade($oldversion) {
-    global $DB;
+    global $DB, $CFG;
 
     $dbman = $DB->get_manager();
 
@@ -190,6 +190,19 @@ function xmldb_projetvet_upgrade($oldversion) {
 
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2026011300, 'projetvet');
+    }
+
+    if ($oldversion < 2026092501) {
+        // Fix #912: Make the report-stage fields mandatory.
+        //
+        // Merge required/mintags flags into the stored configdata of the six
+        // affected fields, preserving site-specific values, then purge the
+        // structure cache. The merge is idempotent.
+        require_once($CFG->dirroot . '/mod/projetvet/lib.php');
+        projetvet_merge_report_field_configdata();
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092501, 'projetvet');
     }
 
     return true;

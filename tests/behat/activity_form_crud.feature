@@ -182,15 +182,22 @@ Feature: Activity form CRUD operations in mod_projetvet
     Then I should see "Almost there"
     And I should see "Report being written"
 
-    # Student adds completion report (entrystatus 2)
+    # Student adds completion report (entrystatus 2). The required report fields are
+    # the two date fields and the three summary textareas; the optional date fields are
+    # enabled via their "[enabled]" checkbox before the day/month/year are set.
     When I am on the "My Activities" "projetvet activity" page logged in as "student1"
     And I click on row with text "Almost there"
     And I set the following fields to these values:
-      | Start date of completion                                            | ##1 January 2025##      |
-      | End date of completion                                              | ##31 March 2025##       |
+      | field_start_date[enabled]                                          | 1                       |
+      | field_end_date[enabled]                                            | 1                       |
+      | Start date of completion                                           | ##1 January 2025##      |
+      | End date of completion                                             | ##31 March 2025##       |
       | Summary of main achievements and actions carried out during this project | I completed all tasks   |
-      | Number of hours completed (modify if necessary)                     | 25                      |
+      | Thanks to this activity, I progressed on…                          | Clinical reasoning      |
+      | During this activity, I realized that I must still progress on…    | Patient communication   |
+      | Number of hours completed (modify if necessary)                    | 25                      |
 
+    And I confirm the practiced competencies
     And I submit the projetvet form
     Then I should see "Project report submitted to the supervisor"
     And I close the notification alert
@@ -232,14 +239,17 @@ Feature: Activity form CRUD operations in mod_projetvet
     And I submit the projetvet form
     And I log out
 
-    # Student adds completion report (entrystatus 2)
+    # Student adds completion report and submits it for final validation (entrystatus 3)
     When I am on the "My Activities" "projetvet activity" page logged in as "student1"
     And I click on row with text "Final Validation Test"
     And I set the following fields to these values:
       | Start date of completion                                            | ##1 February 2025##     |
       | End date of completion                                              | ##30 April 2025##       |
       | Summary of main achievements and actions carried out during this project | All objectives achieved |
+      | Thanks to this activity, I progressed on…                           | Clinical skills and autonomy |
+      | During this activity, I realized that I must still progress on…     | Deeper clinical reasoning |
       | Number of hours completed (modify if necessary)                     | 30                      |
+    And I confirm the practiced competencies
 
     And I submit the projetvet form
     And I log out
@@ -248,6 +258,10 @@ Feature: Activity form CRUD operations in mod_projetvet
     When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
     And I view activities for student "Student One"
     And I click on row with text "Final Validation Test"
+
+    # The final ECTS field is pre-filled with the credits value (2) agreed at
+    # eligibility validation. Verify the pre-fill before the teacher overrides it.
+    Then the field "Final number of ECTS" should contain "2"
 
     And I set the following fields to these values:
       | Final comments    | Excellent work completed |
@@ -259,6 +273,72 @@ Feature: Activity form CRUD operations in mod_projetvet
     Then I should see "Project validated – ECTS credits awarded"
     And I close the notification alert
     And I should see "Project validated – ECTS awarded"
+
+  Scenario: Student cannot submit the report with required fields left empty
+    # Set up a student activity that has been accepted by the teacher, so it is
+    # in the report stage (entrystatus 2) where the required report fields apply.
+    Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
+    And I click on "New Activity" "button"
+    And I set the following fields to these values:
+      | Activity title            | Report Validation Test |
+      | Summary description       | For required field test |
+      | Expected workload (approximately) | 20                    |
+
+    # Select category using tagselect
+    And I open tagselect for "Category"
+    And I select tag "Stage en clinique vétérinaire canine" in tagselect popup
+    And I save tags in tagselect popup
+
+    # Select competences using tagselect
+    And I open tagselect for "Competencies (2 required minimum)"
+    And I select tag "COMM3 - Communiquer en contexte international ou interculturel" in tagselect popup
+    And I select tag "D5- Pratiquer un examen post-mortem" in tagselect popup
+    And I save tags in tagselect popup
+
+    And I submit the projetvet form
+    And I log out
+
+    # Teacher reviews and accepts (entrystatus 1)
+    When I am on the "My Activities" "projetvet activity" page logged in as "teacher1"
+    And I view activities for student "Student One"
+    And I click on row with text "Report Validation Test"
+    And I set the following fields to these values:
+      | Comments | Approved |
+      | Based on the discussion with your tutored student and the indicative estimate, indicate the potential number of ECTS credits for this activity. This number will be reassessed at the end of the activity, taking into account the actual hours worked | 2 |
+    And I submit the projetvet form
+    And I log out
+
+    # Student opens the report form and leaves all required report fields empty:
+    #  - the date selectors are not enabled (left at their default unchecked state),
+    #  - the required textareas are not filled in.
+    When I am on the "My Activities" "projetvet activity" page logged in as "student1"
+    And I click on row with text "Report Validation Test"
+    And I submit the projetvet form
+
+    # Validation must reject the submission because every required report field is
+    # empty. The required date fields submit 0 (their "enable" checkbox is unchecked)
+    # and the required textareas submit ''. The form flags the fields as invalid.
+    Then the field "field_actions_summary" should be marked as invalid
+    # The entry must not have advanced to the "report submitted" state.
+    And I should not see "Report submitted – awaiting validation"
+
+    # Fill in all the required report fields and resubmit. The optional date fields
+    # are enabled via their "[enabled]" checkbox (standard Moodle pattern) and the
+    # day/month/year selects are set via the ##date## pattern.
+    When I set the following fields to these values:
+      | field_start_date[enabled] | 1 |
+      | field_end_date[enabled]   | 1 |
+      | Start date of completion | ##1 January 2025## |
+      | End date of completion   | ##31 March 2025##  |
+      | Summary of main achievements and actions carried out during this project | All tasks done |
+      | Thanks to this activity, I progressed on…                            | Clinical skills |
+      | During this activity, I realized that I must still progress on…      | Reasoning     |
+    And I confirm the practiced competencies
+    And I submit the projetvet form
+
+    Then I should see "Project report submitted to the supervisor"
+    And I close the notification alert
+    And I should see "Report submitted – awaiting validation"
 
   Scenario: Delete activity entry
     Given I am on the "My Activities" "projetvet activity" page logged in as "student1"
