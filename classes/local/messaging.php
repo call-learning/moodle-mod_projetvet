@@ -32,6 +32,11 @@ class messaging {
     const PROVIDER = 'contact';
 
     /**
+     * Maximum number of recipients for a single broadcast request.
+     */
+    const MAX_RECIPIENTS = 100;
+
+    /**
      * Queue a contact message for delivery to the given recipients.
      *
      * The message is not sent inline: an adhoc task is scheduled, so that the
@@ -61,6 +66,39 @@ class messaging {
             'recipientids' => array_values($recipientids),
             'subjectkey' => $subjectkey,
             'bodykey' => $bodykey,
+        ]);
+
+        return \core\task\manager::queue_adhoc_task($task);
+    }
+
+    /**
+     * Queue a custom broadcast message for delivery to the given recipients.
+     *
+     * Unlike {@see schedule_send()}, this carries a tutor-composed subject and
+     * body rather than language-string keys. The task delivers the message
+     * through message_send, in the language of each recipient.
+     *
+     * @param int $cmid The course module id
+     * @param int $userfromid The sender user id
+     * @param array $recipientids Recipient user ids
+     * @param string $subject The custom subject
+     * @param string $body The custom body (HTML)
+     * @return int The scheduled task id
+     */
+    public static function schedule_broadcast_send(
+        int $cmid,
+        int $userfromid,
+        array $recipientids,
+        string $subject,
+        string $body
+    ): int {
+        $task = new send_message();
+        $task->set_custom_data((object) [
+            'cmid' => $cmid,
+            'userfromid' => $userfromid,
+            'recipientids' => array_values($recipientids),
+            'subject' => $subject,
+            'body' => $body,
         ]);
 
         return \core\task\manager::queue_adhoc_task($task);
