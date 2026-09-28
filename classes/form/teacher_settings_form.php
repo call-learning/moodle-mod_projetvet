@@ -64,6 +64,13 @@ class teacher_settings_form extends dynamic_form {
         // Use the groups API to set the teacher rating.
         \mod_projetvet\local\api\groups::set_teacher_rating($teacherid, $projetvetid, $newrating);
 
+        // Use the groups API to set the A1 student acceptance.
+        \mod_projetvet\local\api\groups::set_teacher_a1_acceptance(
+            $teacherid,
+            $projetvetid,
+            (int) $data->acceptsa1
+        );
+
         return [
             'result' => true,
             'message' => get_string('teachersettingsupdated', 'mod_projetvet'),
@@ -106,6 +113,10 @@ class teacher_settings_form extends dynamic_form {
             // Get current rating.
             $rating = teacher_rating::get_or_create_rating($teacherid, $projetvetid);
             $data['rating'] = $rating->get('rating');
+
+            // Get current A1 student acceptance, defaulting to "yes" for tutors
+            // without a rating record.
+            $data['acceptsa1'] = teacher_rating::get_a1_acceptance_for($teacherid, $projetvetid);
         }
 
         parent::set_data((object) $data);
@@ -162,6 +173,16 @@ class teacher_settings_form extends dynamic_form {
 
         $mform->addElement('select', 'rating', get_string('teacher_rating', 'mod_projetvet'), $ratingoptions);
         $mform->addRule('rating', get_string('required'), 'required', null, 'client');
+
+        // A1 student acceptance selection.
+        $a1acceptoptions = [
+            teacher_rating::ACCEPTS_A1_YES => get_string('a1accepts_yes', 'mod_projetvet'),
+            teacher_rating::ACCEPTS_A1_NO => get_string('a1accepts_no', 'mod_projetvet'),
+        ];
+
+        $mform->addElement('select', 'acceptsa1', get_string('a1accepts_field', 'mod_projetvet'), $a1acceptoptions);
+        $mform->addHelpButton('acceptsa1', new \lang_string('a1accepts_field_desc', 'mod_projetvet'));
+        $mform->addRule('acceptsa1', get_string('required'), 'required', null, 'client');
     }
 
     /**
@@ -183,6 +204,16 @@ class teacher_settings_form extends dynamic_form {
 
         if (!in_array($data['rating'], $validratings)) {
             $errors['rating'] = get_string('invalidrating', 'mod_projetvet');
+        }
+
+        // Validate A1 student acceptance value.
+        $valida1acceptances = [
+            teacher_rating::ACCEPTS_A1_YES,
+            teacher_rating::ACCEPTS_A1_NO,
+        ];
+
+        if (!in_array((int) $data['acceptsa1'], $valida1acceptances, true)) {
+            $errors['acceptsa1'] = get_string('invalida1acceptance', 'mod_projetvet');
         }
 
         return $errors;

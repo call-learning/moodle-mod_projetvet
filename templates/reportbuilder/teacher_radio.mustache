@@ -22,14 +22,18 @@
     Context variables required for this template:
     * teacherid - The user ID of the teacher
     * checked - Whether the radio is preselected (optional, defaults to false)
+    * disabled - Whether the radio is non-selectable (optional, defaults to false)
+    * reason - Explicit reason for a non-selectable radio (optional, defaults to empty)
 
     Example context (json):
     {
         "teacherid": 123,
-        "checked": false
+        "checked": false,
+        "disabled": false,
+        "reason": ""
     }
 }}
 <div class="form-check">
-    <input class="form-check-input teacher-select-radio" type="radio" name="teacher-select" id="teacher-radio-{{teacherid}}" data-action="select-teacher" data-teacherid="{{teacherid}}"{{#checked}} checked{{/checked}}>
-    <label class="form-check-label" for="teacher-radio-{{teacherid}}"></label>
+    <input class="form-check-input teacher-select-radio" type="radio" name="teacher-select" id="teacher-radio-{{teacherid}}" data-action="select-teacher" data-teacherid="{{teacherid}}"{{#checked}} checked{{/checked}}{{#disabled}} disabled{{/disabled}}>
+    <label class="form-check-label{{#disabled}} text-muted{{/disabled}}" for="teacher-radio-{{teacherid}}">{{#reason}}<span class="text-muted small" title="{{reason}}">{{reason}}</span>{{/reason}}</label>
 </div>

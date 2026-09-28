@@ -16,6 +16,7 @@
 
 namespace mod_projetvet\local\importer;
 
+use mod_projetvet\local\api\groups;
 use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\local\persistent\projetvet_group;
 use mod_projetvet\local\persistent\teacher_rating;
@@ -143,5 +144,133 @@ final class group_importer_test extends \advanced_testcase {
         $this->expectException(\moodle_exception::class);
         $this->expectExceptionMessage(get_string('invalidcsvstructure', 'mod_projetvet'));
         $importer->import($filepath, 'comma', 'UTF-8');
+    }
+
+    /**
+     * Set the value of a custom profile field for a user.
+     *
+     * @param \stdClass $user The user.
+     * @param string $shortname The profile field shortname.
+     * @param string $value The profile field value.
+     */
+    protected function set_profile_field(\stdClass $user, string $shortname, string $value): void {
+        global $DB;
+
+        $field = $DB->get_record('user_info_field', ['shortname' => $shortname]);
+        if (!$field) {
+            $field = (object)[
+                'shortname' => $shortname,
+                'name' => $shortname,
+                'datatype' => 'text',
+                'categoryid' => 0,
+                'sortorder' => 0,
+                'visible' => 1,
+            ];
+            $field->id = $DB->insert_record('user_info_field', $field);
+        }
+
+        $DB->delete_records('user_info_data', ['userid' => $user->id, 'fieldid' => $field->id]);
+        $DB->insert_record('user_info_data', (object)[
+            'userid' => $user->id,
+            'fieldid' => $field->id,
+            'data' => $value,
+        ]);
+    }
+
+    /**
+     * Test the import refuses a new A1 student for a tutor set to "no", and that the whole
+     * file is rolled back (nothing is written) when any row is rejected.
+     */
+    public function test_import_refuses_a1_for_no_acceptance(): void {
+        global $DB;
+
+        $cm = get_coursemodule_from_instance('projetvet', $this->projetvet->id, $this->course->id, false, MUST_EXIST);
+
+        groups::set_teacher_a1_acceptance(
+            $this->teacher1->id,
+            $this->projetvet->id,
+            teacher_rating::ACCEPTS_A1_NO
+        );
+        // Student1 is A1 (rejected), student2 is not A1 (would be accepted on its own).
+        $this->set_profile_field($this->student1, 'promotion', 'A1');
+
+        $filepath = make_request_directory() . '/groups_import_a1_rejected.csv';
+        $csvcontent = implode(',', ['teacher', 'teacherrating', 'secondaryteacher', 'student1', 'student2'])
+            . "\n" .
+            implode(
+                ',',
+                [
+                    $this->teacher1->username, 'novice', '',
+                    $this->student1->username, $this->student2->username,
+                ]
+            ) . "\n";
+        file_put_contents($filepath, $csvcontent);
+
+        $importer = new group_importer($this->course->id, $cm->id, $this->projetvet->id);
+
+        $exception = null;
+        try {
+            $importer->import($filepath, 'comma', 'UTF-8');
+        } catch (\moodle_exception $e) {
+            $exception = $e;
+        }
+
+        // The import is refused with the number of rejected A1 assignments.
+        $this->assertNotNull($exception);
+        $this->assertSame('a1importrejected', $exception->errorcode);
+
+        // All-or-nothing: no group and no members were written to the database. The pre-existing
+        // rating (set in setup) is left untouched by the rolled-back import.
+        $this->assertSame([], array_keys(projetvet_group::get_by_owner($this->teacher1->id, $this->projetvet->id)));
+        $this->assertEquals(
+            0,
+            $DB->count_records('projetvet_group_members', ['userid' => $this->student2->id])
+        );
+        $rating = teacher_rating::get_user_rating($this->teacher1->id, $this->projetvet->id);
+        $this->assertNotNull($rating);
+        $this->assertEquals(teacher_rating::ACCEPTS_A1_NO, $rating->get('acceptsa1'));
+    }
+
+    /**
+     * Test the import accepts a new A1 student for an eligible tutor set to "yes".
+     */
+    public function test_import_accepts_a1_for_yes_acceptance(): void {
+        $cm = get_coursemodule_from_instance('projetvet', $this->projetvet->id, $this->course->id, false, MUST_EXIST);
+
+        groups::set_teacher_a1_acceptance(
+            $this->teacher1->id,
+            $this->projetvet->id,
+            teacher_rating::ACCEPTS_A1_YES
+        );
+        $this->set_profile_field($this->student1, 'promotion', 'A1');
+
+        $filepath = make_request_directory() . '/groups_import_a1_accepted.csv';
+        $csvcontent = implode(',', ['teacher', 'teacherrating', 'secondaryteacher', 'student1', 'student2'])
+            . "\n" .
+            implode(
+                ',',
+                [
+                    $this->teacher1->username, 'novice', '',
+                    $this->student1->username, $this->student2->username,
+                ]
+            ) . "\n";
+        file_put_contents($filepath, $csvcontent);
+
+        $importer = new group_importer($this->course->id, $cm->id, $this->projetvet->id);
+        $importer->import($filepath, 'comma', 'UTF-8');
+
+        $groups = projetvet_group::get_by_owner($this->teacher1->id, $this->projetvet->id);
+        $this->assertCount(1, $groups);
+        $group = reset($groups);
+
+        $students = group_member::get_records([
+            'groupid' => $group->get('id'),
+            'membertype' => group_member::TYPE_STUDENT,
+        ]);
+        $studentids = array_map(static function ($member): int {
+            return $member->get('userid');
+        }, $students);
+        $this->assertContains((int) $this->student1->id, $studentids);
+        $this->assertContains((int) $this->student2->id, $studentids);
     }
 }

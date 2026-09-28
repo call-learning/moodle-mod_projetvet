@@ -25,6 +25,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['a1accepts_field'] = 'Accepte les étudiants A1';
+$string['a1accepts_field_desc'] = 'Lorsque ce réglage est sur Non, de nouveaux étudiants A1 ne peuvent plus être affectés à ce tuteur. Les affectations A1 existantes sont conservées.';
+$string['a1accepts_no'] = 'Non';
+$string['a1accepts_yes'] = 'Oui';
+$string['a1assignmentblocked'] = 'Nouvelle affectation A1 refusée : {$a}.';
+$string['a1assignmentblocked_capacity'] = 'ce tuteur n\'a plus de capacité disponible';
+$string['a1assignmentblocked_refusesa1'] = 'ce tuteur n\'accepte pas les étudiants A1';
+$string['a1importrejected'] = 'L\'import a été appliqué, mais {$a} étudiant(s) A1 n\'ont pas pu être affectés (tuteur les refusant ou capacité insuffisante).';
+$string['a1inconsistency_warning'] = 'Incohérence : {$a} étudiant(s) A1 sont déjà affectés à ce tuteur alors qu\'il n\'accepte plus les étudiants A1.';
 $string['acceptedelegibility'] = '<p>Votre enseignante ou enseignant tuteur a validé l\'éligibilité de votre projet personnel sur la plateforme <strong>ProjetVet</strong>.</p><p>Vous pouvez désormais <strong>débuter l\'activité</strong>, conformément aux éléments discutés et validés (objectifs, compétences visées, volume horaire prévisionnel et crédits ECTS potentiels). Le nombre de crédits ECTS définitif sera réévalué à l\'issue de l\'activité, sur la base du <strong>temps réellement investi</strong>, et fera l\'objet d\'une validation finale par votre tuteur.</p><p>Nous vous rappelons l\'importance de <strong>conserver les éléments justificatifs</strong> liés à cette activité (attestation, rapport, supports, etc.), qui seront nécessaires lors de la rédaction du bilan.</p><p>Vous pouvez consulter le détail du projet et suivre son avancement directement sur la plateforme <strong>ProjetVet</strong> :</p><p><i><a href="{$a->link}">Accéder à mon projet sur ProjetVet</a></i></p><p>Cordialement,<br><strong>L\'équipe ProjetVet</strong></p>';
 $string['acceptedelegibility_subject'] = 'Validation de l\'éligibilité de votre projet personnel';
 $string['actionrequired'] = 'Action requise';
@@ -275,6 +284,7 @@ $string['inactive'] = 'Inactif';
 $string['insufficient'] = 'Objectifs partiellement atteints, compétences insuffisamment consolidées';
 $string['internationalmobility'] = 'Mobilité internationale';
 $string['invalid_hours'] = 'Veuillez saisir un nombre d\'heures valide';
+$string['invalida1acceptance'] = 'Valeur invalide pour « Accepte les étudiants A1 » (doit être Oui ou Non).';
 $string['invalidcontactmessage'] = 'Le message de contact sélectionné n\'est pas disponible.';
 $string['invalidcsvstructure'] = 'Structure CSV invalide. Veuillez inclure une colonne teacher et des colonnes student.';
 $string['invaliddata'] = 'Données invalides pour {$a}';
@@ -466,6 +476,7 @@ $string['timecreated'] = 'Ajouté le';
 $string['toomanyrecipients'] = 'Trop de destinataires ({$a->count}). Veuillez découper votre message en groupes plus petits.';
 $string['totalcredits'] = 'Total crédits';
 $string['tutor'] = 'Tuteur';
+$string['tutor_a1_acceptance'] = 'Accepte A1';
 $string['tutor_name'] = '[gettutor]<br>Si le tuteur n\'est pas le bon, contacter la DEVE';
 $string['tutorgroupdesc'] = 'Groupe de tutorat pour {$a->tutor} dans {$a->projetvet}';
 $string['tutorgroupname'] = 'Groupe - {$a}';

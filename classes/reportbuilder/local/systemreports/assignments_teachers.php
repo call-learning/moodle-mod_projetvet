@@ -140,6 +140,9 @@ class assignments_teachers extends system_report {
         $this->add_column($entityteacher->get_column('current'));
         $this->add_column($entityteacher->get_column('gap'));
 
+        // A1 acceptance column (with the inconsistency warning badge).
+        $this->add_column($entityteacher->get_column('acceptsa1'));
+
         // Default sorting by the actual lastname field.
         $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
     }

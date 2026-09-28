@@ -25,6 +25,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['a1accepts_field'] = 'Accepts A1 students';
+$string['a1accepts_field_desc'] = 'When set to No, new A1 students can no longer be assigned to this tutor. Existing A1 assignments are kept.';
+$string['a1accepts_no'] = 'No';
+$string['a1accepts_yes'] = 'Yes';
+$string['a1assignmentblocked'] = 'New A1 assignment rejected: {$a}.';
+$string['a1assignmentblocked_capacity'] = 'this tutor has no available capacity';
+$string['a1assignmentblocked_refusesa1'] = 'this tutor does not accept A1 students';
+$string['a1importrejected'] = 'The import was applied, but {$a} A1 student(s) could not be assigned (tutor does not accept them or capacity is insufficient).';
+$string['a1inconsistency_warning'] = 'Inconsistency: {$a} A1 student(s) are already assigned to this tutor while it no longer accepts A1 students.';
 $string['acceptedelegibility'] = '<p>Your tutor teacher has validated the eligibility of your personal project on the <strong>ProjetVet</strong> platform.</p><p>You can now <strong>start the activity</strong>, in accordance with the elements discussed and validated (objectives, targeted competencies, estimated workload and potential ECTS credits). The final number of ECTS credits will be reassessed at the end of the activity, based on the <strong>actual time invested</strong>, and will be subject to final validation by your tutor.</p><p>We remind you of the importance of <strong>keeping supporting documents</strong> related to this activity (certificate, report, materials, etc.), which will be necessary when writing the report.</p><p>You can view the project details and track its progress directly on the <strong>ProjetVet</strong> platform:</p><p><i><a href="{$a->link}">Access my project on ProjetVet</a></i></p><p>Best regards,<br><strong>The ProjetVet team</strong></p>';
 $string['acceptedelegibility_subject'] = 'Validation of your personal project eligibility';
 $string['actionrequired'] = 'Action required';
@@ -271,6 +280,7 @@ $string['inactive'] = 'Inactive';
 $string['insufficient'] = 'Objectives partially achieved, skills insufficiently consolidated';
 $string['internationalmobility'] = 'International mobility';
 $string['invalid_hours'] = 'Please enter a valid number of hours';
+$string['invalida1acceptance'] = 'Invalid value for "Accepts A1 students" (must be Yes or No).';
 $string['invalidcontactmessage'] = 'The selected contact message is not available.';
 $string['invalidcsvstructure'] = 'Invalid CSV structure. Please include a teacher column and student columns.';
 $string['invaliddata'] = 'Invalid data for {$a}';
@@ -462,6 +472,7 @@ $string['timecreated'] = 'Added on';
 $string['toomanyrecipients'] = 'Too many recipients ({$a->count}). Please split your message into smaller groups.';
 $string['totalcredits'] = 'Total credits';
 $string['tutor'] = 'Tutor';
+$string['tutor_a1_acceptance'] = 'Accepts A1';
 $string['tutor_name'] = '[gettutor]<br>If the tutor is not correct, contact the DEVE';
 $string['tutorgroupdesc'] = 'Tutor group for {$a->tutor} in {$a->projetvet}';
 $string['tutorgroupname'] = 'Group - {$a}';

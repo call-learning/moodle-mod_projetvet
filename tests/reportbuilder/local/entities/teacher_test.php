@@ -346,4 +346,131 @@ final class teacher_test extends \advanced_testcase {
         $this->assertArrayHasKey($data['teacher1']->id, $rows);
         $this->assertArrayHasKey($data['teacher3']->id, $rows);
     }
+
+    /**
+     * Test the acceptsa1 column reports the tutor's A1 acceptance and the existing A1 student
+     * count used for the inconsistency warning, and that the render callback surfaces the
+     * warning for a refusing tutor who still has A1 students assigned.
+     */
+    public function test_acceptsa1_column_reports_acceptance_and_a1_count(): void {
+        global $DB;
+
+        $data = $this->create_test_data();
+        $pv = $data['projetvet']->id;
+
+        // Set up the promotion profile field.
+        $field = (object)[
+            'shortname' => 'promotion',
+            'name' => 'promotion',
+            'datatype' => 'text',
+            'categoryid' => 0,
+            'sortorder' => 0,
+            'visible' => 1,
+        ];
+        $field->id = $DB->insert_record('user_info_field', $field);
+        $DB->insert_record('user_info_data', (object)[
+            'userid' => $data['students']['student1']->id,
+            'fieldid' => $field->id,
+            'data' => 'A1',
+        ]);
+
+        // Teacher 1: accepts A1 (default), has 1 A1 student assigned.
+        $group1 = new projetvet_group(0, (object)[
+            'projetvetid' => $pv,
+            'ownerid' => $data['teacher1']->id,
+            'name' => 'Group 1',
+        ]);
+        $group1->create();
+        $group1->add_member($data['students']['student1']->id, group_member::TYPE_STUDENT);
+
+        // Teacher 2: refuses A1, has 1 A1 student assigned (inconsistent).
+        $rating = teacher_rating::get_or_create_rating($data['teacher2']->id, $pv);
+        $rating->set('acceptsa1', teacher_rating::ACCEPTS_A1_NO);
+        $rating->create();
+        $group2 = new projetvet_group(0, (object)[
+            'projetvetid' => $pv,
+            'ownerid' => $data['teacher2']->id,
+            'name' => 'Group 2',
+        ]);
+        $group2->create();
+        $group2->add_member($data['students']['student2']->id, group_member::TYPE_STUDENT);
+        $DB->insert_record('user_info_data', (object)[
+            'userid' => $data['students']['student2']->id,
+            'fieldid' => $field->id,
+            'data' => 'A1',
+        ]);
+
+        // The report's active acceptsa1 column: verify its raw field values resolve correctly
+        // for each teacher by executing the column SQL against the user table.
+        $entity = new teacher($pv);
+        $entity->set_table_alias('user', 'rbteacher');
+        $entity->initialise();
+        $acceptsa1column = null;
+        foreach ($entity->get_columns() as $column) {
+            if ($column->get_name() === 'acceptsa1') {
+                $acceptsa1column = $column;
+                break;
+            }
+        }
+        $this->assertNotNull($acceptsa1column);
+
+        $fields = $acceptsa1column->get_fields();
+        $params = $acceptsa1column->get_params();
+        $this->assertCount(2, $fields);
+
+        // Prepend the user id as the first (key) field: get_records_sql() keys rows by the
+        // first field's value, and several teachers share the same acceptsa1 value.
+        $teacherids = implode(', ', [
+            $data['teacher1']->id,
+            $data['teacher2']->id,
+            $data['teacher3']->id,
+        ]);
+        $sql = 'SELECT rbteacher.id, ' . implode(', ', $fields) . " FROM {user} rbteacher WHERE rbteacher.id IN ($teacherids)";
+        $rows = $DB->get_records_sql($sql, $params);
+        $this->assertCount(3, $rows);
+
+        // Resolve the generated field aliases from the SELECT expressions.
+        preg_match('/AS (\w+)$/', $fields[0], $m0);
+        preg_match('/AS (\w+)$/', $fields[1], $m1);
+        $this->assertNotEmpty($m0, 'Could not resolve the acceptsa1 field alias.');
+        $this->assertNotEmpty($m1, 'Could not resolve the a1studentscount field alias.');
+        $acceptsa1alias = $m0[1];
+        $a1countalias = $m1[1];
+
+        $acceptsbyteacher = [];
+        $a1countbyteacher = [];
+        foreach ($rows as $row) {
+            $acceptsbyteacher[(int) $row->id] = (int) $row->{$acceptsa1alias};
+            $a1countbyteacher[(int) $row->id] = (int) $row->{$a1countalias};
+        }
+
+        // Teacher 1 and Teacher 3 accept A1 (default 1); Teacher 2 refuses (0).
+        $this->assertEquals(1, $acceptsbyteacher[$data['teacher1']->id]);
+        $this->assertEquals(0, $acceptsbyteacher[$data['teacher2']->id]);
+        $this->assertEquals(1, $acceptsbyteacher[$data['teacher3']->id]);
+
+        // Teacher 1 and Teacher 2 each have 1 A1 student assigned; Teacher 3 has none.
+        $this->assertEquals(1, $a1countbyteacher[$data['teacher1']->id]);
+        $this->assertEquals(1, $a1countbyteacher[$data['teacher2']->id]);
+        $this->assertEquals(0, $a1countbyteacher[$data['teacher3']->id]);
+
+        // The render callback: a refusing tutor with A1 students surfaces the warning badge.
+        $row = [
+            $acceptsa1alias => 0,
+            $a1countalias => 1,
+        ];
+        $rendered = $acceptsa1column->format_value($row);
+        $this->assertStringContainsString(get_string('a1accepts_no', 'mod_projetvet'), $rendered);
+        $this->assertStringContainsString(get_string('a1inconsistency_warning', 'mod_projetvet', 1), $rendered);
+
+        // A refusing tutor with no A1 students renders no warning.
+        $rendered = $acceptsa1column->format_value([$acceptsa1alias => 0, $a1countalias => 0]);
+        $this->assertStringContainsString(get_string('a1accepts_no', 'mod_projetvet'), $rendered);
+        $this->assertStringNotContainsString('badge', $rendered);
+
+        // An accepting tutor renders no warning even with A1 students.
+        $rendered = $acceptsa1column->format_value([$acceptsa1alias => 1, $a1countalias => 3]);
+        $this->assertStringContainsString(get_string('a1accepts_yes', 'mod_projetvet'), $rendered);
+        $this->assertStringNotContainsString('badge', $rendered);
+    }
 }

@@ -85,6 +85,8 @@ class teacher extends base {
             teacher_rating::TABLE,
             group_member::TABLE,
             'projetvet_groups',
+            'user_info_data',
+            'user_info_field',
         ];
     }
 
@@ -173,6 +175,51 @@ class teacher extends base {
             )
             ->set_is_sortable(true);
 
+        // A1 acceptance column. The raw stored value (1/0) is localized at render time so
+        // sorting happens on the stable value, and tutors without an explicit rating record
+        // default to accepting A1 students. The A1 student count is carried as a helper
+        // field so the render callback can report the existing A1 assignments that became
+        // inconsistent when a tutor switched the value to "no".
+        $acceptsa1pvparam = database::generate_param_name();
+        $a1countpvparam = database::generate_param_name();
+        $acceptsa1mtparam = database::generate_param_name();
+        $acceptsa1fieldparam = database::generate_param_name();
+        $acceptsa1valueparam = database::generate_param_name();
+        $columns[] = (new column(
+            'acceptsa1',
+            new lang_string('tutor_a1_acceptance', 'mod_projetvet'),
+            $this->get_entity_name()
+        ))
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field($this->get_acceptsa1_sql($acceptsa1pvparam), 'acceptsa1', [$acceptsa1pvparam => $this->projetvetid])
+            ->add_field(
+                $this->get_a1_students_sql($a1countpvparam, $acceptsa1mtparam, $acceptsa1fieldparam, $acceptsa1valueparam),
+                'a1studentscount',
+                [
+                    $a1countpvparam => $this->projetvetid,
+                    $acceptsa1mtparam => group_member::TYPE_STUDENT,
+                    $acceptsa1fieldparam => \mod_projetvet\utils::PROMOTION_FIELD,
+                    $acceptsa1valueparam => \mod_projetvet\utils::PROMOTION_A1,
+                ]
+            )
+            ->set_is_sortable(true)
+            ->add_callback(static function (?int $value, $row): string {
+                $accepts = ((int) $value) === teacher_rating::ACCEPTS_A1_YES;
+                $label = $accepts
+                    ? get_string('a1accepts_yes', 'mod_projetvet')
+                    : get_string('a1accepts_no', 'mod_projetvet');
+
+                // Inconsistency warning for managers: the tutor no longer accepts A1
+                // students but still has A1 students assigned.
+                $a1studentscount = (int) ($row->a1studentscount ?? 0);
+                if (!$accepts && $a1studentscount > 0) {
+                    $title = get_string('a1inconsistency_warning', 'mod_projetvet', $a1studentscount);
+                    $label .= ' ' . \html_writer::span($a1studentscount . ' A1', 'badge bg-warning text-dark', ['title' => $title]);
+                }
+
+                return $label;
+            });
+
         return $columns;
     }
 
@@ -254,5 +301,57 @@ class teacher extends base {
      */
     public function get_gap_sql(string $capacitypvparam, string $groupspvparam, string $mtparam): string {
         return $this->get_capacity_sql($capacitypvparam) . ' - ' . $this->get_current_students_sql($groupspvparam, $mtparam);
+    }
+
+    /**
+     * Returns the SQL expression resolving the A1 student acceptance value of the teacher
+     * referenced by the report's main user table, defaulting to "yes" when no explicit
+     * rating exists.
+     *
+     * @param string $pvparam Reportbuilder parameter name holding the projetvet instance id,
+     *     see {@see database::generate_param_name()}.
+     * @return string
+     */
+    public function get_acceptsa1_sql(string $pvparam): string {
+        $useralias = $this->get_table_alias('user');
+
+        return "COALESCE((SELECT acceptsa1 FROM {" . teacher_rating::TABLE . "} "
+            . "WHERE userid = {$useralias}.id AND projetvetid = :{$pvparam}), "
+            . teacher_rating::ACCEPTS_A1_YES . ")";
+    }
+
+    /**
+     * Returns the SQL expression counting the A1 students assigned to the teacher referenced
+     * by the report's main user table in the given projetvet instance.
+     *
+     * A student is considered A1 when the value of the "promotion" custom profile field is
+     * "A1", as configured by the institution (see {@see \mod_projetvet\utils::is_a1_student()}).
+     *
+     * @param string $pvparam Reportbuilder parameter name holding the projetvet instance id,
+     *     see {@see database::generate_param_name()}.
+     * @param string $mtparam Reportbuilder parameter name holding the member type,
+     *     see {@see database::generate_param_name()}.
+     * @param string $fieldnameparam Reportbuilder parameter name holding the custom profile
+     *     field shortname, see {@see database::generate_param_name()}.
+     * @param string $fieldvalueparam Reportbuilder parameter name holding the promotion value
+     *     identifying A1 students, see {@see database::generate_param_name()}.
+     * @return string
+     */
+    public function get_a1_students_sql(
+        string $pvparam,
+        string $mtparam,
+        string $fieldnameparam,
+        string $fieldvalueparam
+    ): string {
+        $useralias = $this->get_table_alias('user');
+
+        return "(SELECT COUNT(1) FROM {" . group_member::TABLE . "} gm "
+            . "JOIN {projetvet_groups} g ON g.id = gm.groupid "
+            . "JOIN {user_info_data} uid ON uid.userid = gm.userid "
+            . "JOIN {user_info_field} uif ON uif.id = uid.fieldid AND uif.shortname = :{$fieldnameparam} "
+            . "WHERE g.ownerid = {$useralias}.id "
+            . "AND g.projetvetid = :{$pvparam} "
+            . "AND gm.membertype = :{$mtparam} "
+            . "AND uid.data = :{$fieldvalueparam})";
     }
 }

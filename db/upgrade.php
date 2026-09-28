@@ -225,5 +225,31 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026092502, 'projetvet');
     }
 
+    if ($oldversion < 2026092800) {
+        // Add the A1 student acceptance flag to the teacher rating table.
+        //
+        // The default value of 1 ("yes") initialises every existing tutor as
+        // accepting new A1 students, matching the behaviour of tutors that have
+        // no rating record at all.
+        $table = new xmldb_table('projetvet_teacher_rating');
+        $field = new xmldb_field(
+            'acceptsa1',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '1',
+            'rating'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092800, 'projetvet');
+    }
+
     return true;
 }

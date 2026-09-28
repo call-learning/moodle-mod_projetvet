@@ -116,15 +116,25 @@ class teacher_selection {
      * @param int $cmid Course module ID
      * @param int $projetvetid ProjetVet ID
      * @param int $selectedteacherid User ID of the teacher to preselect in the report, or 0
+     * @param int $studentcount Total number of students being assigned (batch size)
+     * @param int $a1studentcount Number of A1 students in the batch
      * @return string HTML output of the report
      */
-    public static function get_teachers_report_html(int $cmid, int $projetvetid, int $selectedteacherid = 0): string {
+    public static function get_teachers_report_html(
+        int $cmid,
+        int $projetvetid,
+        int $selectedteacherid = 0,
+        int $studentcount = 0,
+        int $a1studentcount = 0
+    ): string {
         global $PAGE;
 
         try {
             $parameters = [
                 'cmid' => $cmid,
                 'projetvetid' => $projetvetid,
+                'studentcount' => $studentcount,
+                'a1studentcount' => $a1studentcount,
             ];
             if ($selectedteacherid > 0) {
                 $parameters['selectedteacherid'] = $selectedteacherid;
@@ -176,7 +186,23 @@ class teacher_selection {
             $html .= $studentshtml;
         }
 
-        $reporthtml = self::get_teachers_report_html($cmid, $projetvetid, $preselectedteacherid);
+        // The selection report disables the tutors to which the A1 assignment rule does
+        // not allow assigning the batch (A1 acceptance, capacity).
+        $studentcount = count($studentids);
+        $a1studentcount = 0;
+        foreach (array_map('intval', array_unique($studentids)) as $studentid) {
+            if (\mod_projetvet\utils::is_a1_student($studentid)) {
+                $a1studentcount++;
+            }
+        }
+
+        $reporthtml = self::get_teachers_report_html(
+            $cmid,
+            $projetvetid,
+            $preselectedteacherid,
+            $studentcount,
+            $a1studentcount
+        );
         if (!empty($reporthtml)) {
             $html .= '<div class="assignments-teachers-report">' . $reporthtml . '</div>';
         }

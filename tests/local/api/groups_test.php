@@ -660,4 +660,230 @@ final class groups_test extends \advanced_testcase {
         sort($joinedids);
         $this->assertEquals($teachers, $joinedids);
     }
+
+    /**
+     * Set the value of a custom profile field for a user.
+     *
+     * @param \stdClass $user The user.
+     * @param string $shortname The profile field shortname.
+     * @param string $value The profile field value.
+     */
+    protected function set_profile_field(\stdClass $user, string $shortname, string $value): void {
+        global $DB;
+
+        $field = $DB->get_record('user_info_field', ['shortname' => $shortname]);
+        if (!$field) {
+            $field = (object)[
+                'shortname' => $shortname,
+                'name' => $shortname,
+                'datatype' => 'text',
+                'categoryid' => 0,
+                'sortorder' => 0,
+                'visible' => 1,
+            ];
+            $field->id = $DB->insert_record('user_info_field', $field);
+        }
+
+        $DB->delete_records('user_info_data', ['userid' => $user->id, 'fieldid' => $field->id]);
+        $DB->insert_record('user_info_data', (object)[
+            'userid' => $user->id,
+            'fieldid' => $field->id,
+            'data' => $value,
+        ]);
+    }
+
+    /**
+     * Test the A1 acceptance defaults to "yes" for an existing tutor with no rating record.
+     */
+    public function test_a1_acceptance_defaults_to_yes(): void {
+        $data = $this->create_test_data();
+
+        // No rating record at all.
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        );
+
+        $this->assertEquals(\mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES, $acceptsa1);
+    }
+
+    /**
+     * Test the A1 acceptance persists when set to "no" and is read back.
+     */
+    public function test_set_teacher_a1_acceptance_persists(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        );
+        $this->assertEquals(\mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO, $acceptsa1);
+
+        // Toggle back to "yes".
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES
+        );
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        );
+        $this->assertEquals(\mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES, $acceptsa1);
+    }
+
+    /**
+     * Test a new A1 assignment is refused for a tutor set to "no".
+     */
+    public function test_check_a1_assignment_eligibility_refusesa1(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertEquals(get_string('a1assignmentblocked_refusesa1', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test a new A1 assignment is refused when the tutor has no available capacity.
+     */
+    public function test_check_a1_assignment_eligibility_capacity(): void {
+        $data = $this->create_test_data();
+
+        // Novice = capacity 5.
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('rating', teacher_rating::RATING_NOVICE);
+        $rating->create();
+
+        // Fill the tutor to capacity (5 students).
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $generator = $this->getDataGenerator();
+        for ($i = 1; $i <= 5; $i++) {
+            $student = $generator->create_user(['username' => 'capstudent' . $i]);
+            $generator->enrol_user($student->id, $data['course']->id, 'student');
+            $group->add_member($student->id, group_member::TYPE_STUDENT);
+        }
+
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertEquals(get_string('a1assignmentblocked_capacity', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test a new A1 assignment is allowed for an eligible tutor set to "yes" with capacity.
+     */
+    public function test_check_a1_assignment_eligibility_allowed(): void {
+        $data = $this->create_test_data();
+
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+    }
+
+    /**
+     * Test get_new_a1_student_ids returns only the new A1 students in a batch.
+     */
+    public function test_get_new_a1_student_ids(): void {
+        $data = $this->create_test_data();
+
+        // Mark student1 as A1, student2 as A2.
+        $this->set_profile_field($data['student1'], 'promotion', 'A1');
+        $this->set_profile_field($data['student2'], 'promotion', 'A2');
+
+        // Pre-assign student1 to the teacher (existing, not new).
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+
+        $newa1 = groups::get_new_a1_student_ids(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id, $data['student2']->id, $data['student3']->id]
+        );
+
+        // Student1 is A1 but already assigned (not new), student2 is A2, student3 has no promotion.
+        $this->assertNotContains((int) $data['student1']->id, $newa1);
+        $this->assertNotContains((int) $data['student2']->id, $newa1);
+        $this->assertNotContains((int) $data['student3']->id, $newa1);
+
+        // Now a fresh A1 student should be detected.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'newa1']);
+        $this->set_profile_field($newstudent, 'promotion', 'A1');
+        $newa1 = groups::get_new_a1_student_ids($data['teacher']->id, $data['projetvet']->id, [$newstudent->id]);
+        $this->assertContains((int) $newstudent->id, $newa1);
+    }
+
+    /**
+     * Test that switching the A1 field to "no" does not remove existing A1 assignments.
+     */
+    public function test_existing_a1_assignments_kept_when_field_switched_to_no(): void {
+        $data = $this->create_test_data();
+
+        $this->set_profile_field($data['student1'], 'promotion', 'A1');
+
+        // Assign student1 to the teacher.
+        groups::assign_students_to_teacher($data['teacher']->id, [$data['student1']->id], $data['projetvet']->id);
+
+        // Switch the field to "no".
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        // The existing assignment is kept.
+        $tutor = groups::get_student_primary_tutor($data['student1']->id, $data['projetvet']->id);
+        $this->assertNotNull($tutor);
+        $this->assertEquals($data['teacher']->id, $tutor->id);
+
+        // But a new A1 assignment is now refused.
+        $newa1 = $this->getDataGenerator()->create_user(['username' => 'newa1']);
+        $this->getDataGenerator()->enrol_user($newa1->id, $data['course']->id, 'student');
+        $this->set_profile_field($newa1, 'promotion', 'A1');
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+        $this->assertFalse($eligibility['allowed']);
+    }
+
+    /**
+     * Test a non-A1 assignment is not refused on the basis of the A1 field alone.
+     */
+    public function test_non_a1_assignment_not_blocked_by_a1_field(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        // A non-A1 student (no promotion field) is not subject to the A1 rule.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'nona1']);
+        $this->getDataGenerator()->enrol_user($newstudent->id, $data['course']->id, 'student');
+
+        $newa1 = groups::get_new_a1_student_ids($data['teacher']->id, $data['projetvet']->id, [$newstudent->id]);
+        $this->assertSame([], $newa1);
+    }
 }

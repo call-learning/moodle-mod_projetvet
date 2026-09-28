@@ -99,7 +99,39 @@ class edit_member_form extends dynamic_form {
             $message = get_string('memberupdated', 'mod_projetvet');
         } else {
             $teacheruserids = !empty($data->teacheruserid) && is_array($data->teacheruserid) ? $data->teacheruserid : [];
-            $studentuserids = !empty($data->studentuserid) && is_array($data->studentuserid) ? $data->studentuserid : [];
+            $rawstudentuserids = !empty($data->studentuserid) && is_array($data->studentuserid) ? $data->studentuserid : [];
+            $studentuserids = array_map('intval', $rawstudentuserids);
+
+            // The A1 assignment rule applies to the new A1 students added to this group,
+            // relative to the group owner (the primary tutor). The whole submission is
+            // rejected rather than partially applied, so the manager always gets an
+            // explicit answer.
+            if ($mode === 'students' || $mode === 'all') {
+                $ownerid = (int) $group->get('ownerid');
+                $newa1studentids = \mod_projetvet\local\api\groups::get_new_a1_student_ids(
+                    $ownerid,
+                    $projetvetid,
+                    $studentuserids
+                );
+                if (!empty($newa1studentids)) {
+                    // Students already assigned to the tutor are not new assignments, so
+                    // only the genuinely new students count towards the capacity check.
+                    $existingstudentids = array_map(
+                        'intval',
+                        \mod_projetvet\local\api\groups::get_students_for_tutor($ownerid, $projetvetid)
+                    );
+                    $newstudentcount = count(array_diff($studentuserids, $existingstudentids));
+
+                    $eligibility = \mod_projetvet\local\api\groups::check_a1_assignment_eligibility(
+                        $ownerid,
+                        $projetvetid,
+                        $newstudentcount
+                    );
+                    if (!$eligibility['allowed']) {
+                        throw new \moodle_exception('a1assignmentblocked', 'mod_projetvet', '', $eligibility['reason']);
+                    }
+                }
+            }
 
             if ($mode === 'students') {
                 $addedcount = \mod_projetvet\local\api\groups::sync_group_students($group->get('id'), $studentuserids);

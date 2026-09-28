@@ -24,6 +24,12 @@ namespace mod_projetvet;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class utils {
+    /** Shortname of the custom profile field holding the student year (e.g. "A1"). */
+    const PROMOTION_FIELD = 'promotion';
+
+    /** Promotion value identifying a first-year (A1) student. */
+    const PROMOTION_A1 = 'A1';
+
     /**
      * Process a filter and return its value.
      *
@@ -177,6 +183,19 @@ class utils {
         }
 
         return '';
+    }
+
+    /**
+     * Check whether a student is in the A1 year.
+     *
+     * The student year is read from the "promotion" custom profile field, as
+     * configured by the institution (e.g. "A1", "A2").
+     *
+     * @param int $userid The user ID
+     * @return bool True when the student's promotion is A1
+     */
+    public static function is_a1_student(int $userid): bool {
+        return self::get_user_profile_field($userid, self::PROMOTION_FIELD) === self::PROMOTION_A1;
     }
 
     /**

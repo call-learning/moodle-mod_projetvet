@@ -225,4 +225,116 @@ final class assign_teacher_test extends \advanced_testcase {
         $this->assertContains((int) $this->data['student1']->id, $memberids);
         $this->assertContains((int) $this->data['student2']->id, $memberids);
     }
+
+    /**
+     * Set the value of a custom profile field for a user.
+     *
+     * @param \stdClass $user The user.
+     * @param string $shortname The profile field shortname.
+     * @param string $value The profile field value.
+     */
+    protected function set_profile_field(\stdClass $user, string $shortname, string $value): void {
+        global $DB;
+
+        $field = $DB->get_record('user_info_field', ['shortname' => $shortname]);
+        if (!$field) {
+            $field = (object)[
+                'shortname' => $shortname,
+                'name' => $shortname,
+                'datatype' => 'text',
+                'categoryid' => 0,
+                'sortorder' => 0,
+                'visible' => 1,
+            ];
+            $field->id = $DB->insert_record('user_info_field', $field);
+        }
+
+        $DB->delete_records('user_info_data', ['userid' => $user->id, 'fieldid' => $field->id]);
+        $DB->insert_record('user_info_data', (object)[
+            'userid' => $user->id,
+            'fieldid' => $field->id,
+            'data' => $value,
+        ]);
+    }
+
+    /**
+     * Test a new A1 assignment is refused for a tutor set to "no".
+     */
+    public function test_assign_teacher_refuses_a1_for_no_acceptance(): void {
+        $this->setAdminUser();
+
+        \mod_projetvet\local\api\groups::set_teacher_a1_acceptance(
+            $this->data['teacher']->id,
+            $this->data['projetvetid'],
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+        $this->set_profile_field($this->data['student1'], 'promotion', 'A1');
+
+        try {
+            assign_teacher::execute(
+                $this->data['cmid'],
+                $this->data['projetvetid'],
+                [$this->data['student1']->id],
+                $this->data['teacher']->id
+            );
+            $this->fail('Expected a1assignmentblocked exception not thrown.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('a1assignmentblocked', $e->errorcode);
+        }
+
+        // No membership was created.
+        $tutor = groups::get_student_primary_tutor($this->data['student1']->id, $this->data['projetvetid']);
+        $this->assertNull($tutor);
+    }
+
+    /**
+     * Test a new A1 assignment is accepted for an eligible tutor set to "yes".
+     */
+    public function test_assign_teacher_accepts_a1_for_yes_acceptance(): void {
+        $this->setAdminUser();
+
+        \mod_projetvet\local\api\groups::set_teacher_a1_acceptance(
+            $this->data['teacher']->id,
+            $this->data['projetvetid'],
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES
+        );
+        $this->set_profile_field($this->data['student1'], 'promotion', 'A1');
+
+        $result = assign_teacher::execute(
+            $this->data['cmid'],
+            $this->data['projetvetid'],
+            [$this->data['student1']->id],
+            $this->data['teacher']->id
+        );
+
+        $this->assertTrue($result['result']);
+        $tutor = groups::get_student_primary_tutor($this->data['student1']->id, $this->data['projetvetid']);
+        $this->assertNotNull($tutor);
+        $this->assertEquals($this->data['teacher']->id, $tutor->id);
+    }
+
+    /**
+     * Test a non-A1 student is not refused on the basis of the A1 field alone.
+     */
+    public function test_assign_teacher_non_a1_not_blocked_by_a1_field(): void {
+        $this->setAdminUser();
+
+        \mod_projetvet\local\api\groups::set_teacher_a1_acceptance(
+            $this->data['teacher']->id,
+            $this->data['projetvetid'],
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+        // Student1 has no promotion field, so is not A1.
+
+        $result = assign_teacher::execute(
+            $this->data['cmid'],
+            $this->data['projetvetid'],
+            [$this->data['student1']->id],
+            $this->data['teacher']->id
+        );
+
+        $this->assertTrue($result['result']);
+        $tutor = groups::get_student_primary_tutor($this->data['student1']->id, $this->data['projetvetid']);
+        $this->assertNotNull($tutor);
+    }
 }

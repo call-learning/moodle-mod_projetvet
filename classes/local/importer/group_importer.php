@@ -64,10 +64,14 @@ class group_importer {
     }
 
     /**
-     * Import groups from a CSV file
+     * Import groups from a CSV file.
      *
      * Expected CSV format:
      * teacher,teacherrating,secondaryteacher,student1,student2,student3,...
+     *
+     * The file is imported fully or not at all: the whole content is read and validated
+     * against the A1 assignment rule before any data is written, and the writes are applied
+     * inside a database transaction so that any failure rolls back the entire import.
      *
      * @param string $filepath
      * @param string $delimiter
@@ -106,93 +110,219 @@ class group_importer {
                 }
             }
 
+            // Read every data row of the file.
+            $rows = [];
             $csvreader->init();
             while ($row = $csvreader->next()) {
-                if (empty($row[$teacheridx])) {
-                    continue; // Skip rows without a teacher.
+                if (!empty($row[$teacheridx])) {
+                    $rows[] = $row;
                 }
+            }
 
-                $teacherusername = trim($row[$teacheridx]);
-                $teacher = $DB->get_record('user', ['username' => $teacherusername], '*', IGNORE_MISSING);
+            // Validation pass (read-only): resolve every referenced user and check the A1
+            // assignment rule for every new A1 student assignment, against the current
+            // database state. If anything fails, abort before writing a single row so the
+            // file is imported fully or not at all.
+            $this->validate_rows($rows, $teacheridx, $ratingidx, $secondaryteacheridx, $studentindices);
 
-                if (!$teacher) {
-                    debugging("Teacher not found: $teacherusername", DEBUG_DEVELOPER);
-                    continue;
+            // Write pass, inside a transaction so that any failure rolls back the whole import.
+            $transaction = $DB->start_delegated_transaction();
+            try {
+                foreach ($rows as $row) {
+                    $this->apply_row($row, $teacheridx, $ratingidx, $secondaryteacheridx, $studentindices);
                 }
-
-                // Set teacher rating if provided.
-                if ($ratingidx !== false && !empty($row[$ratingidx])) {
-                    $ratingvalue = trim($row[$ratingidx]);
-                    // Validate rating value.
-                    $validratings = [
-                        teacher_rating::RATING_EXPERT,
-                        teacher_rating::RATING_AVERAGE,
-                        teacher_rating::RATING_NOVICE,
-                    ];
-                    if (in_array($ratingvalue, $validratings)) {
-                        groups::set_teacher_rating($teacher->id, $this->projetvetid, $ratingvalue);
-                    }
-                }
-
-                // Get or create group for this teacher.
-                $existinggroups = projetvet_group::get_by_owner($teacher->id, $this->projetvetid);
-                if (!empty($existinggroups)) {
-                    $group = reset($existinggroups);
-                } else {
-                    // Create new group.
-                    $groupname = fullname($teacher);
-                    $group = new projetvet_group(0, (object)[
-                        'name' => $groupname,
-                        'ownerid' => $teacher->id,
-                        'projetvetid' => $this->projetvetid,
-                    ]);
-                    $group->create();
-                }
-
-                // Get secondary teacher if provided.
-                $secondaryteacherid = null;
-                if ($secondaryteacheridx !== false && !empty($row[$secondaryteacheridx])) {
-                    $secondaryusername = trim($row[$secondaryteacheridx]);
-                    $secondaryteacher = $DB->get_record('user', ['username' => $secondaryusername], '*', IGNORE_MISSING);
-                    if ($secondaryteacher) {
-                        $secondaryteacherid = $secondaryteacher->id;
-                    }
-                }
-
-                // Add secondary teacher as member if provided.
-                if ($secondaryteacherid) {
-                    $this->add_or_update_member(
-                        $group->get('id'),
-                        $secondaryteacherid,
-                        group_member::TYPE_SECONDARY_TUTOR
-                    );
-                }
-
-                // Add students.
-                foreach ($studentindices as $idx) {
-                    if (empty($row[$idx])) {
-                        continue;
-                    }
-
-                    $studentusername = trim($row[$idx]);
-                    $student = $DB->get_record('user', ['username' => $studentusername], '*', IGNORE_MISSING);
-
-                    if (!$student) {
-                        debugging("Student not found: $studentusername", DEBUG_DEVELOPER);
-                        continue;
-                    }
-
-                    // Add student as member.
-                    $this->add_or_update_member(
-                        $group->get('id'),
-                        $student->id,
-                        group_member::TYPE_STUDENT
-                    );
-                }
+                $transaction->allow_commit();
+            } catch (\exception $e) {
+                $transaction->rollback($e);
+                throw $e;
             }
         } finally {
             $csvreader->cleanup();
             $csvreader->close();
+        }
+    }
+
+    /**
+     * Read-only validation of the import rows.
+     *
+     * Resolves every referenced user and checks the A1 assignment rule for every new A1
+     * student assignment. Throws as soon as a row cannot be applied, so that the import is
+     * aborted before any data is written.
+     *
+     * @param array $rows The CSV data rows.
+     * @param int $teacheridx Index of the teacher column.
+     * @param int|false $ratingidx Index of the teacherrating column.
+     * @param int|false $secondaryteacheridx Index of the secondaryteacher column.
+     * @param int[] $studentindices Indices of the student columns.
+     * @throws moodle_exception
+     */
+    protected function validate_rows(
+        array $rows,
+        int $teacheridx,
+        int|false $ratingidx,
+        int|false $secondaryteacheridx,
+        array $studentindices
+    ): void {
+        global $DB;
+
+        $a1rejectioncount = 0;
+
+        foreach ($rows as $row) {
+            $teacherusername = trim($row[$teacheridx]);
+            $teacher = $DB->get_record('user', ['username' => $teacherusername], '*', IGNORE_MISSING);
+
+            if (!$teacher) {
+                debugging("Teacher not found: $teacherusername", DEBUG_DEVELOPER);
+                continue;
+            }
+
+            // The group the row writes to is the teacher's existing group, or the one that
+            // would be created by the write pass.
+            $existinggroups = projetvet_group::get_by_owner($teacher->id, $this->projetvetid);
+            $groupisnew = empty($existinggroups);
+            if ($groupisnew) {
+                $groupid = null;
+            } else {
+                $groupid = reset($existinggroups)->get('id');
+            }
+
+            foreach ($studentindices as $idx) {
+                if (empty($row[$idx])) {
+                    continue;
+                }
+
+                $studentusername = trim($row[$idx]);
+                $student = $DB->get_record('user', ['username' => $studentusername], '*', IGNORE_MISSING);
+
+                if (!$student) {
+                    debugging("Student not found: $studentusername", DEBUG_DEVELOPER);
+                    continue;
+                }
+
+                // The A1 assignment rule applies to new A1 student assignments only:
+                // students already in the tutor's groups keep their assignment whatever the
+                // value of the field, and non-A1 students are not affected by it. When the
+                // group is new, no student is already assigned to it.
+                if ($groupid !== null) {
+                    $existingmembers = group_member::get_records([
+                        'groupid' => $groupid,
+                        'userid' => $student->id,
+                        'membertype' => group_member::TYPE_STUDENT,
+                    ]);
+                } else {
+                    $existingmembers = [];
+                }
+
+                if (empty($existingmembers) && \mod_projetvet\utils::is_a1_student((int) $student->id)) {
+                    $eligibility = groups::check_a1_assignment_eligibility($teacher->id, $this->projetvetid, 1);
+                    if (!$eligibility['allowed']) {
+                        // A refusal is an expected, legitimate outcome of the import, not a
+                        // programming error: the file is not imported at all.
+                        $a1rejectioncount++;
+                    }
+                }
+            }
+        }
+
+        if ($a1rejectioncount > 0) {
+            throw new moodle_exception('a1importrejected', 'mod_projetvet', '', $a1rejectioncount);
+        }
+    }
+
+    /**
+     * Apply a single import row to the database.
+     *
+     * Called from the write pass, inside the import transaction.
+     *
+     * @param array $row The CSV data row.
+     * @param int $teacheridx Index of the teacher column.
+     * @param int|false $ratingidx Index of the teacherrating column.
+     * @param int|false $secondaryteacheridx Index of the secondaryteacher column.
+     * @param int[] $studentindices Indices of the student columns.
+     */
+    protected function apply_row(
+        array $row,
+        int $teacheridx,
+        int|false $ratingidx,
+        int|false $secondaryteacheridx,
+        array $studentindices
+    ): void {
+        global $DB;
+
+        $teacherusername = trim($row[$teacheridx]);
+        $teacher = $DB->get_record('user', ['username' => $teacherusername], '*', IGNORE_MISSING);
+
+        if (!$teacher) {
+            return;
+        }
+
+        // Set teacher rating if provided.
+        if ($ratingidx !== false && !empty($row[$ratingidx])) {
+            $ratingvalue = trim($row[$ratingidx]);
+            // Validate rating value.
+            $validratings = [
+                teacher_rating::RATING_EXPERT,
+                teacher_rating::RATING_AVERAGE,
+                teacher_rating::RATING_NOVICE,
+            ];
+            if (in_array($ratingvalue, $validratings)) {
+                groups::set_teacher_rating($teacher->id, $this->projetvetid, $ratingvalue);
+            }
+        }
+
+        // Get or create group for this teacher.
+        $existinggroups = projetvet_group::get_by_owner($teacher->id, $this->projetvetid);
+        if (!empty($existinggroups)) {
+            $group = reset($existinggroups);
+        } else {
+            // Create new group.
+            $groupname = fullname($teacher);
+            $group = new projetvet_group(0, (object)[
+                'name' => $groupname,
+                'ownerid' => $teacher->id,
+                'projetvetid' => $this->projetvetid,
+            ]);
+            $group->create();
+        }
+
+        // Get secondary teacher if provided.
+        $secondaryteacherid = null;
+        if ($secondaryteacheridx !== false && !empty($row[$secondaryteacheridx])) {
+            $secondaryusername = trim($row[$secondaryteacheridx]);
+            $secondaryteacher = $DB->get_record('user', ['username' => $secondaryusername], '*', IGNORE_MISSING);
+            if ($secondaryteacher) {
+                $secondaryteacherid = $secondaryteacher->id;
+            }
+        }
+
+        // Add secondary teacher as member if provided.
+        if ($secondaryteacherid) {
+            $this->add_or_update_member(
+                $group->get('id'),
+                $secondaryteacherid,
+                group_member::TYPE_SECONDARY_TUTOR
+            );
+        }
+
+        // Add students.
+        foreach ($studentindices as $idx) {
+            if (empty($row[$idx])) {
+                continue;
+            }
+
+            $studentusername = trim($row[$idx]);
+            $student = $DB->get_record('user', ['username' => $studentusername], '*', IGNORE_MISSING);
+
+            if (!$student) {
+                continue;
+            }
+
+            // Add student as member.
+            $this->add_or_update_member(
+                $group->get('id'),
+                $student->id,
+                group_member::TYPE_STUDENT
+            );
         }
     }
 

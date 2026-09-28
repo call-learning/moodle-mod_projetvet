@@ -50,6 +50,12 @@ class teacher_rating extends persistent {
     /** Capacity for novice teachers */
     const CAPACITY_NOVICE = 5;
 
+    /** A1 student acceptance: yes */
+    const ACCEPTS_A1_YES = 1;
+
+    /** A1 student acceptance: no */
+    const ACCEPTS_A1_NO = 0;
+
     /**
      * Return the custom definition of the properties of this model.
      *
@@ -73,6 +79,12 @@ class teacher_rating extends persistent {
                 'default' => self::RATING_AVERAGE,
                 'message' => new lang_string('invaliddata', 'projetvet', 'rating'),
             ],
+            'acceptsa1' => [
+                'null' => NULL_NOT_ALLOWED,
+                'type' => PARAM_INT,
+                'default' => self::ACCEPTS_A1_YES,
+                'message' => new lang_string('invaliddata', 'projetvet', 'acceptsa1'),
+            ],
         ];
     }
 
@@ -94,6 +106,48 @@ class teacher_rating extends persistent {
         }
 
         return true;
+    }
+
+    /**
+     * Validate A1 student acceptance
+     *
+     * @param mixed $value
+     * @return true|lang_string
+     */
+    protected function validate_acceptsa1($value) {
+        $validvalues = [
+            self::ACCEPTS_A1_YES,
+            self::ACCEPTS_A1_NO,
+        ];
+
+        if (!in_array((int) $value, $validvalues, true)) {
+            return new lang_string('invaliddata', 'projetvet', 'acceptsa1');
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether this tutor accepts new A1 students
+     *
+     * @return bool
+     */
+    public function accepts_a1(): bool {
+        return (int) $this->get('acceptsa1') === self::ACCEPTS_A1_YES;
+    }
+
+    /**
+     * Get the A1 student acceptance value for a tutor, defaulting to "yes" when
+     * no rating record exists.
+     *
+     * @param int $userid The tutor's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @return int One of ACCEPTS_A1_YES or ACCEPTS_A1_NO
+     */
+    public static function get_a1_acceptance_for(int $userid, int $projetvetid): int {
+        $rating = self::get_user_rating($userid, $projetvetid);
+
+        return $rating === null ? self::ACCEPTS_A1_YES : (int) $rating->get('acceptsa1');
     }
 
     /**

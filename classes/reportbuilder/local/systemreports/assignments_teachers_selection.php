@@ -113,6 +113,9 @@ class assignments_teachers_selection extends system_report {
         $entityuseralias = $entityuser->get_table_alias('user');
         $entityteacher = $this->get_entity('teacher');
         $selectedteacherid = $this->get_parameter('selectedteacherid', 0, PARAM_INT);
+        $studentcount = $this->get_parameter('studentcount', 0, PARAM_INT);
+        $a1studentcount = $this->get_parameter('a1studentcount', 0, PARAM_INT);
+        $projetvetid = $this->get_parameter('projetvetid', 0, PARAM_INT);
 
         // Radio column used by the form to select a teacher.
         $selectcolumn = (new column(
@@ -125,13 +128,45 @@ class assignments_teachers_selection extends system_report {
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(false)
             ->add_attributes(['class' => 'w-30'])
-            ->add_callback(static function ($value, $row) use ($selectedteacherid): string {
-                global $OUTPUT;
-                return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [
-                    'teacherid' => $row->userid_select,
-                    'checked' => ($selectedteacherid > 0 && (int)$row->userid_select === $selectedteacherid),
-                ]);
-            });
+            ->add_callback(
+                static function (
+                    $value,
+                    $row
+                ) use (
+                    $selectedteacherid,
+                    $studentcount,
+                    $a1studentcount,
+                    $projetvetid
+                ): string {
+                    global $OUTPUT;
+
+                    $teacherid = (int) $row->userid_select;
+                    $disabled = false;
+                    $reason = '';
+
+                    // When the batch contains A1 students, the tutors to which the A1
+                    // assignment rule does not allow assigning the batch are rendered
+                    // as non-selectable, with the blocking reason made explicit.
+                    if ($a1studentcount > 0 && $studentcount > 0) {
+                        $eligibility = \mod_projetvet\local\api\groups::check_a1_assignment_eligibility(
+                            $teacherid,
+                            $projetvetid,
+                            $studentcount
+                        );
+                        if (!$eligibility['allowed']) {
+                            $disabled = true;
+                            $reason = get_string('a1assignmentblocked', 'mod_projetvet', $eligibility['reason']);
+                        }
+                    }
+
+                    return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [
+                        'teacherid' => $row->userid_select,
+                        'checked' => ($selectedteacherid > 0 && (int)$row->userid_select === $selectedteacherid),
+                        'disabled' => $disabled,
+                        'reason' => $reason,
+                    ]);
+                }
+            );
 
         $this->add_column($selectcolumn);
 
@@ -148,6 +183,9 @@ class assignments_teachers_selection extends system_report {
         $this->add_column($entityteacher->get_column('target'));
         $this->add_column($entityteacher->get_column('current'));
         $this->add_column($entityteacher->get_column('gap'));
+
+        // A1 acceptance column (with the inconsistency warning badge).
+        $this->add_column($entityteacher->get_column('acceptsa1'));
 
         // Default sorting by the actual lastname field.
         $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);

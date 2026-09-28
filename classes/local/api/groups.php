@@ -164,6 +164,104 @@ class groups {
     }
 
     /**
+     * Set the A1 student acceptance value for a specific user in a projetvet instance
+     *
+     * @param int $userid The teacher's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $acceptsa1 The new acceptance value (ACCEPTS_A1_YES or ACCEPTS_A1_NO)
+     * @return \mod_projetvet\local\persistent\teacher_rating The updated rating persistent
+     */
+    public static function set_teacher_a1_acceptance(
+        int $userid,
+        int $projetvetid,
+        int $acceptsa1
+    ): \mod_projetvet\local\persistent\teacher_rating {
+        $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($userid, $projetvetid);
+
+        if ((int) $rating->get('acceptsa1') !== $acceptsa1) {
+            $rating->set('acceptsa1', $acceptsa1);
+
+            if (!$rating->get('id')) {
+                $rating->create();
+            } else {
+                $rating->update();
+            }
+        }
+
+        return $rating;
+    }
+
+    /**
+     * Check whether a new A1 student assignment is allowed for a tutor.
+     *
+     * A new A1 student assignment is only allowed when all of the following hold:
+     * - the tutor accepts new A1 students ("Accepte les étudiants A1" = "Oui"),
+     * - the tutor still has enough available capacity for the new student count,
+     * - the tutor is open to new assignments (availability status).
+     *
+     * The availability status check is currently a no-op: no tutor availability
+     * status exists yet, so every tutor is considered open to new assignments.
+     * When the status concept is implemented, that check belongs here.
+     *
+     * This method is the single enforcement point of the A1 assignment rule.
+     * Manual assignment, import and automatic proposal flows must call it before
+     * creating new A1 student memberships. Existing assignments are never affected
+     * by this rule: switching the value to "Non" keeps the existing A1 assignments.
+     *
+     * @param int $teacherid The tutor's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $newstudentcount The number of new students created by the assignment
+     * @return array{allowed: bool, reason: string} The reason is a localized message, or '' when allowed.
+     */
+    public static function check_a1_assignment_eligibility(int $teacherid, int $projetvetid, int $newstudentcount = 1): array {
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for($teacherid, $projetvetid);
+        if ($acceptsa1 !== \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES) {
+            return [
+                'allowed' => false,
+                'reason' => get_string('a1assignmentblocked_refusesa1', 'mod_projetvet'),
+            ];
+        }
+
+        if (self::get_teacher_available_capacity($teacherid, $projetvetid) < $newstudentcount) {
+            return [
+                'allowed' => false,
+                'reason' => get_string('a1assignmentblocked_capacity', 'mod_projetvet'),
+            ];
+        }
+
+        return ['allowed' => true, 'reason' => ''];
+    }
+
+    /**
+     * Get the user IDs of the A1 students in a batch that are not yet members of the
+     * tutor's groups in the given projetvet instance.
+     *
+     * Students already assigned to the tutor are not new assignments, so the A1
+     * rule does not apply to them.
+     *
+     * @param int $teacherid The tutor's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @param int[] $studentids The student user IDs of the assignment batch
+     * @return int[] The user IDs of the new A1 students in the batch
+     */
+    public static function get_new_a1_student_ids(int $teacherid, int $projetvetid, array $studentids): array {
+        $existingstudentids = array_map('intval', self::get_students_for_tutor($teacherid, $projetvetid));
+
+        $newa1studentids = [];
+        foreach (array_map('intval', array_unique($studentids)) as $studentid) {
+            if (in_array($studentid, $existingstudentids, true)) {
+                continue;
+            }
+
+            if (\mod_projetvet\utils::is_a1_student($studentid)) {
+                $newa1studentids[] = $studentid;
+            }
+        }
+
+        return $newa1studentids;
+    }
+
+    /**
      * Get available teachers for selection (excluding current teacher)
      *
      * @param int $cmid Course module ID
