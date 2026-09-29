@@ -66,6 +66,14 @@ $functions = [
         'ajax'          => true,
         'capabilities'  => 'mod/projetvet:admin',
     ],
+    'mod_projetvet_send_assignment_notifications' => [
+        'classname'     => 'mod_projetvet\external\send_assignment_notifications',
+        'methodname'    => 'execute',
+        'description'   => 'Queue manager-confirmed tutor assignment notifications',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'mod/projetvet:admin',
+    ],
     'mod_projetvet_send_message' => [
         'classname'     => 'mod_projetvet\external\send_message',
         'methodname'    => 'execute',

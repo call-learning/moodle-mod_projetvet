@@ -28,13 +28,15 @@ use mod_projetvet\task\send_message;
 class messaging {
     /**
      * Message provider name registered in db/messages.php.
+     * @var string
      */
-    const PROVIDER = 'contact';
+    public const string PROVIDER = 'contact';
 
     /**
      * Maximum number of recipients for a single broadcast request.
+     * @var int
      */
-    const MAX_RECIPIENTS = 100;
+    public const int MAX_RECIPIENTS = 100;
 
     /**
      * Queue a contact message for delivery to the given recipients.
@@ -66,6 +68,41 @@ class messaging {
             'recipientids' => array_values($recipientids),
             'subjectkey' => $subjectkey,
             'bodykey' => $bodykey,
+        ]);
+
+        return \core\task\manager::queue_adhoc_task($task);
+    }
+
+    /**
+     * Queue one localized message for one recipient with named parameters.
+     *
+     * @param int $cmid The course module id.
+     * @param int $userfromid The sender user id.
+     * @param int $recipientid Recipient user id.
+     * @param string $subjectkey Language string key for the subject.
+     * @param string $bodykey Language string key for the body.
+     * @param array $data Named language string parameters.
+     * @param ?array $bodydata Named language string parameters for the body.
+     * @return int The scheduled task id
+     */
+    public static function schedule_personal_send(
+        int $cmid,
+        int $userfromid,
+        int $recipientid,
+        string $subjectkey,
+        string $bodykey,
+        array $data = [],
+        ?array $bodydata = null
+    ): int {
+        $task = new send_message();
+        $task->set_custom_data((object) [
+            'cmid' => $cmid,
+            'userfromid' => $userfromid,
+            'recipientids' => [$recipientid],
+            'subjectkey' => $subjectkey,
+            'bodykey' => $bodykey,
+            'subjectdata' => $data,
+            'bodydata' => $bodydata ?? $data,
         ]);
 
         return \core\task\manager::queue_adhoc_task($task);

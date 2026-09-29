@@ -218,7 +218,7 @@ function xmldb_projetvet_upgrade($oldversion) {
             'message_providers',
             'capability',
             'mod/projetvet:view',
-            ['component' => 'mod_projetvet', 'name' => 'contact']
+            ['component' => 'mod_projetvet', 'name' => \mod_projetvet\local\messaging::PROVIDER]
         );
 
         // Projetvet savepoint reached.

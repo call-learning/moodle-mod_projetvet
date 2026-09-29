@@ -20,6 +20,7 @@ use mod_projetvet\external\assign_teacher;
 use mod_projetvet\local\api\groups;
 use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\local\persistent\projetvet_group;
+use mod_projetvet\task\send_message;
 
 /**
  * Assign teacher external function test.
@@ -73,6 +74,8 @@ final class assign_teacher_test extends \advanced_testcase {
 
         $this->assertTrue($result['result']);
         $this->assertStringContainsString('2', $result['message']);
+        $this->assertCount(2, $result['notificationchanges']);
+        $this->assertCount(0, \core\task\manager::get_adhoc_tasks('\\' . send_message::class));
 
         // The students are now members of the teacher's group.
         $tutor = groups::get_student_primary_tutor($this->data['student1']->id, $this->data['projetvetid']);
@@ -224,6 +227,31 @@ final class assign_teacher_test extends \advanced_testcase {
         );
         $this->assertContains((int) $this->data['student1']->id, $memberids);
         $this->assertContains((int) $this->data['student2']->id, $memberids);
+    }
+
+    /**
+     * Test assigning the already assigned tutor does not propose a notification.
+     *
+     * @return void
+     */
+    public function test_reassigning_same_teacher_has_no_notification_change(): void {
+        $this->setAdminUser();
+        assign_teacher::execute(
+            $this->data['cmid'],
+            $this->data['projetvetid'],
+            [$this->data['student1']->id],
+            $this->data['teacher']->id
+        );
+
+        $result = assign_teacher::execute(
+            $this->data['cmid'],
+            $this->data['projetvetid'],
+            [$this->data['student1']->id],
+            $this->data['teacher']->id
+        );
+
+        $this->assertTrue($result['result']);
+        $this->assertSame([], $result['notificationchanges']);
     }
 
     /**

@@ -16,6 +16,8 @@
 
 namespace mod_projetvet\task;
 
+use mod_projetvet\local\messaging;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -124,12 +126,12 @@ final class send_message_test extends \advanced_testcase {
         global $DB;
         $existing = $DB->get_record('message_providers', [
             'component' => 'mod_projetvet',
-            'name' => 'contact',
+            'name' => messaging::PROVIDER,
         ]);
         if (!$existing) {
             $DB->insert_record('message_providers', (object) [
                 'component' => 'mod_projetvet',
-                'name' => 'contact',
+                'name' => messaging::PROVIDER,
                 'capability' => 'mod/projetvet:approve',
             ]);
         }
@@ -146,7 +148,7 @@ final class send_message_test extends \advanced_testcase {
         return $DB->get_records('notifications', [
             'useridto' => $userid,
             'component' => 'mod_projetvet',
-            'eventtype' => 'contact',
+            'eventtype' => messaging::PROVIDER,
         ]);
     }
 
@@ -182,6 +184,49 @@ final class send_message_test extends \advanced_testcase {
 
         $this->assertCount(1, $this->get_contact_notifications($this->data['student1']->id));
         $this->assertCount(1, $this->get_contact_notifications($student2->id));
+    }
+
+    /**
+     * Test a personalized task renders named parameters for three recipients.
+     *
+     * @return void
+     */
+    public function test_execute_sends_personalized_messages(): void {
+        $this->setAdminUser();
+        $student2 = $this->getDataGenerator()->create_user(['username' => 'student2']);
+        $student3 = $this->getDataGenerator()->create_user(['username' => 'student3']);
+        foreach ([$this->data['student1'], $student2, $student3] as $recipient) {
+            $this->getDataGenerator()->enrol_user($recipient->id, $this->data['course']->id, 'student');
+        }
+
+        $task = new send_message();
+        $task->set_custom_data((object) [
+            'cmid' => $this->data['cmid'],
+            'userfromid' => $this->data['teacher']->id,
+            'recipientids' => [$this->data['student1']->id, $student2->id, $student3->id],
+            'subjectkey' => 'assignment_first_tutor_subject',
+            'bodykey' => 'assignment_first_tutor_body',
+            'subjectdata' => [
+                'studentfirstname' => 'Student',
+                'studentlastname' => 'Example',
+                'newtutorfirstname' => 'Tutor',
+            ],
+            'bodydata' => [
+                'studentfirstname' => 'Student',
+                'studentlastname' => 'Example',
+                'newtutorfirstname' => 'Tutor',
+                'link' => 'https://example.test/projetvet',
+            ],
+        ]);
+        $task->execute();
+
+        foreach ([$this->data['student1']->id, $student2->id, $student3->id] as $recipientid) {
+            $notifications = $this->get_contact_notifications($recipientid);
+            $this->assertCount(1, $notifications);
+            $notification = reset($notifications);
+            $this->assertStringContainsString('Student Example', $notification->subject);
+            $this->assertStringNotContainsString('reason', $notification->fullmessage);
+        }
     }
 
     /**

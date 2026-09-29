@@ -18,6 +18,7 @@ namespace mod_projetvet\task;
 
 use core\task\adhoc_task;
 use core_user;
+use mod_projetvet\local\messaging;
 use moodle_url;
 
 /**
@@ -45,6 +46,8 @@ class send_message extends adhoc_task {
      *   - recipientids (int[]): the recipient user ids
      *   - subjectkey (string): the language string key for the subject (key-based path)
      *   - bodykey (string): the language string key for the body (key-based path)
+     *   - subjectdata (array): named parameters for the subject string
+     *   - bodydata (array): named parameters for the body string
      *   - subject (string): the custom subject (broadcast path)
      *   - body (string): the custom body HTML (broadcast path)
      *
@@ -62,6 +65,8 @@ class send_message extends adhoc_task {
         $userfromid = (int) ($customdata->userfromid ?? 0);
         $subjectkey = (string) ($customdata->subjectkey ?? '');
         $bodykey = (string) ($customdata->bodykey ?? '');
+        $subjectdata = (array) ($customdata->subjectdata ?? []);
+        $bodydata = (array) ($customdata->bodydata ?? []);
         $customsubject = (string) ($customdata->subject ?? '');
         $custombody = (string) ($customdata->body ?? '');
         $recipientids = array_map(
@@ -117,8 +122,9 @@ class send_message extends adhoc_task {
             }
 
             if ($iskeybased) {
-                $subject = get_string($subjectkey, 'mod_projetvet');
-                $body = get_string($bodykey, 'mod_projetvet', ['link' => $linkurl->out(false)]);
+                $subject = get_string($subjectkey, 'mod_projetvet', $subjectdata);
+                $bodydata['link'] = $linkurl->out(false);
+                $body = get_string($bodykey, 'mod_projetvet', $bodydata);
             } else {
                 $subject = $customsubject;
                 $body = $custombody . '<br><a href="' . $linkurl->out(false) . '">' . $contexturlname . '</a>';
@@ -126,7 +132,7 @@ class send_message extends adhoc_task {
 
             $message = new \core\message\message();
             $message->component = 'mod_projetvet';
-            $message->name = 'contact';
+            $message->name = messaging::PROVIDER;
             $message->userfrom = $sender;
             $message->userto = $recipient;
             $message->subject = $subject;

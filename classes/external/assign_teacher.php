@@ -83,6 +83,13 @@ class assign_teacher extends external_api {
             throw new \invalid_parameter_exception('One or more selected users are not eligible students.');
         }
 
+        // Capture the previous principal tutor before the assignment changes group membership.
+        $previousprimaryids = [];
+        foreach ($studentids as $studentid) {
+            $previous = groups::get_student_primary_tutor($studentid, $params['projetvetid']);
+            $previousprimaryids[$studentid] = $previous ? (int) $previous->id : 0;
+        }
+
         // The A1 assignment rule only applies when the batch creates at least one new A1
         // student membership for this teacher. When it applies, the whole batch is rejected
         // rather than partially assigned, so the manager always gets an explicit answer.
@@ -114,9 +121,37 @@ class assign_teacher extends external_api {
             $params['projetvetid']
         );
 
+        $notificationchanges = [];
+        foreach ($studentids as $studentid) {
+            $beforeprimaryid = $previousprimaryids[$studentid];
+            if ($beforeprimaryid === (int) $params['teacherid']) {
+                continue;
+            }
+            $notificationchanges[] = [
+                'studentid' => (int) $studentid,
+                'beforeprimaryid' => $beforeprimaryid,
+                'afterprimaryid' => (int) $params['teacherid'],
+                'beforetemporaryid' => 0,
+                'aftertemporaryid' => 0,
+                'date' => time(),
+            ];
+            $notificationchanges[array_key_last($notificationchanges)]['signature'] =
+                \mod_projetvet\local\assignment_notifications::sign_change(
+                    $params['cmid'],
+                    $params['projetvetid'],
+                    (int) $studentid,
+                    $beforeprimaryid,
+                    (int) $params['teacherid'],
+                    0,
+                    0,
+                    $notificationchanges[array_key_last($notificationchanges)]['date']
+                );
+        }
+
         return [
             'result' => true,
             'message' => get_string('membersadded', 'mod_projetvet', $assignedcount),
+            'notificationchanges' => $notificationchanges,
         ];
     }
 
@@ -143,9 +178,24 @@ class assign_teacher extends external_api {
      * @return external_single_structure
      */
     public static function execute_returns(): external_single_structure {
+        $notificationchange = new external_single_structure([
+            'studentid' => new external_value(PARAM_INT, 'Student user id', VALUE_REQUIRED),
+            'beforeprimaryid' => new external_value(PARAM_INT, 'Previous principal tutor id', VALUE_REQUIRED),
+            'afterprimaryid' => new external_value(PARAM_INT, 'New principal tutor id', VALUE_REQUIRED),
+            'beforetemporaryid' => new external_value(PARAM_INT, 'Previous temporary tutor id', VALUE_REQUIRED),
+            'aftertemporaryid' => new external_value(PARAM_INT, 'New temporary tutor id', VALUE_REQUIRED),
+            'date' => new external_value(PARAM_INT, 'Effective date', VALUE_REQUIRED),
+            'signature' => new external_value(PARAM_ALPHANUMEXT, 'Signed assignment transition', VALUE_REQUIRED),
+        ]);
+
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'Success', VALUE_REQUIRED),
             'message' => new external_value(PARAM_TEXT, 'Result message', VALUE_REQUIRED),
+            'notificationchanges' => new external_multiple_structure(
+                $notificationchange,
+                'Assignment changes requiring optional notifications',
+                VALUE_REQUIRED
+            ),
         ]);
     }
 }
