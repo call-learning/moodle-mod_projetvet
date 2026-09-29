@@ -169,6 +169,10 @@ class html_element extends MoodleQuickForm_static {
             // rendered as a span rather than a label element.
             'staticlabel' => true,
             'label' => $this->getLabel(),
+            // When there is no label, drop the label column entirely so the
+            // content spans the full form width instead of sitting in a 3/9
+            // row with an empty col-md-3 gutter.
+            'labelcolumn' => $this->getLabel() !== '',
             'content' => $content,
             'dataattributes' => $dataattributeslist,
             'hasaction' => isset($this->dataattributes['data-action']),

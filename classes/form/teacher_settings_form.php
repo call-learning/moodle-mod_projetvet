@@ -23,7 +23,7 @@ use mod_projetvet\local\persistent\teacher_rating;
 use moodle_url;
 
 /**
- * Form for updating teacher settings (rating/capacity)
+ * Form for updating teacher settings (rating/capacity/status)
  *
  * @package    mod_projetvet
  * @copyright  2026 Bas Brands <bas@sonsbeekmedia.nl>
@@ -60,9 +60,13 @@ class teacher_settings_form extends dynamic_form {
         $teacherid = $data->teacherid;
         $projetvetid = $data->projetvetid;
         $newrating = $data->rating;
+        $newstatus = (int) $data->status;
 
         // Use the groups API to set the teacher rating.
         \mod_projetvet\local\api\groups::set_teacher_rating($teacherid, $projetvetid, $newrating);
+
+        // Save the tutor availability status independently from the rating/capacity.
+        \mod_projetvet\local\api\groups::set_teacher_status($teacherid, $projetvetid, $newstatus);
 
         // Use the groups API to set the A1 student acceptance.
         \mod_projetvet\local\api\groups::set_teacher_a1_acceptance(
@@ -113,6 +117,7 @@ class teacher_settings_form extends dynamic_form {
             // Get current rating.
             $rating = teacher_rating::get_or_create_rating($teacherid, $projetvetid);
             $data['rating'] = $rating->get('rating');
+            $data['status'] = $rating->get_availability_status();
 
             // Get current A1 student acceptance, defaulting to "yes" for tutors
             // without a rating record.
@@ -157,9 +162,9 @@ class teacher_settings_form extends dynamic_form {
         // Display teacher name.
         $mform->addElement('static', 'teachername', get_string('teacher', 'mod_projetvet'), fullname($teacher));
 
-        // Add explanation HTML.
-        $explanationhtml = get_string('teachersettingsexplanation', 'mod_projetvet');
-        $mform->addElement('html', '', $explanationhtml);
+        // Add explanation HTML via the stringkey attribute so the html_element
+        // renders it in the content column.
+        $mform->addElement('html', 'explanation', '', '', ['stringkey' => 'teachersettingsexplanation']);
 
         // Rating selection.
         $ratingoptions = [
@@ -174,6 +179,20 @@ class teacher_settings_form extends dynamic_form {
         $mform->addElement('select', 'rating', get_string('teacher_rating', 'mod_projetvet'), $ratingoptions);
         $mform->addRule('rating', get_string('required'), 'required', null, 'client');
 
+        // Tutor availability status.
+        $statusoptions = [
+            teacher_rating::STATUS_ACTIVE_OPEN => get_string('teacher_status_active_open', 'mod_projetvet'),
+            teacher_rating::STATUS_ACTIVE_CLOSED => get_string('teacher_status_active_closed', 'mod_projetvet'),
+            teacher_rating::STATUS_TEMPORARILY_UNAVAILABLE => get_string(
+                'teacher_status_temporarily_unavailable',
+                'mod_projetvet'
+            ),
+            teacher_rating::STATUS_INACTIVE => get_string('teacher_status_inactive', 'mod_projetvet'),
+        ];
+
+        $mform->addElement('select', 'status', get_string('teacher_status', 'mod_projetvet'), $statusoptions);
+        $mform->addRule('status', get_string('required'), 'required', null, 'client');
+
         // A1 student acceptance selection.
         $a1acceptoptions = [
             teacher_rating::ACCEPTS_A1_YES => get_string('a1accepts_yes', 'mod_projetvet'),
@@ -181,7 +200,7 @@ class teacher_settings_form extends dynamic_form {
         ];
 
         $mform->addElement('select', 'acceptsa1', get_string('a1accepts_field', 'mod_projetvet'), $a1acceptoptions);
-        $mform->addHelpButton('acceptsa1', new \lang_string('a1accepts_field_desc', 'mod_projetvet'));
+        $mform->addHelpButton('acceptsa1', 'a1accepts_field_desc', 'mod_projetvet');
         $mform->addRule('acceptsa1', get_string('required'), 'required', null, 'client');
     }
 
@@ -204,6 +223,18 @@ class teacher_settings_form extends dynamic_form {
 
         if (!in_array($data['rating'], $validratings)) {
             $errors['rating'] = get_string('invalidrating', 'mod_projetvet');
+        }
+
+        // Validate tutor availability status.
+        $validstatuses = [
+            teacher_rating::STATUS_ACTIVE_OPEN,
+            teacher_rating::STATUS_ACTIVE_CLOSED,
+            teacher_rating::STATUS_TEMPORARILY_UNAVAILABLE,
+            teacher_rating::STATUS_INACTIVE,
+        ];
+
+        if (!in_array((int) $data['status'], $validstatuses, true)) {
+            $errors['status'] = get_string('invaliddata', 'mod_projetvet', 'status');
         }
 
         // Validate A1 student acceptance value.

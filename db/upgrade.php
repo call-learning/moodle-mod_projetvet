@@ -251,5 +251,27 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026092800, 'projetvet');
     }
 
+    if ($oldversion < 2026092900) {
+        // Add the tutor availability status, defaulting existing tutors to open.
+        $table = new xmldb_table('projetvet_teacher_rating');
+        $field = new xmldb_field(
+            'status',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'rating'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092900, 'projetvet');
+    }
+
     return true;
 }

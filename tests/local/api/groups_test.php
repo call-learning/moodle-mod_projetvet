@@ -196,6 +196,110 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
+     * Test that a tutor without a settings record is open by default.
+     */
+    public function test_teacher_status_defaults_to_active_open(): void {
+        $data = $this->create_test_data();
+
+        $this->assertSame(
+            teacher_rating::STATUS_ACTIVE_OPEN,
+            groups::get_teacher_status($data['teacher']->id, $data['projetvet']->id)
+        );
+        $this->assertTrue(groups::is_teacher_open_for_new_assignments(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->create();
+
+        $this->assertSame(teacher_rating::STATUS_ACTIVE_OPEN, $rating->get_availability_status());
+    }
+
+    /**
+     * Test that the tutor status can be changed independently from the rating.
+     */
+    public function test_set_teacher_status(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_rating(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::RATING_EXPERT
+        );
+        groups::set_teacher_status(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::STATUS_ACTIVE_CLOSED
+        );
+
+        $rating = teacher_rating::get_user_rating($data['teacher']->id, $data['projetvet']->id);
+        $this->assertSame(teacher_rating::STATUS_ACTIVE_CLOSED, $rating->get_availability_status());
+        $this->assertSame(teacher_rating::RATING_EXPERT, $rating->get('rating'));
+    }
+
+    /**
+     * Test that an unknown tutor availability status is rejected.
+     */
+    public function test_unknown_teacher_status_is_rejected(): void {
+        $data = $this->create_test_data();
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('status', 'unknown');
+
+        $this->expectException(\core\invalid_persistent_exception::class);
+        $rating->create();
+    }
+
+    /**
+     * Test that changing status preserves assignments, groups, rating and capacity.
+     */
+    public function test_teacher_status_change_preserves_existing_data(): void {
+        $data = $this->create_test_data();
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('rating', teacher_rating::RATING_EXPERT);
+        $rating->create();
+
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+
+        $capacity = groups::get_teacher_available_capacity($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('status', teacher_rating::STATUS_INACTIVE);
+        $rating->update();
+
+        $updatedrating = teacher_rating::get_user_rating($data['teacher']->id, $data['projetvet']->id);
+        $this->assertNotNull($updatedrating);
+        $this->assertSame(teacher_rating::STATUS_INACTIVE, $updatedrating->get_availability_status());
+        $this->assertSame(teacher_rating::RATING_EXPERT, $updatedrating->get('rating'));
+        $this->assertSame($capacity, groups::get_teacher_available_capacity(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+        $this->assertCount(2, groups::get_students_for_tutor(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+        $this->assertFalse(groups::is_teacher_open_for_new_assignments(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+
+        groups::set_teacher_rating(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::RATING_NOVICE
+        );
+        $updatedrating = teacher_rating::get_user_rating($data['teacher']->id, $data['projetvet']->id);
+        $this->assertSame(teacher_rating::STATUS_INACTIVE, $updatedrating->get_availability_status());
+        $this->assertSame(teacher_rating::RATING_NOVICE, $updatedrating->get('rating'));
+    }
+
+    /**
      * Test get_available_teachers
      */
     public function test_get_available_teachers(): void {

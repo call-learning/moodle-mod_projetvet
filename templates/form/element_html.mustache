@@ -17,11 +17,16 @@
 {{!
     @template mod_projetvet/form/element_html
 
-    HTML display element - displays static HTML content with dynamic filters
+    HTML display element - displays static HTML content with dynamic filters.
+
+    Overrides core_form/element-template so that when the element has no label
+    (labelcolumn === false) the label column is omitted entirely and the content
+    spans the full form width. When a label is present the standard 3/9 row is
+    kept.
 
     Example context (json):
     {
-        "label": "Tutor",
+        "label": "",
         "required": false,
         "advanced": false,
         "helpbutton": "",
@@ -32,7 +37,8 @@
             "iderror": "id_error_field_123",
             "name": "field_123",
             "type": "html",
-            "label": "Tutor",
+            "label": "",
+            "labelcolumn": false,
             "staticlabel": true
         },
         "id": "id_field_123",
@@ -45,13 +51,47 @@
         "hasaction": true
     }
 }}
-{{< core_form/element-template }}
-    {{$element}}
-        <div class="form-html-display" id="{{id}}" {{#dataattributes}}{{key}}="{{value}}" {{/dataattributes}}>
-            <div class="form-html-content">
-                {{{content}}}
-            </div>
-            {{#hasaction}}<div class="mt-1 text-muted" id="{{id}}_suggestion"></div>{{/hasaction}}
+<div id="{{element.wrapperid}}" class="mb-3 row {{#error}}has-danger{{/error}} fitem {{#element.emptylabel}}femptylabel{{/element.emptylabel}} {{#advanced}}advanced{{/advanced}} {{{element.extraclasses}}} {{{element.parentclasses}}}" {{#element.groupname}}data-groupname="{{.}}"{{/element.groupname}}>
+    {{#labelcolumn}}
+    <div class="col-md-3 col-form-label d-flex pb-0 pe-md-0">
+        {{# label}}{{$ label }}
+            {{^element.staticlabel}}
+                <label id="{{element.id}}_label" class="d-inline word-break {{#element.hiddenlabel}}visually-hidden{{/element.hiddenlabel}}" for="{{element.id}}">
+                    {{{label}}}
+                </label>
+            {{/element.staticlabel}}
+            {{#element.staticlabel}}
+                <span class="d-inline-block {{#element.hiddenlabel}}visually-hidden{{/element.hiddenlabel}}">
+                    {{{label}}}
+                </span>
+            {{/element.staticlabel}}
+        {{/ label }}{{/ label}}
+        <div class="form-label-addon d-flex align-items-center align-self-start">
+            {{#required}}
+                <div class="text-danger" title="{{#str}}required{{/str}}" aria-hidden="true">
+                    {{#pix}}req, core{{/pix}}
+                </div>
+            {{/required}}
+            {{{helpbutton}}}
         </div>
-    {{/element}}
-{{/ core_form/element-template }}
+    </div>
+    {{/labelcolumn}}
+    <div class="{{#labelcolumn}}col-md-9{{/labelcolumn}}{{^labelcolumn}}col-md-12{{/labelcolumn}} d-flex flex-wrap align-items-start felement" data-fieldtype="{{element.type}}">
+        {{$ element }}
+            <div class="form-html-display" id="{{id}}" {{#dataattributes}}{{key}}="{{value}}" {{/dataattributes}}>
+                <div class="form-html-content">
+                    {{{content}}}
+                </div>
+                {{#hasaction}}<div class="mt-1 text-muted" id="{{id}}_suggestion"></div>{{/hasaction}}
+            </div>
+        {{/ element }}
+        <div class="form-control-feedback invalid-feedback" id="{{element.iderror}}" {{#error}} style="display: block;"{{/error}}>
+            {{{error}}}
+        </div>
+    </div>
+</div>
+{{#js}}
+require(['theme_boost/form-display-errors'], function(module) {
+    module.enhance({{#quote}}{{element.id}}{{/quote}});
+});
+{{/js}}

@@ -133,6 +133,29 @@ class groups {
     }
 
     /**
+     * Get the availability status for a teacher in a ProjetVet instance.
+     *
+     * @param int $userid The teacher's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @return int One of the teacher rating status constants
+     */
+    public static function get_teacher_status(int $userid, int $projetvetid): int {
+        return \mod_projetvet\local\persistent\teacher_rating::get_status_for($userid, $projetvetid);
+    }
+
+    /**
+     * Whether a teacher is open to new assignments.
+     *
+     * @param int $userid The teacher's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @return bool
+     */
+    public static function is_teacher_open_for_new_assignments(int $userid, int $projetvetid): bool {
+        return self::get_teacher_status($userid, $projetvetid)
+            === \mod_projetvet\local\persistent\teacher_rating::STATUS_ACTIVE_OPEN;
+    }
+
+    /**
      * Set teacher rating for a specific user in a projetvet instance
      *
      * @param int $userid The teacher's user ID
@@ -153,6 +176,34 @@ class groups {
             $rating->set('rating', $newrating);
 
             // Save to database if it's a new record.
+            if (!$rating->get('id')) {
+                $rating->create();
+            } else {
+                $rating->update();
+            }
+        }
+
+        return $rating;
+    }
+
+    /**
+     * Set tutor availability status for a specific user in a ProjetVet instance.
+     *
+     * @param int $userid The tutor's user ID
+     * @param int $projetvetid The ProjetVet instance ID
+     * @param int $status The new availability status
+     * @return \mod_projetvet\local\persistent\teacher_rating The updated settings persistent
+     */
+    public static function set_teacher_status(
+        int $userid,
+        int $projetvetid,
+        int $status
+    ): \mod_projetvet\local\persistent\teacher_rating {
+        $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($userid, $projetvetid);
+
+        if ($rating->get_availability_status() !== $status) {
+            $rating->set('status', $status);
+
             if (!$rating->get('id')) {
                 $rating->create();
             } else {

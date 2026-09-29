@@ -115,6 +115,7 @@ final class teacher_test extends \advanced_testcase {
 
         $rating = teacher_rating::get_or_create_rating($data['teacher1']->id, $pv);
         $rating->set('rating', teacher_rating::RATING_EXPERT);
+        $rating->set('status', teacher_rating::STATUS_ACTIVE_CLOSED);
         $rating->create();
 
         $group = new projetvet_group(0, (object)[
@@ -153,6 +154,7 @@ final class teacher_test extends \advanced_testcase {
 
         $this->assertArrayHasKey('user:fullnamewithpicturelink', $columnsbyid);
         $this->assertArrayHasKey('teacher:rating', $columnsbyid);
+        $this->assertArrayHasKey('teacher:status', $columnsbyid);
         $this->assertArrayHasKey('teacher:target', $columnsbyid);
         $this->assertArrayHasKey('teacher:current', $columnsbyid);
         $this->assertArrayHasKey('teacher:gap', $columnsbyid);
@@ -189,6 +191,19 @@ final class teacher_test extends \advanced_testcase {
         $this->assertEquals(8, $gammarow->{$targetalias});
         $this->assertEquals(0, $gammarow->{$currentalias});
         $this->assertEquals(8, $gammarow->{$gapalias});
+
+        $statusalias = $columnsbyid['teacher:status']->get_column_alias();
+        $this->assertSame(teacher_rating::STATUS_ACTIVE_CLOSED, (int) $alpharow->{$statusalias});
+        $this->assertSame(teacher_rating::STATUS_ACTIVE_OPEN, (int) $gammarow->{$statusalias});
+        $this->assertArrayHasKey('teacher:status', $report->get_filters());
+
+        $statusfilter = $report->get_filter_instances()['teacher:status'];
+        [$statussql, $statusparams] = $statusfilter->get_sql_filter([
+            'teacher:status_operator' => 1,
+            'teacher:status_value' => teacher_rating::STATUS_ACTIVE_CLOSED,
+        ]);
+        $this->assertStringContainsString('=:', $statussql);
+        $this->assertContains((string) teacher_rating::STATUS_ACTIVE_CLOSED, $statusparams);
     }
 
     /**

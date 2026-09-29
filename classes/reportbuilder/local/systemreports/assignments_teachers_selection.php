@@ -180,6 +180,7 @@ class assignments_teachers_selection extends system_report {
 
         // Rating, target capacity, current student count and gap columns from the teacher entity.
         $this->add_column($entityteacher->get_column('rating'));
+        $this->add_column($entityteacher->get_column('status'));
         $this->add_column($entityteacher->get_column('target'));
         $this->add_column($entityteacher->get_column('current'));
         $this->add_column($entityteacher->get_column('gap'));

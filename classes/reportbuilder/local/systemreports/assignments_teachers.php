@@ -136,6 +136,7 @@ class assignments_teachers extends system_report {
 
         // Rating, target capacity, current student count and gap columns from the teacher entity.
         $this->add_column($entityteacher->get_column('rating'));
+        $this->add_column($entityteacher->get_column('status'));
         $this->add_column($entityteacher->get_column('target'));
         $this->add_column($entityteacher->get_column('current'));
         $this->add_column($entityteacher->get_column('gap'));
@@ -152,9 +153,11 @@ class assignments_teachers extends system_report {
      */
     protected function add_filters(): void {
         $entityuser = $this->get_entity('user');
+        $entityteacher = $this->get_entity('teacher');
 
         // Fullname filter.
         $this->add_filter($entityuser->get_filter('fullname'));
+        $this->add_filter($entityteacher->get_filter('status'));
     }
 
     /**

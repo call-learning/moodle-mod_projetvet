@@ -17,8 +17,10 @@
 namespace mod_projetvet\reportbuilder\local\entities;
 
 use core_reportbuilder\local\entities\base;
+use core_reportbuilder\local\filters\select;
 use core_reportbuilder\local\helpers\database;
 use core_reportbuilder\local\report\column;
+use core_reportbuilder\local\report\filter;
 use lang_string;
 use mod_projetvet\local\persistent\group_member;
 use mod_projetvet\local\persistent\teacher_rating;
@@ -120,6 +122,34 @@ class teacher extends base {
             ->set_is_sortable(true)
             ->add_callback(static function (?string $value): string {
                 return teacher_rating::get_rating_string_for((string)$value);
+            });
+
+        // Tutor availability status. The raw numeric value is used for sorting, while the
+        // callback displays a short, colour-coded label with the full status as its accessible
+        // label and tooltip.
+        $statuspvparam = database::generate_param_name();
+        $columns[] = (new column(
+            'status',
+            new lang_string('teacher_status', 'mod_projetvet'),
+            $this->get_entity_name()
+        ))
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field($this->get_status_sql($statuspvparam), 'status', [$statuspvparam => $this->projetvetid])
+            ->set_is_sortable(true)
+            ->add_callback(static function (?int $value): string {
+                $status = (int) $value;
+                $shortlabel = teacher_rating::get_status_short_string_for($status);
+                $longlabel = teacher_rating::get_status_string_for($status);
+                $badgeclass = teacher_rating::get_status_badge_class_for($status);
+
+                if ($shortlabel === '' || $longlabel === '' || $badgeclass === '') {
+                    return '';
+                }
+
+                return \html_writer::span($shortlabel, 'badge ' . $badgeclass, [
+                    'aria-label' => $longlabel,
+                    'title' => $longlabel,
+                ]);
             });
 
         // Target capacity column, derived from the rating.
@@ -224,6 +254,34 @@ class teacher extends base {
     }
 
     /**
+     * Returns the filters this entity makes available to reports.
+     *
+     * @return filter[]
+     */
+    protected function get_available_filters(): array {
+        $statuspvparam = database::generate_param_name();
+
+        return [
+            (new filter(
+                select::class,
+                'status',
+                new lang_string('teacher_status', 'mod_projetvet'),
+                $this->get_entity_name(),
+                $this->get_status_sql($statuspvparam),
+                [$statuspvparam => $this->projetvetid]
+            ))->set_options([
+                teacher_rating::STATUS_ACTIVE_OPEN => get_string('teacher_status_active_open', 'mod_projetvet'),
+                teacher_rating::STATUS_ACTIVE_CLOSED => get_string('teacher_status_active_closed', 'mod_projetvet'),
+                teacher_rating::STATUS_TEMPORARILY_UNAVAILABLE => get_string(
+                    'teacher_status_temporarily_unavailable',
+                    'mod_projetvet'
+                ),
+                teacher_rating::STATUS_INACTIVE => get_string('teacher_status_inactive', 'mod_projetvet'),
+            ]),
+        ];
+    }
+
+    /**
      * Returns the SQL expression resolving the rating of the teacher referenced by the report's
      * main user table, defaulting to the average rating when no explicit rating exists.
      *
@@ -237,6 +295,22 @@ class teacher extends base {
         return "COALESCE((SELECT rating FROM {" . teacher_rating::TABLE . "} "
             . "WHERE userid = {$useralias}.id AND projetvetid = :{$pvparam}), '"
             . teacher_rating::RATING_AVERAGE . "')";
+    }
+
+    /**
+     * Returns the SQL expression resolving the availability status of the teacher referenced by
+     * the report's main user table, defaulting to active and open when no explicit settings exist.
+     *
+     * @param string $pvparam Reportbuilder parameter name holding the projetvet instance id,
+     *     see {@see database::generate_param_name()}.
+     * @return string
+     */
+    public function get_status_sql(string $pvparam): string {
+        $useralias = $this->get_table_alias('user');
+
+        return 'COALESCE((SELECT status FROM {' . teacher_rating::TABLE . '} '
+            . "WHERE userid = {$useralias}.id AND projetvetid = :{$pvparam}), "
+            . teacher_rating::STATUS_ACTIVE_OPEN . ')';
     }
 
     /**
