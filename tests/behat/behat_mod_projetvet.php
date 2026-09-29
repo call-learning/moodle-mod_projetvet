@@ -714,4 +714,46 @@ class behat_mod_projetvet extends behat_base {
             throw new ExpectationException('A highlighted info row (tr.row-highlight) was not found.', $this->getSession());
         }
     }
+
+    /**
+     * Asserts that a form field has been marked invalid by the server-side validation.
+     *
+     * This is language-independent: it locates the field by its name attribute and checks
+     * the "is-invalid" CSS class that formslib applies when a validation error is returned
+     * for it, rather than matching the human-readable error message (which varies by language).
+     *
+     * @Then /^the field "(?P<fieldname_string>(?:[^"]|\\")*)" should be marked as invalid$/
+     * @param string $fieldname The field name attribute (e.g. "field_actions_summary").
+     * @throws ExpectationException
+     */
+    public function the_field_should_be_marked_as_invalid($fieldname) {
+        $class = $this->get_form_field_class($fieldname);
+        if (strpos($class, 'is-invalid') === false) {
+            throw new ExpectationException(
+                'Field "' . $fieldname . '" was not marked invalid. Class: "' . $class . '".',
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Returns the CSS class of a form field, located by its name attribute.
+     *
+     * @param string $fieldname The field name attribute.
+     * @return string the field's class attribute.
+     * @throws ExpectationException
+     */
+    protected function get_form_field_class($fieldname) {
+        $this->wait_for_pending_js();
+        $page = $this->getSession()->getPage();
+
+        $field = $page->find('css', '[name="' . $fieldname . '"]');
+        if (!$field) {
+            throw new ExpectationException(
+                'Field with name "' . $fieldname . '" not found on the page.',
+                $this->getSession()
+            );
+        }
+        return (string) $field->getAttribute('class');
+    }
 }

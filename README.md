@@ -8,7 +8,7 @@
 
 - Component: `mod_projetvet`
 - Moodle required: `2024100700` (Moodle 4.5+)
-- Supported branches: Moodle `4.5` to `5.1`
+- Supported branches: Moodle `4.5` to `5.2`
 
 ## Installation
 
