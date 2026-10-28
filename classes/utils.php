@@ -256,8 +256,10 @@ class utils {
         ];
 
         $result = $DB->get_record_sql($sql, $params);
+        $total = $result ? (int)$result->total : 0;
 
-        return $result ? (int)$result->total : 0;
+        // Add the validated ECTS of the projects already validated with the previous system.
+        return $total + \mod_projetvet\local\api\archive::get_validated_ects($projetvetid, $studentid)['total'];
     }
 
     /**
@@ -267,6 +269,7 @@ class utils {
      * the statusmsg is 'teacheraccept' or 'validated'.
      * - For activities: checks entrystatus 1 (teacheraccept) or 3 (validated)
      * - For facetoface: checks entrystatus 1 (teacheraccept) only
+     * - For the archive of previously validated projects: checks entrystatus 1 (submitted)
      *
      * @param int $projetvetid The projetvet instance ID
      * @param int $studentid The student ID
@@ -275,7 +278,7 @@ class utils {
     public static function student_has_pending_teacher_action(int $projetvetid, int $studentid): bool {
         global $DB;
 
-        // Check for activities at entrystatus 1 or 3, or facetoface at entrystatus 1.
+        // Check for activities at entrystatus 1 or 3, facetoface at entrystatus 1, or a submitted archive.
         // Using a single optimized query to minimize database calls.
         $sql = "SELECT COUNT(fe.id)
                   FROM {projetvet_form_entry} fe
@@ -286,6 +289,8 @@ class utils {
                        (fs.idnumber = :activities AND fe.entrystatus IN (:status1, :status3))
                        OR
                        (fs.idnumber = :facetoface AND fe.entrystatus = :status1_f2f)
+                       OR
+                       (fs.idnumber = :archive AND fe.entrystatus = :archivesubmitted)
                    )";
 
         $params = [
@@ -296,6 +301,8 @@ class utils {
             'status3' => 3,
             'facetoface' => 'facetoface',
             'status1_f2f' => 1,
+            'archive' => \mod_projetvet\local\api\archive::FORMSET,
+            'archivesubmitted' => \mod_projetvet\local\api\archive::STATUS_SUBMITTED,
         ];
 
         $count = $DB->count_records_sql($sql, $params);
