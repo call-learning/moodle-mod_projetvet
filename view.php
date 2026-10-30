@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+global $DB, $USER, $OUTPUT, $PAGE;
 
 // Course module id.
 $id = optional_param('id', 0, PARAM_INT);
@@ -49,20 +50,60 @@ $context = context_module::instance($cm->id);
 $studentid = optional_param('studentid', 0, PARAM_INT);
 
 \mod_projetvet\event\course_module_viewed::create_from_record($moduleinstance, $cm, $course)->trigger();
-
-$PAGE->set_url('/mod/projetvet/view.php', ['id' => $cm->id]);
+$currenturl = new moodle_url('/mod/projetvet/view.php', ['id' => $cm->id]);
+if (!empty($studentid)) {
+    $currenturl->param('studentid', $studentid);
+}
+$PAGE->set_url($currenturl);
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+// Get the renderer.
+$renderer = $PAGE->get_renderer('mod_projetvet');
+
 // Determine if user can view all activities (teacher or manager).
 $canviewall = has_capability('mod/projetvet:viewallactivities', $context);
 
+// Assemble the page actions (buttons rendered in the page header, side by side).
+$pagebuttons = '';
+
+// Make the tutor information form directly accessible to primary tutors.
+if (
+    $DB->record_exists('projetvet_groups', [
+        'projetvetid' => $moduleinstance->id,
+        'ownerid' => $USER->id,
+    ])
+) {
+    $pagebuttons .= $renderer->single_button(
+        new moodle_url('/mod/projetvet/tutor_info.php', ['returnurl' => $currenturl]),
+        get_string('practicalinfo_settings', 'mod_projetvet')
+    );
+}
+
+// Add the broadcast button for tutors who can contact their students, only on
+// the overview (student list) view, not when a specific student is being shown.
+// It links to the dedicated broadcast page (protected with a session key there).
+if (
+    $canviewall
+    && !$studentid
+    && has_capability('mod/projetvet:approve', $context)
+    && \mod_projetvet\utils::is_tutor($USER->id)
+) {
+    $pagebuttons .= $renderer->single_button(
+        new moodle_url('/mod/projetvet/broadcast.php', ['id' => $cm->id]),
+        get_string('broadcast_button', 'mod_projetvet'),
+        'get',
+        ['sesskey' => sesskey(), 'returnurl' => $currenturl]
+    );
+}
+
+if ($pagebuttons !== '') {
+    $PAGE->set_button($pagebuttons);
+}
+
 // Get the current group for this activity.
 $currentgroup = groups_get_activity_group($cm, true);
-
-// Get the renderer.
-$renderer = $PAGE->get_renderer('mod_projetvet');
 
 // Display appropriate view based on capability and context.
 if ($canviewall && !$studentid) {
@@ -86,6 +127,12 @@ if ($canviewall && !$studentid) {
 } else {
     // Student view or teacher/manager viewing a specific student.
     $viewingstudentid = $studentid ? $studentid : $USER->id;
+
+    // Privacy: a user may only view another student's page if they can view all activities
+    // (teachers, tutors and managers). Students may only view their own page.
+    if (!projetvet_user_can_view_student($USER->id, $viewingstudentid, $context)) {
+        throw new moodle_exception('invalidaccess', 'error');
+    }
 
     // Load JavaScript for activity forms.
     $PAGE->requires->js_call_amd('mod_projetvet/projetvet_form', 'init');

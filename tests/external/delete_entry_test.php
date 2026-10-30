@@ -31,15 +31,13 @@ use test_data_definition;
  * @package     mod_projetvet
  * @copyright   2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers      \mod_projetvet\external\delete_entry
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(delete_entry::class)]
 final class delete_entry_test extends advanced_testcase {
     use test_data_definition;
 
     /**
-     * Setup test data
-     *
-     * @return void
+     * Setup test data.
      */
     public function setUp(): void {
         parent::setUp();
@@ -49,9 +47,7 @@ final class delete_entry_test extends advanced_testcase {
     }
 
     /**
-     * Test successful deletion by student owner
-     *
-     * @return void
+     * Test successful deletion by student owner.
      */
     public function test_delete_entry_by_owner(): void {
         global $DB;
@@ -80,9 +76,7 @@ final class delete_entry_test extends advanced_testcase {
     }
 
     /**
-     * Test deletion fails with invalid entry ID
-     *
-     * @return void
+     * Test deletion fails with invalid entry ID.
      */
     public function test_delete_entry_invalid_id(): void {
         $this->expectException(\moodle_exception::class);
@@ -92,9 +86,7 @@ final class delete_entry_test extends advanced_testcase {
     }
 
     /**
-     * Test deletion requires proper context validation
-     *
-     * @return void
+     * Test deletion requires proper context validation.
      */
     public function test_delete_entry_validates_context(): void {
         global $DB;
@@ -117,9 +109,7 @@ final class delete_entry_test extends advanced_testcase {
     }
 
     /**
-     * Test deletion respects can_delete permission
-     *
-     * @return void
+     * Test deletion respects can_delete permission.
      */
     public function test_delete_entry_respects_permissions(): void {
         global $DB;
@@ -144,9 +134,7 @@ final class delete_entry_test extends advanced_testcase {
     }
 
     /**
-     * Test deletion by teacher with proper capability
-     *
-     * @return void
+     * Test deletion by teacher with proper capability.
      */
     public function test_delete_entry_by_teacher(): void {
         global $DB;
@@ -178,9 +166,7 @@ final class delete_entry_test extends advanced_testcase {
     }
 
     /**
-     * Test return value structure
-     *
-     * @return void
+     * Test return value structure.
      */
     public function test_delete_entry_return_structure(): void {
         global $DB;

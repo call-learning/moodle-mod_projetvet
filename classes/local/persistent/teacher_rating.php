@@ -50,6 +50,24 @@ class teacher_rating extends persistent {
     /** Capacity for novice teachers */
     const CAPACITY_NOVICE = 5;
 
+    /** A1 student acceptance: yes */
+    const ACCEPTS_A1_YES = 1;
+
+    /** A1 student acceptance: no */
+    const ACCEPTS_A1_NO = 0;
+
+    /** Tutor is active and open to new assignments. */
+    const STATUS_ACTIVE_OPEN = 0;
+
+    /** Tutor is active but closed to new assignments. */
+    const STATUS_ACTIVE_CLOSED = 1;
+
+    /** Tutor is temporarily unavailable. */
+    const STATUS_TEMPORARILY_UNAVAILABLE = 2;
+
+    /** Tutor is inactive. */
+    const STATUS_INACTIVE = 3;
+
     /**
      * Return the custom definition of the properties of this model.
      *
@@ -73,6 +91,18 @@ class teacher_rating extends persistent {
                 'default' => self::RATING_AVERAGE,
                 'message' => new lang_string('invaliddata', 'projetvet', 'rating'),
             ],
+            'status' => [
+                'null' => NULL_NOT_ALLOWED,
+                'type' => PARAM_INT,
+                'default' => self::STATUS_ACTIVE_OPEN,
+                'message' => new lang_string('invaliddata', 'projetvet', 'status'),
+            ],
+            'acceptsa1' => [
+                'null' => NULL_NOT_ALLOWED,
+                'type' => PARAM_INT,
+                'default' => self::ACCEPTS_A1_YES,
+                'message' => new lang_string('invaliddata', 'projetvet', 'acceptsa1'),
+            ],
         ];
     }
 
@@ -94,6 +124,144 @@ class teacher_rating extends persistent {
         }
 
         return true;
+    }
+
+    /**
+     * Validate tutor availability status.
+     *
+     * @param int $value
+     * @return true|lang_string
+     */
+    protected function validate_status($value) {
+        $validstatuses = [
+            self::STATUS_ACTIVE_OPEN,
+            self::STATUS_ACTIVE_CLOSED,
+            self::STATUS_TEMPORARILY_UNAVAILABLE,
+            self::STATUS_INACTIVE,
+        ];
+
+        if (!in_array((int) $value, $validstatuses, true)) {
+            return new lang_string('invaliddata', 'projetvet', 'status');
+        }
+
+        return true;
+    }
+
+    /**
+     * Get the tutor availability status.
+     *
+     * @return int
+     */
+    public function get_availability_status(): int {
+        return (int) ($this->get('status') ?? self::STATUS_ACTIVE_OPEN);
+    }
+
+    /**
+     * Whether the tutor can receive new assignments.
+     *
+     * @return bool
+     */
+    public function is_open_for_new_assignments(): bool {
+        return $this->get_availability_status() === self::STATUS_ACTIVE_OPEN;
+    }
+
+    /**
+     * Get the localized status string for a raw status value.
+     *
+     * @param int $status
+     * @return string
+     */
+    public static function get_status_string_for(int $status): string {
+        $statusstrings = [
+            self::STATUS_ACTIVE_OPEN => 'teacher_status_active_open',
+            self::STATUS_ACTIVE_CLOSED => 'teacher_status_active_closed',
+            self::STATUS_TEMPORARILY_UNAVAILABLE => 'teacher_status_temporarily_unavailable',
+            self::STATUS_INACTIVE => 'teacher_status_inactive',
+        ];
+
+        if (!array_key_exists($status, $statusstrings)) {
+            return '';
+        }
+
+        return get_string($statusstrings[$status], 'mod_projetvet');
+    }
+
+    /**
+     * Get the localized short status string for a raw status value.
+     *
+     * @param int $status
+     * @return string
+     */
+    public static function get_status_short_string_for(int $status): string {
+        $statusstrings = [
+            self::STATUS_ACTIVE_OPEN => 'teacher_status_active_open_short',
+            self::STATUS_ACTIVE_CLOSED => 'teacher_status_active_closed_short',
+            self::STATUS_TEMPORARILY_UNAVAILABLE => 'teacher_status_temporarily_unavailable_short',
+            self::STATUS_INACTIVE => 'teacher_status_inactive_short',
+        ];
+
+        if (!array_key_exists($status, $statusstrings)) {
+            return '';
+        }
+
+        return get_string($statusstrings[$status], 'mod_projetvet');
+    }
+
+    /**
+     * Get the Bootstrap badge class for a raw status value.
+     *
+     * @param int $status
+     * @return string
+     */
+    public static function get_status_badge_class_for(int $status): string {
+        return [
+            self::STATUS_ACTIVE_OPEN => 'bg-success',
+            self::STATUS_ACTIVE_CLOSED => 'bg-info',
+            self::STATUS_TEMPORARILY_UNAVAILABLE => 'bg-warning text-dark',
+            self::STATUS_INACTIVE => 'bg-danger',
+        ][$status] ?? '';
+    }
+
+    /**
+     * Validate A1 student acceptance
+     *
+     * @param mixed $value
+     * @return true|lang_string
+     */
+    protected function validate_acceptsa1($value) {
+        $validvalues = [
+            self::ACCEPTS_A1_YES,
+            self::ACCEPTS_A1_NO,
+        ];
+
+        if (!in_array((int) $value, $validvalues, true)) {
+            return new lang_string('invaliddata', 'projetvet', 'acceptsa1');
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether this tutor accepts new A1 students
+     *
+     * @return bool
+     */
+    public function accepts_a1(): bool {
+        return (int) $this->get('acceptsa1') === self::ACCEPTS_A1_YES;
+    }
+
+    /**
+     * Get the A1 student acceptance value for a tutor, defaulting to "yes" when
+     * no rating record exists.
+     *
+     * @param int $userid The tutor's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @return int One of ACCEPTS_A1_YES or ACCEPTS_A1_NO
+     */
+    public static function get_a1_acceptance_for(int $userid, int $projetvetid): int {
+        $rating = self::get_user_rating($userid, $projetvetid);
+
+        return $rating === null ? self::ACCEPTS_A1_YES : (int) $rating->get('acceptsa1');
     }
 
     /**
@@ -174,6 +342,7 @@ class teacher_rating extends persistent {
                 'userid' => $userid,
                 'projetvetid' => $projetvetid,
                 'rating' => self::RATING_AVERAGE,
+                'status' => self::STATUS_ACTIVE_OPEN,
             ]);
         }
 
@@ -195,6 +364,43 @@ class teacher_rating extends persistent {
         }
 
         return $ratings;
+    }
+
+    /**
+     * Get a tutor's availability status, defaulting to active and open when no
+     * settings record exists.
+     *
+     * @param int $userid
+     * @param int $projetvetid
+     * @return int
+     */
+    public static function get_status_for(int $userid, int $projetvetid): int {
+        $rating = self::get_user_rating($userid, $projetvetid);
+
+        return $rating === null ? self::STATUS_ACTIVE_OPEN : $rating->get_availability_status();
+    }
+
+    /**
+     * Get the localized string for a raw rating value
+     *
+     * An empty string is returned for unknown values so callers rendering report
+     * data can safely pass through values they did not compute themselves.
+     *
+     * @param string $rating
+     * @return string
+     */
+    public static function get_rating_string_for(string $rating): string {
+        $validratings = [
+            self::RATING_EXPERT,
+            self::RATING_AVERAGE,
+            self::RATING_NOVICE,
+        ];
+
+        if (!in_array($rating, $validratings, true)) {
+            return '';
+        }
+
+        return get_string('rating_' . $rating, 'mod_projetvet');
     }
 
     /**

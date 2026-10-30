@@ -23,13 +23,11 @@ namespace mod_projetvet;
  * @category   test
  * @copyright  2026 Laurent David <laurent@call-learning.fr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_projetvet\utils
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(utils::class)]
 final class utils_test extends \advanced_testcase {
     /**
      * Test dashboard-related student metrics from utils.
-     *
-     * @return void
      */
     public function test_dashboard_student_metrics(): void {
         global $DB;

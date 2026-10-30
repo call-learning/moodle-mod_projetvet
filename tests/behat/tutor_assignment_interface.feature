@@ -138,15 +138,6 @@ Feature: Tutor assignments interface for managing groups
     And I click on "assign-students" buttonaction in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     Then I should see "Assign students"
     And I should see "Select student"
-    And I should not see "Select secondary teacher"
-
-  Scenario: Open assign secondary teacher dialog from teacher report
-    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
-    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
-    And I click on "assign-secondary-teacher" buttonaction in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
-    Then I should see "Assign secondary teacher"
-    And I should see "Select secondary teacher"
-    And I should not see "Select student"
 
   Scenario: Filter students without teachers
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
@@ -181,3 +172,16 @@ Feature: Tutor assignments interface for managing groups
     When I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     Then "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Student Eleven"
     And "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Teacher Three"
+
+  Scenario: Choose not to send assignment notifications
+    Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
+    And I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I click on "assign-teacher" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    Then I should see "Assign teacher"
+    When I click on ".teacher-select-radio" "css_element"
+    And I press "Save"
+    Then I should see "Send notifications?"
+    And I should see "Do not send"
+    When I press "Do not send"
+    Then I should not see "Send notifications?"

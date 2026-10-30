@@ -36,7 +36,7 @@ class renderer extends plugin_renderer_base {
      * @return string HTML to output
      */
     public function render_student_info($moduleinstance, $cm, $context, $studentid, $isteacher) {
-        $studentinfo = new student_info($moduleinstance, $cm, $studentid, $isteacher);
+        $studentinfo = new student_info($moduleinstance, $cm, $context, $studentid, $isteacher);
         return $this->render_from_template('mod_projetvet/student_info', $studentinfo->export_for_template($this));
     }
 
@@ -82,6 +82,16 @@ class renderer extends plugin_renderer_base {
     public function render_dashboard_page($moduleinstance, $cm, $context) {
         $dashboardpage = new dashboard_page($moduleinstance, $cm, $context);
         return $this->render_from_template('mod_projetvet/dashboard_page', $dashboardpage->export_for_template($this));
+    }
+
+    /**
+     * Render the substitute tutors management page of a principal tutor.
+     *
+     * @param substitutions_page $page
+     * @return string HTML to output
+     */
+    public function render_substitutions_page(substitutions_page $page): string {
+        return $this->render_from_template('mod_projetvet/substitutions_page', $page->export_for_template($this));
     }
 
     /**

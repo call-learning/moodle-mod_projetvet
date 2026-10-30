@@ -21,7 +21,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import Ajax from 'core/ajax';
+import Fragment from 'core/fragment';
 import ModalForm from 'core_form/modalform';
+import ModalEvents from 'core/modal_events';
+import ModalSaveCancel from 'core/modal_save_cancel';
 import Notification from 'core/notification';
 import * as Str from 'core/str';
 
@@ -48,27 +52,6 @@ export const init = () => {
 
         // Open modal form to assign students only.
         showAssignStudentsModal(cmid, teacherid, projetvetid);
-    });
-
-    // Handle assign secondary teacher button clicks in the teachers report.
-    document.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-action="assign-secondary-teacher"]');
-        if (!button) {
-            return;
-        }
-
-        event.preventDefault();
-
-        const teacherid = button.dataset.teacherid;
-        const projetvetid = button.dataset.projetvetid;
-        const cmid = button.dataset.cmid;
-
-        if (!teacherid || !projetvetid || !cmid) {
-            return;
-        }
-
-        // Open modal form to assign secondary tutor(s) only.
-        showAssignSecondaryTeacherModal(cmid, teacherid, projetvetid);
     });
 
     // Handle update teacher rating button clicks in the teachers report.
@@ -140,28 +123,6 @@ export const init = () => {
         updateBulkAssignButton();
     });
 
-    // Handle teacher radio button selection in edit_teacher_form modal.
-    document.addEventListener('change', (event) => {
-        const radio = event.target.closest('.teacher-select-radio');
-        if (!radio) {
-            return;
-        }
-
-        const teacherid = radio.dataset.teacherid;
-        if (!teacherid) {
-            return;
-        }
-
-        // Find the hidden teacherid field in the form and set its value.
-        const form = radio.closest('form');
-        if (form) {
-            const hiddenField = form.querySelector('input[name="teacherid"]');
-            if (hiddenField) {
-                hiddenField.value = teacherid;
-            }
-        }
-    });
-
     // Handle upload groups button clicks in assignments page.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action="upload-groups"]');
@@ -199,7 +160,6 @@ const showAssignStudentsModal = (cmid, teacherid, projetvetid) => {
             cmid: cmid,
             teacherid: teacherid,
             projetvetid: projetvetid,
-            mode: 'students',
             memberid: 0,
             groupid: 0, // Will be created or loaded on the server side.
         },
@@ -225,50 +185,6 @@ const showAssignStudentsModal = (cmid, teacherid, projetvetid) => {
             });
         }
         // Reload the page to refresh the report.
-        window.location.reload();
-    });
-
-    modalForm.show();
-};
-
-/**
- * Show modal form for assigning secondary teacher(s)
- *
- * @param {number} cmid Course module ID
- * @param {number} teacherid Teacher user ID
- * @param {number} projetvetid Projetvet instance ID
- */
-const showAssignSecondaryTeacherModal = (cmid, teacherid, projetvetid) => {
-    const modalForm = new ModalForm({
-        formClass: '\\mod_projetvet\\form\\edit_member_form',
-        args: {
-            cmid: cmid,
-            teacherid: teacherid,
-            projetvetid: projetvetid,
-            mode: 'secondaryteachers',
-            memberid: 0,
-            groupid: 0,
-        },
-        returnFocus: document.activeElement,
-    });
-
-    modalForm.addEventListener(modalForm.events.LOADED, () => {
-        modalForm.modal.getModal().addClass('modal-dialog-centered');
-        Str.get_string('assignsecondaryteacher', 'mod_projetvet')
-            .then((title) => {
-                modalForm.modal.setTitle(title);
-                return title;
-            })
-            .catch(Notification.exception);
-    });
-
-    modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (event) => {
-        if (event.detail.message) {
-            Notification.addNotification({
-                message: event.detail.message,
-                type: 'success',
-            });
-        }
         window.location.reload();
     });
 
@@ -319,40 +235,213 @@ const showTeacherSettingsModal = (cmid, teacherid, projetvetid) => {
 };
 
 /**
- * Show modal form for assigning a teacher to students
+ * Fetch the HTML and JavaScript for the assign teacher modal body.
+ *
+ * @param {number} cmid Course module ID
+ * @param {Array} studentids Array of student user IDs
+ * @param {number} projetvetid Projetvet instance ID
+ * @return {Promise} Resolves to an object with html and js properties
+ */
+const fetchAssignTeacherBody = (cmid, studentids, projetvetid) => Ajax.call([{
+    methodname: 'mod_projetvet_get_assign_teacher_modal',
+    args: {cmid, projetvetid, studentids},
+}])[0].then((response) => ({
+    html: response.html,
+    js: Fragment.processCollectedJavascript(response.javascript),
+}));
+
+/**
+ * Show a modal to assign a teacher to students.
+ *
+ * This dialog intentionally uses a plain save/cancel modal rather than a form,
+ * because its body contains a reportbuilder report which renders its own filter
+ * form. Embedding that report inside a form would produce invalid nested forms,
+ * breaking the filter controls and the radio/hidden-field association. The
+ * assignment is therefore performed with a web service on save, using the
+ * selected teacher radio, instead of submitting a form.
  *
  * @param {number} cmid Course module ID
  * @param {Array} studentids Array of student user IDs
  * @param {number} projetvetid Projetvet instance ID
  */
 const showAssignTeacherModal = (cmid, studentids, projetvetid) => {
-    const modalForm = new ModalForm({
-        formClass: '\\mod_projetvet\\form\\edit_teacher_form',
-        args: {
-            cmid: cmid,
-            studentids: JSON.stringify(studentids),
-            projetvetid: projetvetid,
-        },
-        returnFocus: document.activeElement,
-    });
+    ModalSaveCancel.create({
+        large: true,
+        isVerticallyCentered: true,
+        removeOnClose: true,
+        returnElement: document.activeElement,
+    })
+        .then((modal) => {
+            modal.getModal().addClass('modal-fullscreen-form');
 
-    // Add custom class to modal after it's loaded.
-    modalForm.addEventListener(modalForm.events.LOADED, () => {
-        modalForm.modal.getModal().addClass('modal-dialog-centered modal-fullscreen-form');
-    });
+            // Fetch the popup body (selected students + teachers selection report)
+            // and set the modal title.
+            const bodyPromise = fetchAssignTeacherBody(cmid, studentids, projetvetid);
 
-    modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (event) => {
-        if (event.detail.message) {
-            Notification.addNotification({
-                message: event.detail.message,
-                type: 'success',
+            // eslint-disable-next-line promise/no-nesting
+            return Promise.all([modal.setBodyContent(bodyPromise), Str.get_string('assignteacher', 'mod_projetvet')])
+                .then(([, title]) => {
+                    modal.setTitle(title);
+                    return modal;
+                });
+        })
+        .then((modal) => {
+            // Intercept the save button to perform the assignment.
+            modal.getRoot().on(ModalEvents.save, (event) => {
+                handleAssignTeacherSave(event, modal, cmid, studentids, projetvetid);
             });
-        }
-        // Reload the page to refresh the report.
-        window.location.reload();
-    });
 
-    modalForm.show();
+            return modal.show();
+        })
+        .catch(Notification.exception);
+};
+
+/**
+ * Handle the save button of the assign teacher modal.
+ *
+ * @param {object} event The save event
+ * @param {object} modal The modal save/cancel instance
+ * @param {number} cmid Course module ID
+ * @param {Array} studentids Array of student user IDs
+ * @param {number} projetvetid Projetvet instance ID
+ */
+const handleAssignTeacherSave = (event, modal, cmid, studentids, projetvetid) => {
+    event.preventDefault();
+
+    const radio = modal.getRoot().find('.teacher-select-radio:checked');
+    if (radio.length === 0) {
+        Str.get_string('assignselectteacher', 'mod_projetvet')
+            .then((message) => {
+                Notification.addNotification({message, type: 'error'});
+                return message;
+            })
+            .catch(Notification.exception);
+        return;
+    }
+
+    const teacherid = Number(radio.first().data('teacherid'));
+    Ajax.call([{
+        methodname: 'mod_projetvet_assign_teacher',
+        args: {cmid, projetvetid, studentids, teacherid},
+    }])[0]
+        .then((response) => {
+            if (response.message) {
+                Notification.addNotification({
+                    message: response.message,
+                    type: 'success',
+                });
+            }
+            modal.hide();
+            if (response.notificationchanges && response.notificationchanges.length > 0) {
+                showAssignmentNotificationChoice(cmid, projetvetid, response.notificationchanges);
+            } else {
+                // Reload the page to refresh the reports.
+                window.location.reload();
+            }
+            return response;
+        })
+        .catch(Notification.exception);
+};
+
+/**
+ * Show the optional notification choice after an assignment succeeds.
+ *
+ * @param {number} cmid Course module ID
+ * @param {number} projetvetid ProjetVet instance ID
+ * @param {Array} changes Assignment state changes
+ * @return {Promise} Modal promise
+ */
+const showAssignmentNotificationChoice = (cmid, projetvetid, changes) => {
+    const change = changes[0];
+    const scenario = change.beforeprimaryid === 0
+        ? 'first_assignment'
+        : 'definitive_change';
+    const scenarioString = scenario === 'first_assignment'
+        ? 'assignmentnotification_first'
+        : 'assignmentnotification_definitive';
+
+    return Promise.all([
+        Str.get_string('assignmentnotificationchoice', 'mod_projetvet'),
+        Str.get_string('sendnotifications', 'mod_projetvet'),
+        Str.get_string('donotsendnotifications', 'mod_projetvet'),
+        Str.get_string(scenarioString, 'mod_projetvet'),
+    ])
+        .then(([choiceLabel, sendLabel, doNotSendLabel, scenarioLabel]) => createAssignmentNotificationModal(
+            choiceLabel,
+            sendLabel,
+            doNotSendLabel,
+            scenarioLabel
+        ))
+        .then((modal) => configureAssignmentNotificationModal(modal, cmid, projetvetid, changes, scenario))
+        .catch(Notification.exception);
+};
+
+/**
+ * Create the assignment notification modal.
+ *
+ * @param {string} choiceLabel Modal title and question
+ * @param {string} sendLabel Send button label
+ * @param {string} doNotSendLabel Cancel button label
+ * @param {string} scenarioLabel Scenario label
+ * @return {Promise} Modal promise
+ */
+const createAssignmentNotificationModal = (choiceLabel, sendLabel, doNotSendLabel, scenarioLabel) => ModalSaveCancel.create({
+        isVerticallyCentered: true,
+        removeOnClose: true,
+        returnElement: document.activeElement,
+    }).then((modal) => {
+        const body = `<p>${choiceLabel}</p><p><strong>${scenarioLabel}</strong></p>`;
+        modal.setBodyContent(Promise.resolve(body));
+        modal.setTitle(choiceLabel);
+        modal.setSaveButtonText(sendLabel);
+        modal.setButtonText('cancel', doNotSendLabel);
+        return modal;
+     });
+
+/**
+ * Configure and display the assignment notification modal.
+ *
+ * @param {object} modal The modal instance
+ * @param {number} cmid Course module ID
+ * @param {number} projetvetid ProjetVet instance ID
+ * @param {Array} changes Assignment state changes
+ * @param {string} scenario Notification scenario
+ * @return {Promise} Modal display promise
+ */
+const configureAssignmentNotificationModal = (modal, cmid, projetvetid, changes, scenario) => {
+    modal.getRoot().on(ModalEvents.save, (event) => {
+        handleAssignmentNotificationSave(event, modal, cmid, projetvetid, changes, scenario);
+    });
+    modal.getRoot().on(ModalEvents.cancel, () => window.location.reload());
+    return modal.show();
+};
+
+/**
+ * Send the selected assignment notifications.
+ *
+ * @param {object} event The save event
+ * @param {object} modal The modal instance
+ * @param {number} cmid Course module ID
+ * @param {number} projetvetid ProjetVet instance ID
+ * @param {Array} changes Assignment state changes
+ * @param {string} scenario Notification scenario
+ * @return {Promise} The AJAX request promise
+ */
+const handleAssignmentNotificationSave = (event, modal, cmid, projetvetid, changes, scenario) => {
+    event.preventDefault();
+    return Ajax.call([{
+        methodname: 'mod_projetvet_send_assignment_notifications',
+        args: {cmid, projetvetid, scenario, changes},
+    }])[0]
+        .then((response) => {
+            if (response.message) {
+                Notification.addNotification({message: response.message, type: 'success'});
+            }
+            modal.hide();
+            window.location.reload();
+            return response;
+        })
+        .catch(Notification.exception);
 };
 
 /**

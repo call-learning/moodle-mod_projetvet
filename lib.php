@@ -125,6 +125,9 @@ function projetvet_delete_instance($id) {
         calendar_event::load($event)->delete();
     }
 
+    // Delete the substitute tutors history of the instance.
+    $DB->delete_records('projetvet_substitutions', ['projetvetid' => $record->id]);
+
     // Delete the instance.
     $DB->delete_records('projetvet', ['id' => $id]);
 
@@ -240,4 +243,160 @@ function projetvet_extend_settings_navigation($settingsnav, $projetvetnode = nul
         );
         $projetvetnode->add_node($dashboardnode);
     }
+}
+
+/**
+ * Extends the user settings navigation with the tutor practical info settings.
+ *
+ * This function is called by core when building the user settings navigation tree.
+ * The node is only added for the logged-in user on their own preferences page,
+ * and only if the user is a tutor (primary owner of at least one projetvet group).
+ *
+ * @param navigation_node $usersetting The user settings navigation node.
+ * @param stdClass $user The user whose settings are being built.
+ * @param context_user $usercontext The user context.
+ * @param stdClass $course The course being displayed.
+ * @param context_course $coursecontext The course context.
+ * @return void
+ */
+function mod_projetvet_extend_navigation_user_settings(navigation_node $usersetting, $user, $usercontext, $course, $coursecontext) {
+    global $DB, $PAGE, $USER;
+
+    // Only inject the node on the user's own preferences page.
+    $onpreferencepage = $PAGE->url->compare(new moodle_url('/user/preferences.php'), URL_MATCH_BASE);
+    if (!$onpreferencepage || $user->id != $USER->id) {
+        return;
+    }
+
+    // Only tutors (primary owners of at least one projetvet group) get the node.
+    if (!$DB->record_exists('projetvet_groups', ['ownerid' => $user->id])) {
+        return;
+    }
+
+    // Add the entry under a dedicated "Projetvet" section so it does not fall
+    // into the default "Other" ("Divers") section (same pattern as core badges).
+    $section = $usersetting->add(
+        get_string('pluginname', 'mod_projetvet'),
+        null,
+        navigation_node::TYPE_CONTAINER,
+        null,
+        'projetvet'
+    );
+    $section->add(
+        get_string('practicalinfo_settings', 'mod_projetvet'),
+        new moodle_url('/mod/projetvet/tutor_info.php'),
+        navigation_node::TYPE_SETTING
+    );
+}
+
+/**
+ * Check whether a user may view a specific student's data in a Projetvet activity.
+ *
+ * A user may always view their own data. Viewing another student's data requires the
+ * viewallactivities capability, held by teachers, tutors and managers. This is the privacy
+ * boundary that prevents a student from opening another student's page by guessing the
+ * studentid parameter.
+ *
+ * @param int $viewerid The id of the user attempting to view the data.
+ * @param int $studentid The id of the student whose data is to be viewed.
+ * @param context_module $context The module context of the activity.
+ * @return bool True if the viewer may view the student's data.
+ */
+function projetvet_user_can_view_student(int $viewerid, int $studentid, context_module $context): bool {
+    // A user may always view their own data.
+    if ($viewerid === $studentid) {
+        return true;
+    }
+
+    // Viewing another student's data requires the viewallactivities capability
+    // (teachers, tutors and managers).
+    return has_capability('mod/projetvet:viewallactivities', $context, $viewerid);
+}
+
+/**
+ * Merge required/mintags flags into the stored configdata of report-stage fields.
+ *
+ * This is used by the 2026092501 upgrade savepoint (ticket #912). It merges the
+ * new flags into the existing configdata JSON of the affected fields, preserving
+ * any site-specific values (e.g. textarea rows) and tolerating missing or invalid
+ * JSON. The step is idempotent: re-running it on already-merged rows is a no-op.
+ *
+ * @return void
+ */
+function projetvet_merge_report_field_configdata(): void {
+    global $DB;
+
+    $requiredfields = [
+        'start_date',
+        'end_date',
+        'actions_summary',
+        'progress_on',
+        'must_still_progress_on',
+    ];
+    $mintagsfields = [
+        'practiced_competencies',
+    ];
+
+    foreach ($requiredfields as $idnumber) {
+        $record = $DB->get_record('projetvet_form_field', ['idnumber' => $idnumber]);
+        if (!$record) {
+            continue;
+        }
+        $configdata = json_decode($record->configdata ?? '', true);
+        if (!is_array($configdata)) {
+            $configdata = [];
+        }
+        $configdata['required'] = true;
+        $newconfig = json_encode($configdata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $DB->set_field('projetvet_form_field', 'configdata', $newconfig, ['id' => $record->id]);
+    }
+
+    foreach ($mintagsfields as $idnumber) {
+        $record = $DB->get_record('projetvet_form_field', ['idnumber' => $idnumber]);
+        if (!$record) {
+            continue;
+        }
+        $configdata = json_decode($record->configdata ?? '', true);
+        if (!is_array($configdata)) {
+            $configdata = [];
+        }
+        $configdata['mintags'] = 2;
+        $newconfig = json_encode($configdata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $DB->set_field('projetvet_form_field', 'configdata', $newconfig, ['id' => $record->id]);
+    }
+
+    // Purge the activitystructures cache so the new flags take effect immediately.
+    \cache::make('mod_projetvet', 'activitystructures')->purge();
+}
+
+/**
+ * Pre-fill the final ECTS field with the tutor-agreed credits value.
+ *
+ * This is used by the 2026100200 upgrade savepoint (ticket #917). It merges the
+ * prefillfrom flag into the stored configdata of the final_ects field, preserving
+ * any site-specific values and tolerating missing or invalid JSON. The step is
+ * idempotent: re-running it on already-merged rows is a no-op.
+ *
+ * @return void
+ */
+function projetvet_merge_final_ects_prefill(): void {
+    global $DB;
+
+    $record = $DB->get_record('projetvet_form_field', ['idnumber' => 'final_ects']);
+    if (!$record) {
+        return;
+    }
+    $configdata = json_decode($record->configdata ?? '', true);
+    if (!is_array($configdata)) {
+        $configdata = [];
+    }
+    if (($configdata['prefillfrom'] ?? null) === 'credits') {
+        return;
+    }
+    $configdata['prefillfrom'] = 'credits';
+    $newconfig = json_encode($configdata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $DB->set_field('projetvet_form_field', 'configdata', $newconfig, ['id' => $record->id]);
+
+    // Purge the activitystructures cache so the new flag takes effect immediately.
+    \cache::make('mod_projetvet', 'activitystructures')->purge();
 }

@@ -19,6 +19,8 @@ namespace mod_projetvet\output;
 use mod_projetvet\local\persistent\form_set;
 use mod_projetvet\local\persistent\form_entry;
 use mod_projetvet\local\api\entries;
+use mod_projetvet\local\api\substitutions;
+use mod_projetvet\local\persistent\substitution;
 use core\url as moodle_url;
 use renderer_base;
 use renderable;
@@ -43,6 +45,11 @@ class student_info implements renderable, templatable {
     protected $cm;
 
     /**
+     * @var \context_module The course module context.
+     */
+    protected $context;
+
+    /**
      * @var int $studentid The student ID.
      */
     protected $studentid;
@@ -57,12 +64,14 @@ class student_info implements renderable, templatable {
      *
      * @param object $moduleinstance The module instance
      * @param object $cm The course module
+     * @param \context_module $context The course module context
      * @param int $studentid The student ID
      * @param bool $isteacher Whether the user is a teacher
      */
-    public function __construct($moduleinstance, $cm, $studentid, $isteacher) {
+    public function __construct($moduleinstance, $cm, $context, $studentid, $isteacher) {
         $this->moduleinstance = $moduleinstance;
         $this->cm = $cm;
+        $this->context = $context;
         $this->studentid = $studentid;
         $this->isteacher = $isteacher;
     }
@@ -74,6 +83,8 @@ class student_info implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
+        global $USER;
+
         // Get chart data using the chart_data class.
         $totalects = chart_data::get_total_ects($this->moduleinstance->id, $this->studentid);
         $targetects = get_config('mod_projetvet', 'target_ects') ?: 20;
@@ -124,28 +135,56 @@ class student_info implements renderable, templatable {
         // Teacher row.
         $teacherrow = ['label' => get_string('tutor', 'mod_projetvet')];
         $teacherrow['value'] = $tutorname;
-        $teacherrow['hasbutton'] = true;
-        $teacherrow['buttontext'] = get_string('practicalinfo', 'mod_projetvet');
-        $teacherrow['buttonaction'] = 'activity-entry-form';
-        $teacherrow['cmid'] = $this->cm->id;
-        $teacherrow['projetvetid'] = $this->moduleinstance->id;
-        $teacherrow['studentid'] = $this->studentid;
-        $teacherrow['formsetidnumber'] = 'teacherinfo';
-        $teacherrow['readonly'] = $this->isteacher ? 0 : 1;
-
-        $teacherformset = form_set::get_record(['idnumber' => 'teacherinfo']);
-        if ($teacherformset) {
-            $teacherentry = form_entry::get_record([
-                'projetvetid' => $this->moduleinstance->id,
-                'studentid' => $this->studentid,
-                'formsetid' => $teacherformset->get('id'),
-            ]);
-            if ($teacherentry) {
-                $teacherrow['entryid'] = $teacherentry->get('id');
-            }
-        }
 
         $data['infotable']['rows'][] = $teacherrow;
+
+        // Substitute tutor row, while a substitution is open: the principal tutor stays visible above.
+        $substitution = substitutions::get_open_substitution($this->studentid, $this->moduleinstance->id);
+        if ($substitution) {
+            $data['infotable']['rows'][] = [
+                'label' => get_string('substitution_substitute', 'mod_projetvet'),
+                'value' => s(self::get_substitution_summary($substitution)),
+                'rowhighlight' => true,
+            ];
+        }
+
+        // Show the tutor's info to the assigned student, the tutor, or a ProjetVet admin.
+        $canviewtutorinfo = $tutor && ($this->studentid == $USER->id || $tutor->id == $USER->id ||
+                has_capability('mod/projetvet:admin', $this->context));
+        if ($canviewtutorinfo) {
+            $tutorinfo = get_user_preferences('projetvet_tutor_info', '', $tutor->id);
+            $tutorinforow = ['label' => get_string('tutorinfo', 'mod_projetvet')];
+            if ($tutorinfo !== '') {
+                $tutorinforow['value'] = format_text($tutorinfo, FORMAT_PLAIN, ['newlines' => true]);
+                $tutorinforow['rowhighlight'] = true;
+            } else {
+                $tutorinforow['valueempty'] = get_string('practicalinfo_notyet', 'mod_projetvet');
+            }
+
+            // The tutor can (re)define their practical info from this student view. The link
+            // carries a return url so that, once saved, the tutor is sent back to this page.
+            if ($tutor->id == $USER->id) {
+                $returnurl = (string) new moodle_url('/mod/projetvet/view.php', [
+                    'id' => $this->cm->id,
+                    'studentid' => $this->studentid,
+                ]);
+                $tutorinforow['haslink'] = true;
+                $tutorinforow['linkurl'] = (string) new moodle_url('/mod/projetvet/tutor_info.php', [
+                    'returnurl' => $returnurl,
+                ]);
+                if ($tutorinfo !== '') {
+                    // Info already set: offer a subtle edit affordance (pencil icon).
+                    $tutorinforow['linkicon'] = 'fa-pencil';
+                    $tutorinforow['linktitle'] = get_string('edit', 'moodle');
+                } else {
+                    // Info not set yet: offer a clear link to define it.
+                    $tutorinforow['linktext'] = get_string('practicalinfo_notyet_link', 'mod_projetvet');
+                    $tutorinforow['linktitle'] = get_string('practicalinfo_notyet_link', 'mod_projetvet');
+                }
+            }
+
+            $data['infotable']['rows'][] = $tutorinforow;
+        }
 
         // Thesis subject row.
         $thesisrow = ['label' => get_string('thesissubject', 'mod_projetvet')];
@@ -251,13 +290,50 @@ class student_info implements renderable, templatable {
         }
 
         $data['infotable']['rows'][] = $mobilityrow;
-                // Show back link for teachers viewing a student.
+        // Show back link for teachers viewing a student.
         if ($this->isteacher) {
             $data['showbacklink'] = true;
             $data['backurl'] = new moodle_url('/mod/projetvet/view.php', ['id' => $this->cm->id]);
         }
 
         return $data;
+    }
+
+    /**
+     * Describe an open substitution: substitute name and period.
+     *
+     * @param substitution $substitution
+     * @return string
+     */
+    public static function get_substitution_summary(substitution $substitution): string {
+        return get_string('substitution_summary', 'mod_projetvet', (object) [
+            'name' => fullname(\core_user::get_user($substitution->get('substitutetutorid'))),
+            'period' => self::get_substitution_period($substitution),
+        ]);
+    }
+
+    /**
+     * Describe the period of an open substitution: "since <start>" once in effect, "from <start>"
+     * when planned, followed by "until <planned end>" when an end date is planned.
+     *
+     * @param substitution $substitution
+     * @return string
+     */
+    public static function get_substitution_period(substitution $substitution): string {
+        $dateformat = get_string('strftimedatefullshort', 'langconfig');
+        $period = get_string(
+            $substitution->is_in_effect() ? 'substitution_period_since' : 'substitution_period_from',
+            'mod_projetvet',
+            userdate($substitution->get('startdate'), $dateformat)
+        );
+        if ($substitution->get('enddate')) {
+            $period .= ' ' . get_string(
+                'substitution_period_until',
+                'mod_projetvet',
+                userdate($substitution->get('enddate'), $dateformat)
+            );
+        }
+        return $period;
     }
 
     /**

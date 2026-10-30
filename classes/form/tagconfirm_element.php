@@ -102,14 +102,41 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
     }
 
     /**
-     * Returns the HTML for this form element.
+     * Accepts a renderer.
      *
-     * @return string
+     * @param object $renderer An HTML_QuickForm_Renderer object
+     * @param bool $required Whether an element is required
+     * @param string|null $error An error message associated with an element
+     * @return void
      */
-    public function toHtml() { // @codingStandardsIgnoreLine
+    public function accept(&$renderer, $required = false, $error = null) {
         global $OUTPUT;
+
+        $elementname = $this->getName();
         $context = $this->export_for_template($OUTPUT);
-        return $OUTPUT->render_from_template('mod_projetvet/form/element_tagconfirm', $context);
+        $rendercontext = [
+            'element' => $context,
+            'label' => $this->getLabel(),
+            'required' => $required,
+            'advanced' => isset($renderer->_advancedElements[$elementname]),
+            'helpbutton' => '',
+            'error' => $error,
+        ] + $context;
+        $html = $OUTPUT->render_from_template('mod_projetvet/form/element_tagconfirm', $rendercontext);
+
+        if ($renderer->_inGroup) {
+            $this->_groupElementTemplate = $html;
+        }
+        if (($renderer->_inGroup) && !empty($this->_groupElementTemplate)) {
+            $renderer->_groupElementTemplate = $html;
+        } else if (!isset($renderer->_templates[$elementname])) {
+            $renderer->_templates[$elementname] = $html;
+        }
+        if (in_array($elementname, $renderer->_stopFieldsetElements) && $renderer->_fieldsetsOpen > 0) {
+            $renderer->_html .= $renderer->_closeFieldsetTemplate;
+            $renderer->_fieldsetsOpen--;
+        }
+        $renderer->_html .= $html;
     }
 
     /**
@@ -119,6 +146,7 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
+        $this->_generateId();
         $elementname = $this->getName();
         $elementid = $this->getAttribute('id');
         $isfrozen = $this->isFrozen();
@@ -179,6 +207,12 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
         return [
             'elementname' => $elementname,
             'elementid' => $elementid,
+            'id' => $elementid,
+            'wrapperid' => 'fitem_' . $elementid,
+            'iderror' => 'id_error_' . $elementid,
+            // Composite element without a single form control, so the label is
+            // rendered as a span rather than a label element.
+            'staticlabel' => true,
             'label' => $this->getLabel(),
             'groups' => $groups,
             'hasgroups' => !empty($groups),

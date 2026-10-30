@@ -29,7 +29,7 @@
  * @return bool
  */
 function xmldb_projetvet_upgrade($oldversion) {
-    global $DB;
+    global $DB, $CFG;
 
     $dbman = $DB->get_manager();
 
@@ -190,6 +190,152 @@ function xmldb_projetvet_upgrade($oldversion) {
 
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2026011300, 'projetvet');
+    }
+
+    if ($oldversion < 2026092501) {
+        // Fix #912: Make the report-stage fields mandatory.
+        //
+        // Merge required/mintags flags into the stored configdata of the six
+        // affected fields, preserving site-specific values, then purge the
+        // structure cache. The merge is idempotent.
+        require_once($CFG->dirroot . '/mod/projetvet/lib.php');
+        projetvet_merge_report_field_configdata();
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092501, 'projetvet');
+    }
+
+    if ($oldversion < 2026092502) {
+        // Fix the contact message provider capability. The capability on a
+        // message provider is checked against the *recipient*, so it must be a
+        // capability the student has. The tutor-only mod/projetvet:approve meant
+        // students (the recipients) never had the provider enabled and the
+        // contact/broadcast messages were silently dropped.
+        //
+        // db/messages.php is only read at install time to seed this table, so the
+        // live row has to be updated here as well.
+        $DB->set_field(
+            'message_providers',
+            'capability',
+            'mod/projetvet:view',
+            ['component' => 'mod_projetvet', 'name' => \mod_projetvet\local\messaging::PROVIDER]
+        );
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092502, 'projetvet');
+    }
+
+    if ($oldversion < 2026092800) {
+        // Add the A1 student acceptance flag to the teacher rating table.
+        //
+        // The default value of 1 ("yes") initialises every existing tutor as
+        // accepting new A1 students, matching the behaviour of tutors that have
+        // no rating record at all.
+        $table = new xmldb_table('projetvet_teacher_rating');
+        $field = new xmldb_field(
+            'acceptsa1',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '1',
+            'rating'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092800, 'projetvet');
+    }
+
+    if ($oldversion < 2026092900) {
+        // Add the tutor availability status, defaulting existing tutors to open.
+        $table = new xmldb_table('projetvet_teacher_rating');
+        $field = new xmldb_field(
+            'status',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'rating'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026092900, 'projetvet');
+    }
+
+    if ($oldversion < 2026100200) {
+        // Fix #917: Pre-fill the final ECTS field with the tutor-agreed credits.
+        //
+        // Merge the prefillfrom flag into the stored configdata of the final_ects
+        // field, preserving site-specific values, then purge the structure cache.
+        // The merge is idempotent.
+        require_once($CFG->dirroot . '/mod/projetvet/lib.php');
+        projetvet_merge_final_ects_prefill();
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026100200, 'projetvet');
+    }
+
+    if ($oldversion < 2026102300) {
+        // Fix #866: Define table projetvet_substitutions to be created.
+        $table = new xmldb_table('projetvet_substitutions');
+
+        // Adding fields to table projetvet_substitutions.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('projetvetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('studentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('primarytutorid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('substitutetutorid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('startdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('enddate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('reason', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('notifyprimary', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('status', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timeclosed', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('closedby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('createdby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table projetvet_substitutions.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('fk_projetvetid', XMLDB_KEY_FOREIGN, ['projetvetid'], 'projetvet', ['id']);
+        $table->add_key('fk_studentid', XMLDB_KEY_FOREIGN, ['studentid'], 'user', ['id']);
+        $table->add_key('fk_primarytutorid', XMLDB_KEY_FOREIGN, ['primarytutorid'], 'user', ['id']);
+        $table->add_key('fk_substitutetutorid', XMLDB_KEY_FOREIGN, ['substitutetutorid'], 'user', ['id']);
+
+        // Adding indexes to table projetvet_substitutions.
+        $table->add_index('projetvet_student', XMLDB_INDEX_NOTUNIQUE, ['projetvetid', 'studentid']);
+        $table->add_index('projetvet_status', XMLDB_INDEX_NOTUNIQUE, ['projetvetid', 'status']);
+
+        // Conditionally launch create table for projetvet_substitutions.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026102300, 'projetvet');
+    }
+
+    if ($oldversion < 2026102500) {
+        // Fix #866: Secondary tutors are replaced by the per-student substitute tutors.
+        // Delete the remaining secondary tutor memberships so they no longer give access
+        // to the students of the group.
+        $DB->delete_records('projetvet_group_members', ['membertype' => 'secondary_tutor']);
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026102500, 'projetvet');
     }
 
     return true;

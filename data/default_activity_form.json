@@ -121,6 +121,7 @@
           "description": "",
           "configdata": {
             "required": true,
+            "mintags": 2,
             "maxtags": 500,
             "helptext": true
           },
@@ -379,7 +380,9 @@
           "name": "Date de début de réalisation",
           "type": "date",
           "description": "Indiquez ici la période pendant laquelle s'est déroulée l'activité de CPP",
-          "configdata": {},
+          "configdata": {
+            "required": true
+          },
           "capability": "submit",
           "entrystatus": 2,
           "listorder": 0
@@ -389,7 +392,9 @@
           "name": "Date de fin de réalisation",
           "type": "date",
           "description": "",
-          "configdata": {},
+          "configdata": {
+            "required": true
+          },
           "capability": "submit",
           "entrystatus": 2,
           "listorder": 3
@@ -400,7 +405,8 @@
           "type": "textarea",
           "description": "Décrire ici de façon concrète ce que vous avez fait",
           "configdata": {
-            "rows": 6
+            "rows": 6,
+            "required": true
           },
           "capability": "submit",
           "entrystatus": 2,
@@ -436,7 +442,8 @@
           "type": "textarea",
           "description": "",
           "configdata": {
-            "rows": 4
+            "rows": 4,
+            "required": true
           },
           "capability": "submit",
           "entrystatus": 2,
@@ -448,7 +455,8 @@
           "type": "textarea",
           "description": "",
           "configdata": {
-            "rows": 4
+            "rows": 4,
+            "required": true
           },
           "capability": "submit",
           "entrystatus": 2,
@@ -473,7 +481,8 @@
           "type": "tagconfirm",
           "description": "Parmi les compétences définies lors de la soumission du projet, indiquez celles que vous avez réellement mises en pratique. Vous pouvez également en ajouter.",
           "configdata": {
-            "tagselect": "competency"
+            "tagselect": "competency",
+            "mintags": 2
           },
           "capability": "submit",
           "entrystatus": 0,
@@ -597,6 +606,7 @@
           "description": "",
           "configdata": {
             "required": true,
+            "prefillfrom": "credits",
             "data-action": "validateects",
             "data-string": "validateects"
           },

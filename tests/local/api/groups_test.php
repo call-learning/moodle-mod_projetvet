@@ -26,8 +26,8 @@ use mod_projetvet\local\persistent\teacher_rating;
  * @package   mod_projetvet
  * @copyright 2026 Bas Brands <bas@sonsbeekmedia.nl>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers    \mod_projetvet\local\api\groups
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(groups::class)]
 final class groups_test extends \advanced_testcase {
     /**
      * Test setup - create course, users, module
@@ -147,7 +147,7 @@ final class groups_test extends \advanced_testcase {
 
         // Add members of different types.
         $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
-        $group->add_member($data['student2']->id, group_member::TYPE_SECONDARY_TUTOR);
+        $group->add_member($data['student2']->id, group_member::TYPE_PRIMARY_TUTOR);
 
         // Get only students.
         $students = groups::get_user_memberships($data['student1']->id, $data['projetvet']->id, group_member::TYPE_STUDENT);
@@ -158,10 +158,10 @@ final class groups_test extends \advanced_testcase {
         $tutors = groups::get_user_memberships(
             $data['student2']->id,
             $data['projetvet']->id,
-            group_member::TYPE_SECONDARY_TUTOR
+            group_member::TYPE_PRIMARY_TUTOR
         );
         $this->assertCount(1, $tutors);
-        $this->assertTrue($tutors[0]->is_secondary_tutor());
+        $this->assertTrue($tutors[0]->is_tutor());
 
         // Get all memberships for student1.
         $all = groups::get_user_memberships($data['student1']->id, $data['projetvet']->id);
@@ -193,6 +193,110 @@ final class groups_test extends \advanced_testcase {
 
         // Expert rating = 12 capacity, 2 students assigned = 10 available.
         $this->assertEquals(10, $capacity);
+    }
+
+    /**
+     * Test that a tutor without a settings record is open by default.
+     */
+    public function test_teacher_status_defaults_to_active_open(): void {
+        $data = $this->create_test_data();
+
+        $this->assertSame(
+            teacher_rating::STATUS_ACTIVE_OPEN,
+            groups::get_teacher_status($data['teacher']->id, $data['projetvet']->id)
+        );
+        $this->assertTrue(groups::is_teacher_open_for_new_assignments(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->create();
+
+        $this->assertSame(teacher_rating::STATUS_ACTIVE_OPEN, $rating->get_availability_status());
+    }
+
+    /**
+     * Test that the tutor status can be changed independently from the rating.
+     */
+    public function test_set_teacher_status(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_rating(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::RATING_EXPERT
+        );
+        groups::set_teacher_status(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::STATUS_ACTIVE_CLOSED
+        );
+
+        $rating = teacher_rating::get_user_rating($data['teacher']->id, $data['projetvet']->id);
+        $this->assertSame(teacher_rating::STATUS_ACTIVE_CLOSED, $rating->get_availability_status());
+        $this->assertSame(teacher_rating::RATING_EXPERT, $rating->get('rating'));
+    }
+
+    /**
+     * Test that an unknown tutor availability status is rejected.
+     */
+    public function test_unknown_teacher_status_is_rejected(): void {
+        $data = $this->create_test_data();
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('status', 'unknown');
+
+        $this->expectException(\core\invalid_persistent_exception::class);
+        $rating->create();
+    }
+
+    /**
+     * Test that changing status preserves assignments, groups, rating and capacity.
+     */
+    public function test_teacher_status_change_preserves_existing_data(): void {
+        $data = $this->create_test_data();
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('rating', teacher_rating::RATING_EXPERT);
+        $rating->create();
+
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+
+        $capacity = groups::get_teacher_available_capacity($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('status', teacher_rating::STATUS_INACTIVE);
+        $rating->update();
+
+        $updatedrating = teacher_rating::get_user_rating($data['teacher']->id, $data['projetvet']->id);
+        $this->assertNotNull($updatedrating);
+        $this->assertSame(teacher_rating::STATUS_INACTIVE, $updatedrating->get_availability_status());
+        $this->assertSame(teacher_rating::RATING_EXPERT, $updatedrating->get('rating'));
+        $this->assertSame($capacity, groups::get_teacher_available_capacity(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+        $this->assertCount(2, groups::get_students_for_tutor(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+        $this->assertFalse(groups::is_teacher_open_for_new_assignments(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        ));
+
+        groups::set_teacher_rating(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::RATING_NOVICE
+        );
+        $updatedrating = teacher_rating::get_user_rating($data['teacher']->id, $data['projetvet']->id);
+        $this->assertSame(teacher_rating::STATUS_INACTIVE, $updatedrating->get_availability_status());
+        $this->assertSame(teacher_rating::RATING_NOVICE, $updatedrating->get('rating'));
     }
 
     /**
@@ -267,46 +371,10 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
-     * Test add_members syncs correctly
+     * Test sync_group_students updates only students and keeps the primary tutor untouched.
      */
-    public function test_add_members_sync(): void {
+    public function test_sync_group_students_preserves_primary_tutor(): void {
         $data = $this->create_test_data();
-
-        // Create group.
-        $group = new projetvet_group(0, (object)[
-            'projetvetid' => $data['projetvet']->id,
-            'ownerid' => $data['teacher']->id,
-            'name' => 'Test Group',
-        ]);
-        $group->create();
-
-        // Add initial students.
-        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
-        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
-
-        // Sync to remove student2 and add student3.
-        groups::add_members($group->get('id'), [], [$data['student1']->id, $data['student3']->id]);
-
-        // Re-fetch the group to get updated members.
-        $group = new projetvet_group($group->get('id'));
-        $members = $group->get_members(group_member::TYPE_STUDENT);
-        $this->assertCount(2, $members);
-
-        $memberids = array_map(fn($m) => $m->get('userid'), $members);
-        $this->assertContains((int)$data['student1']->id, $memberids);
-        $this->assertContains((int)$data['student3']->id, $memberids);
-        $this->assertNotContains((int)$data['student2']->id, $memberids);
-    }
-
-    /**
-     * Test sync_group_students updates only students and keeps secondary tutors untouched.
-     */
-    public function test_sync_group_students_preserves_secondary_tutors(): void {
-        $data = $this->create_test_data();
-        $generator = $this->getDataGenerator();
-
-        $teacher2 = $generator->create_user(['username' => 'teacher2']);
-        $generator->enrol_user($teacher2->id, $data['course']->id, 'editingteacher');
 
         $group = new projetvet_group(0, (object)[
             'projetvetid' => $data['projetvet']->id,
@@ -314,56 +382,19 @@ final class groups_test extends \advanced_testcase {
             'name' => 'Test Group',
         ]);
         $group->create();
+        $group->add_member($data['teacher']->id, group_member::TYPE_PRIMARY_TUTOR);
         $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
         $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
-        $group->add_member($teacher2->id, group_member::TYPE_SECONDARY_TUTOR);
 
-        // Keep only student2.
-        groups::sync_group_students($group->get('id'), [$data['student2']->id]);
+        // Keep student2 and add student3.
+        groups::sync_group_students($group->get('id'), [$data['student2']->id, $data['student3']->id]);
 
-        $students = $group->get_members(group_member::TYPE_STUDENT);
-        $secondary = $group->get_members(group_member::TYPE_SECONDARY_TUTOR);
+        $studentids = array_map(fn($m) => (int) $m->get('userid'), $group->get_members(group_member::TYPE_STUDENT));
+        $tutors = array_values($group->get_members(group_member::TYPE_PRIMARY_TUTOR));
 
-        $this->assertCount(1, $students);
-        $this->assertEquals($data['student2']->id, $students[0]->get('userid'));
-        $this->assertCount(1, $secondary);
-        $this->assertEquals($teacher2->id, $secondary[0]->get('userid'));
-    }
-
-    /**
-     * Test sync_group_secondary_tutors updates only secondary tutors and keeps students untouched.
-     */
-    public function test_sync_group_secondary_tutors_preserves_students(): void {
-        $data = $this->create_test_data();
-        $generator = $this->getDataGenerator();
-
-        $teacher2 = $generator->create_user(['username' => 'teacher2']);
-        $teacher3 = $generator->create_user(['username' => 'teacher3']);
-        $generator->enrol_user($teacher2->id, $data['course']->id, 'editingteacher');
-        $generator->enrol_user($teacher3->id, $data['course']->id, 'editingteacher');
-
-        $group = new projetvet_group(0, (object)[
-            'projetvetid' => $data['projetvet']->id,
-            'ownerid' => $data['teacher']->id,
-            'name' => 'Test Group',
-        ]);
-        $group->create();
-        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
-        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
-        $group->add_member($teacher2->id, group_member::TYPE_SECONDARY_TUTOR);
-
-        // Replace teacher2 by teacher3.
-        groups::sync_group_secondary_tutors($group->get('id'), [$teacher3->id]);
-
-        $students = $group->get_members(group_member::TYPE_STUDENT);
-        $secondary = $group->get_members(group_member::TYPE_SECONDARY_TUTOR);
-
-        $this->assertCount(2, $students);
-        $studentids = array_map(fn($m) => $m->get('userid'), $students);
-        $this->assertContains((int)$data['student1']->id, $studentids);
-        $this->assertContains((int)$data['student2']->id, $studentids);
-        $this->assertCount(1, $secondary);
-        $this->assertEquals($teacher3->id, $secondary[0]->get('userid'));
+        $this->assertEqualsCanonicalizing([(int) $data['student2']->id, (int) $data['student3']->id], $studentids);
+        $this->assertCount(1, $tutors);
+        $this->assertEquals($data['teacher']->id, $tutors[0]->get('userid'));
     }
 
     /**
@@ -399,33 +430,6 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
-     * Test get_student_secondary_tutors
-     */
-    public function test_get_student_secondary_tutors(): void {
-        $data = $this->create_test_data();
-        $generator = $this->getDataGenerator();
-
-        // Create secondary tutor.
-        $teacher2 = $generator->create_user(['username' => 'teacher2']);
-        $generator->enrol_user($teacher2->id, $data['course']->id, 'editingteacher');
-
-        // Create group.
-        $group = new projetvet_group(0, (object)[
-            'projetvetid' => $data['projetvet']->id,
-            'ownerid' => $data['teacher']->id,
-            'name' => 'Test Group',
-        ]);
-        $group->create();
-        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
-        $group->add_member($teacher2->id, group_member::TYPE_SECONDARY_TUTOR);
-
-        $tutors = groups::get_student_secondary_tutors($data['student1']->id, $data['projetvet']->id);
-
-        $this->assertCount(1, $tutors);
-        $this->assertEquals($teacher2->id, $tutors[0]->id);
-    }
-
-    /**
      * Test assign_students_to_group removes from other groups
      */
     public function test_assign_students_to_group_removes_duplicates(): void {
@@ -456,9 +460,66 @@ final class groups_test extends \advanced_testcase {
         $group1members = $group1->get_members(group_member::TYPE_STUDENT);
         $this->assertCount(0, $group1members);
 
-        $group2members = $group2->get_members(group_member::TYPE_STUDENT);
+        $group2members = array_values($group2->get_members(group_member::TYPE_STUDENT));
         $this->assertCount(1, $group2members);
         $this->assertEquals($data['student1']->id, $group2members[0]->get('userid'));
+    }
+
+    /**
+     * Test assign_students_to_teacher creates the teacher group when it does not exist yet.
+     */
+    public function test_assign_students_to_teacher_creates_group(): void {
+        $data = $this->create_test_data();
+
+        $assigned = groups::assign_students_to_teacher(
+            $data['teacher']->id,
+            [$data['student1']->id, $data['student2']->id],
+            $data['projetvet']->id
+        );
+
+        $this->assertEquals(2, $assigned);
+
+        // The teacher now owns a group containing the two students.
+        $groups = projetvet_group::get_by_owner($data['teacher']->id, $data['projetvet']->id);
+        $this->assertCount(1, $groups);
+        $group = reset($groups);
+        $members = array_values($group->get_members(group_member::TYPE_STUDENT));
+        $this->assertCount(2, $members);
+        $memberids = array_map(fn($m) => (int) $m->get('userid'), $members);
+        $this->assertContains((int) $data['student1']->id, $memberids);
+        $this->assertContains((int) $data['student2']->id, $memberids);
+
+        // The students resolve to this teacher as their primary tutor.
+        $tutor = groups::get_student_primary_tutor($data['student1']->id, $data['projetvet']->id);
+        $this->assertNotNull($tutor);
+        $this->assertEquals($data['teacher']->id, $tutor->id);
+    }
+
+    /**
+     * Test assign_students_to_teacher reuses the teacher's existing group.
+     */
+    public function test_assign_students_to_teacher_reuses_group(): void {
+        $data = $this->create_test_data();
+
+        // Pre-create the teacher group with one student.
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+
+        // Assign another student to the same teacher.
+        groups::assign_students_to_teacher($data['teacher']->id, [$data['student2']->id], $data['projetvet']->id);
+
+        // Still a single group, now containing both students.
+        $groups = projetvet_group::get_by_owner($data['teacher']->id, $data['projetvet']->id);
+        $this->assertCount(1, $groups);
+        $group = new projetvet_group($group->get('id'));
+        $memberids = array_map(fn($m) => (int) $m->get('userid'), array_values($group->get_members(group_member::TYPE_STUDENT)));
+        $this->assertContains((int) $data['student1']->id, $memberids);
+        $this->assertContains((int) $data['student2']->id, $memberids);
     }
 
     /**
@@ -485,17 +546,17 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
-     * Test get_students_for_tutor as secondary tutor
+     * Test a leftover secondary tutor membership (replaced by the substitute tutors) gives no
+     * access to the students of the group, and cannot be created anymore.
      */
-    public function test_get_students_for_tutor_as_secondary(): void {
+    public function test_legacy_secondary_tutor_has_no_access(): void {
+        global $DB;
+
         $data = $this->create_test_data();
         $generator = $this->getDataGenerator();
-
-        // Create secondary tutor.
         $teacher2 = $generator->create_user(['username' => 'teacher2']);
         $generator->enrol_user($teacher2->id, $data['course']->id, 'editingteacher');
 
-        // Create group with teacher1 as owner.
         $group = new projetvet_group(0, (object)[
             'projetvetid' => $data['projetvet']->id,
             'ownerid' => $data['teacher']->id,
@@ -503,13 +564,20 @@ final class groups_test extends \advanced_testcase {
         ]);
         $group->create();
         $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
-        $group->add_member($teacher2->id, group_member::TYPE_SECONDARY_TUTOR);
+        $DB->insert_record(group_member::TABLE, (object) [
+            'groupid' => $group->get('id'),
+            'userid' => $teacher2->id,
+            'membertype' => 'secondary_tutor',
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
 
-        // Get students for teacher2 (secondary tutor).
-        $studentids = groups::get_students_for_tutor($teacher2->id, $data['projetvet']->id);
+        $this->assertEmpty(groups::get_students_for_tutor($teacher2->id, $data['projetvet']->id));
+        $this->assertFalse(\mod_projetvet\utils::is_tutor($teacher2->id));
+        $this->assertFalse(\mod_projetvet\utils::is_tutor_for_project($teacher2->id, $data['projetvet']->id));
 
-        $this->assertCount(1, $studentids);
-        $this->assertContains((int)$data['student1']->id, $studentids);
+        $this->expectException(\core\invalid_persistent_exception::class);
+        $group->add_member($teacher2->id, 'secondary_tutor');
     }
 
     /**
@@ -524,5 +592,309 @@ final class groups_test extends \advanced_testcase {
         $this->assertCount(3, $students);
         $studentids = array_column($students, 'uniqueid');
         $this->assertNotContains($data['teacher']->id, $studentids);
+    }
+
+    /**
+     * Test get_all_students_join built against a custom user id column (as the reportbuilder
+     * report uses), proving the fragment is coherent, executable and consistent with the
+     * array-based source of truth.
+     */
+    public function test_get_all_students_join_with_custom_alias(): void {
+        global $DB;
+
+        $data = $this->create_test_data();
+        $cm = get_coursemodule_from_instance('projetvet', $data['projetvet']->id);
+
+        $join = groups::get_all_students_join($cm->id, 'rbalias0.id');
+
+        $this->assertNotSame('', $join->joins);
+        $this->assertStringContainsString('rbalias0', $join->joins);
+
+        // Every parameter referenced in the fragment must be provided (otherwise the query is broken).
+        preg_match_all('/:(\w+)/', $join->joins . ' ' . $join->wheres, $matches);
+        $missing = array_diff($matches[1], array_keys($join->params));
+        $this->assertSame([], array_values($missing));
+
+        // The fragment must run against a query that aliases {user} as rbalias0 (not "u").
+        $rows = $DB->get_records_sql(
+            "SELECT rbalias0.id
+               FROM {user} rbalias0
+               {$join->joins}
+              WHERE {$join->wheres}",
+            $join->params
+        );
+
+        $joinedids = array_keys($rows);
+        sort($joinedids);
+
+        $expected = [$data['student1']->id, $data['student2']->id, $data['student3']->id];
+        sort($expected);
+        $this->assertEquals($expected, $joinedids);
+        $this->assertNotContains($data['teacher']->id, $joinedids);
+
+        // Must be identical to the array-based source of truth.
+        $expectedfromarray = array_column(groups::get_all_students($cm->id), 'uniqueid');
+        sort($expectedfromarray);
+        $this->assertEquals($expectedfromarray, $joinedids);
+    }
+
+    /**
+     * Test get_all_teachers_join built against a custom user id column (as the reportbuilder
+     * report uses), proving the fragment is coherent and consistent with the array variant.
+     */
+    public function test_get_all_teachers_join_with_custom_alias(): void {
+        global $DB;
+
+        $data = $this->create_test_data();
+        $cm = get_coursemodule_from_instance('projetvet', $data['projetvet']->id);
+
+        $join = groups::get_all_teachers_join($cm->id, 'rbalias0.id');
+
+        $this->assertNotSame('', $join->joins);
+        $this->assertStringContainsString('rbalias0', $join->joins);
+
+        // The fragment must run against a query that aliases {user} as rbalias0 (not "u").
+        $rows = $DB->get_records_sql(
+            "SELECT rbalias0.id
+               FROM {user} rbalias0
+               {$join->joins}
+              WHERE {$join->wheres}",
+            $join->params
+        );
+
+        $joinedids = array_keys($rows);
+        $this->assertEquals([$data['teacher']->id], $joinedids);
+
+        // Must be identical to the array-based source of truth.
+        $teachers = groups::get_all_teachers($cm->id);
+        sort($teachers);
+        sort($joinedids);
+        $this->assertEquals($teachers, $joinedids);
+    }
+
+    /**
+     * Set the value of a custom profile field for a user.
+     *
+     * @param \stdClass $user The user.
+     * @param string $shortname The profile field shortname.
+     * @param string $value The profile field value.
+     */
+    protected function set_profile_field(\stdClass $user, string $shortname, string $value): void {
+        global $DB;
+
+        $field = $DB->get_record('user_info_field', ['shortname' => $shortname]);
+        if (!$field) {
+            $field = (object)[
+                'shortname' => $shortname,
+                'name' => $shortname,
+                'datatype' => 'text',
+                'categoryid' => 0,
+                'sortorder' => 0,
+                'visible' => 1,
+            ];
+            $field->id = $DB->insert_record('user_info_field', $field);
+        }
+
+        $DB->delete_records('user_info_data', ['userid' => $user->id, 'fieldid' => $field->id]);
+        $DB->insert_record('user_info_data', (object)[
+            'userid' => $user->id,
+            'fieldid' => $field->id,
+            'data' => $value,
+        ]);
+    }
+
+    /**
+     * Test the A1 acceptance defaults to "yes" for an existing tutor with no rating record.
+     */
+    public function test_a1_acceptance_defaults_to_yes(): void {
+        $data = $this->create_test_data();
+
+        // No rating record at all.
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        );
+
+        $this->assertEquals(\mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES, $acceptsa1);
+    }
+
+    /**
+     * Test the A1 acceptance persists when set to "no" and is read back.
+     */
+    public function test_set_teacher_a1_acceptance_persists(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        );
+        $this->assertEquals(\mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO, $acceptsa1);
+
+        // Toggle back to "yes".
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES
+        );
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for(
+            $data['teacher']->id,
+            $data['projetvet']->id
+        );
+        $this->assertEquals(\mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES, $acceptsa1);
+    }
+
+    /**
+     * Test a new A1 assignment is refused for a tutor set to "no".
+     */
+    public function test_check_a1_assignment_eligibility_refusesa1(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertEquals(get_string('a1assignmentblocked_refusesa1', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test a new A1 assignment is refused when the tutor has no available capacity.
+     */
+    public function test_check_a1_assignment_eligibility_capacity(): void {
+        $data = $this->create_test_data();
+
+        // Novice = capacity 5.
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('rating', teacher_rating::RATING_NOVICE);
+        $rating->create();
+
+        // Fill the tutor to capacity (5 students).
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $generator = $this->getDataGenerator();
+        for ($i = 1; $i <= 5; $i++) {
+            $student = $generator->create_user(['username' => 'capstudent' . $i]);
+            $generator->enrol_user($student->id, $data['course']->id, 'student');
+            $group->add_member($student->id, group_member::TYPE_STUDENT);
+        }
+
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertEquals(get_string('a1assignmentblocked_capacity', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test a new A1 assignment is allowed for an eligible tutor set to "yes" with capacity.
+     */
+    public function test_check_a1_assignment_eligibility_allowed(): void {
+        $data = $this->create_test_data();
+
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+    }
+
+    /**
+     * Test get_new_a1_student_ids returns only the new A1 students in a batch.
+     */
+    public function test_get_new_a1_student_ids(): void {
+        $data = $this->create_test_data();
+
+        // Mark student1 as A1, student2 as A2.
+        $this->set_profile_field($data['student1'], 'promotion', 'A1');
+        $this->set_profile_field($data['student2'], 'promotion', 'A2');
+
+        // Pre-assign student1 to the teacher (existing, not new).
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+
+        $newa1 = groups::get_new_a1_student_ids(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id, $data['student2']->id, $data['student3']->id]
+        );
+
+        // Student1 is A1 but already assigned (not new), student2 is A2, student3 has no promotion.
+        $this->assertNotContains((int) $data['student1']->id, $newa1);
+        $this->assertNotContains((int) $data['student2']->id, $newa1);
+        $this->assertNotContains((int) $data['student3']->id, $newa1);
+
+        // Now a fresh A1 student should be detected.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'newa1']);
+        $this->set_profile_field($newstudent, 'promotion', 'A1');
+        $newa1 = groups::get_new_a1_student_ids($data['teacher']->id, $data['projetvet']->id, [$newstudent->id]);
+        $this->assertContains((int) $newstudent->id, $newa1);
+    }
+
+    /**
+     * Test that switching the A1 field to "no" does not remove existing A1 assignments.
+     */
+    public function test_existing_a1_assignments_kept_when_field_switched_to_no(): void {
+        $data = $this->create_test_data();
+
+        $this->set_profile_field($data['student1'], 'promotion', 'A1');
+
+        // Assign student1 to the teacher.
+        groups::assign_students_to_teacher($data['teacher']->id, [$data['student1']->id], $data['projetvet']->id);
+
+        // Switch the field to "no".
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        // The existing assignment is kept.
+        $tutor = groups::get_student_primary_tutor($data['student1']->id, $data['projetvet']->id);
+        $this->assertNotNull($tutor);
+        $this->assertEquals($data['teacher']->id, $tutor->id);
+
+        // But a new A1 assignment is now refused.
+        $newa1 = $this->getDataGenerator()->create_user(['username' => 'newa1']);
+        $this->getDataGenerator()->enrol_user($newa1->id, $data['course']->id, 'student');
+        $this->set_profile_field($newa1, 'promotion', 'A1');
+        $eligibility = groups::check_a1_assignment_eligibility($data['teacher']->id, $data['projetvet']->id, 1);
+        $this->assertFalse($eligibility['allowed']);
+    }
+
+    /**
+     * Test a non-A1 assignment is not refused on the basis of the A1 field alone.
+     */
+    public function test_non_a1_assignment_not_blocked_by_a1_field(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_NO
+        );
+
+        // A non-A1 student (no promotion field) is not subject to the A1 rule.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'nona1']);
+        $this->getDataGenerator()->enrol_user($newstudent->id, $data['course']->id, 'student');
+
+        $newa1 = groups::get_new_a1_student_ids($data['teacher']->id, $data['projetvet']->id, [$newstudent->id]);
+        $this->assertSame([], $newa1);
     }
 }

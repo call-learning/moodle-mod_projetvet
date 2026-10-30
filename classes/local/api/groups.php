@@ -115,7 +115,10 @@ class groups {
     }
 
     /**
-     * Get available capacity for a teacher based on their rating and current primary student load
+     * Get available capacity for a teacher based on their rating and current student load
+     *
+     * The load is the teacher's principal students plus the students they follow as an open
+     * substitute (see {@see substitutions::get_tutor_load()}).
      *
      * @param int $userid The teacher's user ID
      * @param int $projetvetid The projetvet instance ID
@@ -126,10 +129,30 @@ class groups {
         $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($userid, $projetvetid);
         $target = $rating->get_capacity();
 
-        // Get current student count (primary groups only).
-        $current = self::get_primary_student_count($userid, $projetvetid);
+        return $target - substitutions::get_tutor_load($userid, $projetvetid);
+    }
 
-        return $target - $current;
+    /**
+     * Get the availability status for a teacher in a ProjetVet instance.
+     *
+     * @param int $userid The teacher's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @return int One of the teacher rating status constants
+     */
+    public static function get_teacher_status(int $userid, int $projetvetid): int {
+        return \mod_projetvet\local\persistent\teacher_rating::get_status_for($userid, $projetvetid);
+    }
+
+    /**
+     * Whether a teacher is open to new assignments.
+     *
+     * @param int $userid The teacher's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @return bool
+     */
+    public static function is_teacher_open_for_new_assignments(int $userid, int $projetvetid): bool {
+        return self::get_teacher_status($userid, $projetvetid)
+            === \mod_projetvet\local\persistent\teacher_rating::STATUS_ACTIVE_OPEN;
     }
 
     /**
@@ -161,6 +184,132 @@ class groups {
         }
 
         return $rating;
+    }
+
+    /**
+     * Set tutor availability status for a specific user in a ProjetVet instance.
+     *
+     * @param int $userid The tutor's user ID
+     * @param int $projetvetid The ProjetVet instance ID
+     * @param int $status The new availability status
+     * @return \mod_projetvet\local\persistent\teacher_rating The updated settings persistent
+     */
+    public static function set_teacher_status(
+        int $userid,
+        int $projetvetid,
+        int $status
+    ): \mod_projetvet\local\persistent\teacher_rating {
+        $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($userid, $projetvetid);
+
+        if ($rating->get_availability_status() !== $status) {
+            $rating->set('status', $status);
+
+            if (!$rating->get('id')) {
+                $rating->create();
+            } else {
+                $rating->update();
+            }
+        }
+
+        return $rating;
+    }
+
+    /**
+     * Set the A1 student acceptance value for a specific user in a projetvet instance
+     *
+     * @param int $userid The teacher's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $acceptsa1 The new acceptance value (ACCEPTS_A1_YES or ACCEPTS_A1_NO)
+     * @return \mod_projetvet\local\persistent\teacher_rating The updated rating persistent
+     */
+    public static function set_teacher_a1_acceptance(
+        int $userid,
+        int $projetvetid,
+        int $acceptsa1
+    ): \mod_projetvet\local\persistent\teacher_rating {
+        $rating = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($userid, $projetvetid);
+
+        if ((int) $rating->get('acceptsa1') !== $acceptsa1) {
+            $rating->set('acceptsa1', $acceptsa1);
+
+            if (!$rating->get('id')) {
+                $rating->create();
+            } else {
+                $rating->update();
+            }
+        }
+
+        return $rating;
+    }
+
+    /**
+     * Check whether a new A1 student assignment is allowed for a tutor.
+     *
+     * A new A1 student assignment is only allowed when all of the following hold:
+     * - the tutor accepts new A1 students ("Accepte les étudiants A1" = "Oui"),
+     * - the tutor still has enough available capacity for the new student count,
+     * - the tutor is open to new assignments (availability status).
+     *
+     * The availability status check is currently a no-op: no tutor availability
+     * status exists yet, so every tutor is considered open to new assignments.
+     * When the status concept is implemented, that check belongs here.
+     *
+     * This method is the single enforcement point of the A1 assignment rule.
+     * Manual assignment, import and automatic proposal flows must call it before
+     * creating new A1 student memberships. Existing assignments are never affected
+     * by this rule: switching the value to "Non" keeps the existing A1 assignments.
+     *
+     * @param int $teacherid The tutor's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @param int $newstudentcount The number of new students created by the assignment
+     * @return array{allowed: bool, reason: string} The reason is a localized message, or '' when allowed.
+     */
+    public static function check_a1_assignment_eligibility(int $teacherid, int $projetvetid, int $newstudentcount = 1): array {
+        $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for($teacherid, $projetvetid);
+        if ($acceptsa1 !== \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES) {
+            return [
+                'allowed' => false,
+                'reason' => get_string('a1assignmentblocked_refusesa1', 'mod_projetvet'),
+            ];
+        }
+
+        if (self::get_teacher_available_capacity($teacherid, $projetvetid) < $newstudentcount) {
+            return [
+                'allowed' => false,
+                'reason' => get_string('a1assignmentblocked_capacity', 'mod_projetvet'),
+            ];
+        }
+
+        return ['allowed' => true, 'reason' => ''];
+    }
+
+    /**
+     * Get the user IDs of the A1 students in a batch that are not yet members of the
+     * tutor's groups in the given projetvet instance.
+     *
+     * Students already assigned to the tutor are not new assignments, so the A1
+     * rule does not apply to them.
+     *
+     * @param int $teacherid The tutor's user ID
+     * @param int $projetvetid The projetvet instance ID
+     * @param int[] $studentids The student user IDs of the assignment batch
+     * @return int[] The user IDs of the new A1 students in the batch
+     */
+    public static function get_new_a1_student_ids(int $teacherid, int $projetvetid, array $studentids): array {
+        $existingstudentids = array_map('intval', self::get_students_for_tutor($teacherid, $projetvetid));
+
+        $newa1studentids = [];
+        foreach (array_map('intval', array_unique($studentids)) as $studentid) {
+            if (in_array($studentid, $existingstudentids, true)) {
+                continue;
+            }
+
+            if (\mod_projetvet\utils::is_a1_student($studentid)) {
+                $newa1studentids[] = $studentid;
+            }
+        }
+
+        return $newa1studentids;
     }
 
     /**
@@ -232,25 +381,26 @@ class groups {
      * @return array Array of student options with 'uniqueid' and 'name' keys
      */
     public static function get_all_students(int $cmid): array {
-        $modcontext = \context_module::instance($cmid);
-        $coursecontext = $modcontext->get_course_context();
+        global $DB;
 
-        // Get students (users with submit capability but not approve).
-        $enrolledstudents = get_enrolled_users(
-            $coursecontext,
-            'mod/projetvet:submit',
-            0,
-            'u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
-            'u.lastname, u.firstname'
+        $studentsjoin = self::get_all_students_join($cmid, 'u.id');
+
+        if ($studentsjoin->cannotmatchanyrows) {
+            return [];
+        }
+
+        $users = $DB->get_records_sql(
+            "SELECT u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic,
+                    u.middlename, u.alternatename
+              FROM {user} u
+              {$studentsjoin->joins}
+             WHERE {$studentsjoin->wheres}
+             ORDER BY u.lastname, u.firstname",
+            $studentsjoin->params
         );
 
         $studentoptions = [];
-        foreach ($enrolledstudents as $user) {
-            // Skip teachers (users with approve capability).
-            if (has_capability('mod/projetvet:approve', $coursecontext, $user->id)) {
-                continue;
-            }
-
+        foreach ($users as $user) {
             $studentoptions[] = [
                 'uniqueid' => $user->id,
                 'name' => fullname($user),
@@ -261,25 +411,72 @@ class groups {
     }
 
     /**
+     * Get the SQL join fragment that restricts a query to the enrolled students in the course.
+     *
+     * A student is an enrolled user who has the submit capability but does not have the
+     * approve capability (i.e. is not a teacher). This is the single source of truth used by
+     * {@see self::get_all_students()} so the array and join variants never diverge.
+     *
+     * @param int $cmid Course module ID.
+     * @param string $useridcolumn The column reference of the user id in the target query
+     *     (e.g. "u.id" or "rbalias0.id").
+     * @return \core\dml\sql_join Joins, wheres and params to apply to the target query.
+     */
+    public static function get_all_students_join(int $cmid, string $useridcolumn): \core\dml\sql_join {
+        return self::get_enrolled_capability_join(
+            self::get_course_context_from_cmid($cmid),
+            'mod/projetvet:submit',
+            'mod/projetvet:approve',
+            $useridcolumn
+        );
+    }
+
+    /**
      * Get all teachers in the course with approve capability
      *
      * @param int $cmid Course module ID
      * @return array Array of teacher user IDs
      */
     public static function get_all_teachers(int $cmid): array {
-        $modcontext = \context_module::instance($cmid);
-        $coursecontext = $modcontext->get_course_context();
+        global $DB;
 
-        // Get teachers (users with approve capability).
-        $enrolledteachers = get_enrolled_users(
-            $coursecontext,
-            'mod/projetvet:approve',
-            0,
-            'u.id, u.lastname, u.firstname',
-            'u.lastname ASC, u.firstname ASC'
+        $teachersjoin = self::get_all_teachers_join($cmid, 'u.id');
+
+        if ($teachersjoin->cannotmatchanyrows) {
+            return [];
+        }
+
+        $users = $DB->get_records_sql(
+            "SELECT u.id
+              FROM {user} u
+              {$teachersjoin->joins}
+             WHERE {$teachersjoin->wheres}
+             ORDER BY u.lastname ASC, u.firstname ASC",
+            $teachersjoin->params
         );
 
-        return array_keys($enrolledteachers);
+        return array_column($users, 'id');
+    }
+
+    /**
+     * Get the SQL join fragment that restricts a query to the enrolled teachers in the course.
+     *
+     * A teacher is an enrolled user who has the approve capability. This is the single source
+     * of truth used by {@see self::get_all_teachers()} so the array and join variants never
+     * diverge.
+     *
+     * @param int $cmid Course module ID.
+     * @param string $useridcolumn The column reference of the user id in the target query
+     *     (e.g. "u.id" or "rbalias0.id").
+     * @return \core\dml\sql_join Joins, wheres and params to apply to the target query.
+     */
+    public static function get_all_teachers_join(int $cmid, string $useridcolumn): \core\dml\sql_join {
+        return self::get_enrolled_capability_join(
+            self::get_course_context_from_cmid($cmid),
+            'mod/projetvet:approve',
+            null,
+            $useridcolumn
+        );
     }
 
     /**
@@ -352,65 +549,6 @@ class groups {
     }
 
     /**
-     * Sync secondary tutor memberships for a group.
-     *
-     * Removes current secondary tutor members not in the provided array, and adds missing ones.
-     *
-     * @param int $groupid Group ID
-     * @param array $teacheruserids Secondary tutor user IDs to keep/add
-     * @return int Number of members added
-     */
-    public static function sync_group_secondary_tutors(int $groupid, array $teacheruserids): int {
-        $addedcount = 0;
-        $group = new projetvet_group($groupid);
-        $currentsecondaryteachers = $group->get_members(group_member::TYPE_SECONDARY_TUTOR);
-
-        // Remove secondary tutors that are not in the provided array.
-        foreach ($currentsecondaryteachers as $currentmember) {
-            $userid = $currentmember->get('userid');
-            if (!in_array($userid, $teacheruserids)) {
-                $currentmember->delete();
-            }
-        }
-
-        // Add secondary tutors that are missing.
-        foreach ($teacheruserids as $teacheruserid) {
-            $existing = group_member::get_membership($groupid, $teacheruserid);
-            if (!$existing) {
-                $member = new group_member(0, (object)[
-                    'groupid' => $groupid,
-                    'userid' => $teacheruserid,
-                    'membertype' => group_member::TYPE_SECONDARY_TUTOR,
-                ]);
-                $member->create();
-                $addedcount++;
-            }
-        }
-
-        return $addedcount;
-    }
-
-    /**
-     * Add members to a group
-     *
-     * Syncs group membership: removes students not in the provided array and adds new ones.
-     *
-     * @param int $groupid Group ID
-     * @param array $teacheruserids Array of teacher user IDs to add as secondary tutors
-     * @param array $studentuserids Array of student user IDs to add
-     * @return int Number of members added
-     */
-    public static function add_members(
-        int $groupid,
-        array $teacheruserids = [],
-        array $studentuserids = []
-    ): int {
-        $addedstudents = self::sync_group_students($groupid, $studentuserids);
-        $addedteachers = self::sync_group_secondary_tutors($groupid, $teacheruserids);
-        return $addedstudents + $addedteachers;
-    }
-
-    /**
      * Get primary tutor for a student
      *
      * Returns the user object of the primary tutor (group owner) for a student,
@@ -435,37 +573,6 @@ class groups {
         $ownerid = $group->get('ownerid');
 
         return \core_user::get_user($ownerid);
-    }
-
-    /**
-     * Get secondary tutors for a student
-     *
-     * Returns array of user objects for all secondary tutors in the student's group.
-     *
-     * @param int $studentid The student's user ID
-     * @param int $projetvetid The projetvet instance ID
-     * @return array Array of user objects
-     */
-    public static function get_student_secondary_tutors(int $studentid, int $projetvetid): array {
-        $memberships = self::get_student_groups($studentid, $projetvetid);
-
-        if (empty($memberships)) {
-            return [];
-        }
-
-        // Get the first group (students should only be in one group per projetvet).
-        $membership = reset($memberships);
-        $group = $membership->get_group();
-
-        // Get all secondary tutors in this group.
-        $members = $group->get_members(group_member::TYPE_SECONDARY_TUTOR);
-
-        $tutors = [];
-        foreach ($members as $member) {
-            $tutors[] = $member->get_user();
-        }
-
-        return $tutors;
     }
 
     /**
@@ -514,10 +621,40 @@ class groups {
     }
 
     /**
+     * Assign students to a teacher as their primary tutor.
+     *
+     * Gets the teacher's group (creating it, together with the primary tutor
+     * membership, when it does not exist yet) and assigns the students to it.
+     *
+     * @param int $teacherid The teacher's user ID
+     * @param int[] $studentids The student user IDs to assign
+     * @param int $projetvetid The projetvet instance ID
+     * @return int Number of students newly assigned
+     */
+    public static function assign_students_to_teacher(int $teacherid, array $studentids, int $projetvetid): int {
+        $groups = projetvet_group::get_by_owner($teacherid, $projetvetid);
+        if (empty($groups)) {
+            $teacher = \core_user::get_user($teacherid, '*', MUST_EXIST);
+            $group = new projetvet_group(0, (object)[
+                'projetvetid' => $projetvetid,
+                'name' => get_string('tutorgroupname', 'mod_projetvet', fullname($teacher)),
+                'description' => '',
+                'ownerid' => $teacherid,
+            ]);
+            $group->create();
+            $group->add_member($teacherid, group_member::TYPE_PRIMARY_TUTOR);
+        } else {
+            $group = reset($groups);
+        }
+
+        return self::assign_students_to_group($group->get('id'), $studentids, $projetvetid);
+    }
+
+    /**
      * Get all students for a specific tutor
      *
      * Returns array of student user IDs that are in groups where the specified user
-     * is either a primary tutor (owner) or secondary tutor.
+     * is the primary tutor (owner).
      *
      * @param int $tutorid The tutor's user ID
      * @param int $projetvetid The projetvet instance ID
@@ -531,20 +668,6 @@ class groups {
         $groupids = array_map(function ($group) {
             return $group->get('id');
         }, $ownedgroups);
-
-        // Get all groups where this user is a secondary tutor.
-        $secondarymemberships = self::get_user_memberships(
-            $tutorid,
-            $projetvetid,
-            group_member::TYPE_SECONDARY_TUTOR
-        );
-
-        foreach ($secondarymemberships as $membership) {
-            $groupid = $membership->get('groupid');
-            if (!in_array($groupid, $groupids)) {
-                $groupids[] = $groupid;
-            }
-        }
 
         if (empty($groupids)) {
             return [];
@@ -561,5 +684,58 @@ class groups {
 
         $records = $DB->get_records_sql($sql, $params);
         return array_keys($records);
+    }
+
+    /**
+     * Get the course context for a course module ID.
+     *
+     * @param int $cmid Course module ID
+     * @return \context_course
+     */
+    private static function get_course_context_from_cmid(int $cmid): \context_course {
+        return \context_module::instance($cmid)->get_course_context();
+    }
+
+    /**
+     * Build a SQL join fragment that restricts a query to enrolled users who have a capability
+     * and, optionally, do not have another capability.
+     *
+     * It is built from the core {@see get_enrolled_join()} and {@see get_with_capability_join()}
+     * fragments, so it stays consistent with the rest of Moodle. The optional negative capability
+     * is expressed as a NOT IN subquery on a separate alias (u2) so its internal role join does not
+     * collide with the main query scope.
+     *
+     * @param \context_course $coursecontext The course context.
+     * @param string $positivecapability Capability the user must have.
+     * @param string|null $negativecapability Capability the user must not have (optional).
+     * @param string $useridcolumn The column reference of the user id in the target query.
+     * @return \core\dml\sql_join Joins, wheres and params.
+     */
+    private static function get_enrolled_capability_join(
+        \context_course $coursecontext,
+        string $positivecapability,
+        ?string $negativecapability = null,
+        string $useridcolumn = 'u.id'
+    ): \core\dml\sql_join {
+        // Enrolled in the course (JOIN to user_enrolments + enrol).
+        $enrolledjoin = get_enrolled_join($coursecontext, $useridcolumn);
+
+        // Has the required capability (JOIN to the matching role assignments).
+        $positivejoin = get_with_capability_join($coursecontext, $positivecapability, $useridcolumn);
+
+        $joins  = trim(implode("\n", array_filter([$enrolledjoin->joins, $positivejoin->joins])));
+        $wheres = implode(' AND ', array_filter([$enrolledjoin->wheres, $positivejoin->wheres]));
+        $params = $enrolledjoin->params + $positivejoin->params;
+        $cannotmatchanyrows = $enrolledjoin->cannotmatchanyrows || $positivejoin->cannotmatchanyrows;
+
+        // Exclude users who have the negative capability (e.g. teachers) via a NOT IN subquery.
+        if ($negativecapability !== null) {
+            $negativejoin = get_with_capability_join($coursecontext, $negativecapability, 'u2.id');
+            $wheres .= " AND {$useridcolumn} NOT IN (SELECT u2.id FROM {user} u2 "
+                . $negativejoin->joins . ' WHERE ' . $negativejoin->wheres . ')';
+            $params += $negativejoin->params;
+        }
+
+        return new \core\dml\sql_join($joins, $wheres, $params, $cannotmatchanyrows);
     }
 }

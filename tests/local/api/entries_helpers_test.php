@@ -32,8 +32,8 @@ use test_data_definition;
  * @category    test
  * @copyright   2026 Laurent David <laurent@call-learning.fr>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers      \mod_projetvet\local\api\entries
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(entries::class)]
 final class entries_helpers_test extends advanced_testcase {
     use test_data_definition;
 
@@ -42,8 +42,6 @@ final class entries_helpers_test extends advanced_testcase {
 
     /**
      * Setup test data.
-     *
-     * @return void
      */
     protected function setUp(): void {
         global $DB;
@@ -61,13 +59,12 @@ final class entries_helpers_test extends advanced_testcase {
     /**
      * Test can_edit_field returns strict bool and expected value for repeated scenarios.
      *
-     * @dataProvider can_edit_field_provider
      * @param string $userkey User key in fixture, or "nonaccess" for a user without capabilities.
      * @param string $capability Category capability value.
      * @param bool $canedit Category canedit value.
      * @param bool $expected Expected result.
-     * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('can_edit_field_provider')]
     public function test_can_edit_field_with_provider(
         string $userkey,
         string $capability,
@@ -93,17 +90,43 @@ final class entries_helpers_test extends advanced_testcase {
 
     /**
      * Data provider for can_edit_field scenarios.
-     *
-     * @return array
      */
-    public static function can_edit_field_provider(): array {
-        return [
-            '"all" with no capability returns false' => ['nonaccess', 'all', true, false],
-            '"all" with submit capability returns false' => ['student1', 'all', true, false],
-            '"all" with approve capability returns true' => ['teacher1', 'all', false, true],
-            '"submit" uses category canedit=true' => ['student1', 'submit', true, true],
-            '"submit" uses category canedit=false' => ['student1', 'submit', false, false],
-            '"alledit" always returns true' => ['nonaccess', 'alledit', false, true],
+    public static function can_edit_field_provider(): \Generator {
+        yield '"all" with no capability returns false' => [
+            'userkey' => 'nonaccess',
+            'capability' => 'all',
+            'canedit' => true,
+            'expected' => false,
+        ];
+        yield '"all" with submit capability returns false' => [
+            'userkey' => 'student1',
+            'capability' => 'all',
+            'canedit' => true,
+            'expected' => false,
+        ];
+        yield '"all" with approve capability returns true' => [
+            'userkey' => 'teacher1',
+            'capability' => 'all',
+            'canedit' => false,
+            'expected' => true,
+        ];
+        yield '"submit" uses category canedit=true' => [
+            'userkey' => 'student1',
+            'capability' => 'submit',
+            'canedit' => true,
+            'expected' => true,
+        ];
+        yield '"submit" uses category canedit=false' => [
+            'userkey' => 'student1',
+            'capability' => 'submit',
+            'canedit' => false,
+            'expected' => false,
+        ];
+        yield '"alledit" always returns true' => [
+            'userkey' => 'nonaccess',
+            'capability' => 'alledit',
+            'canedit' => false,
+            'expected' => true,
         ];
     }
 }

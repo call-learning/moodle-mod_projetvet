@@ -79,6 +79,23 @@ class Repository {
 
         return promise;
     }
+
+    /**
+     * Send a contact message to students through the Moodle messaging system.
+     * @param {Object} args The arguments containing cmid, projetvetid, studentids, subjectkey, bodykey.
+     * @return {Promise} The promise.
+     */
+    sendMessage(args) {
+        const request = {
+            methodname: 'mod_projetvet_send_message',
+            args: args
+        };
+
+        let promise = Ajax.call([request])[0]
+            .fail(Notification.exception);
+
+        return promise;
+    }
 }
 
 const RepositoryInstance = new Repository();

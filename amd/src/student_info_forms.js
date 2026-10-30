@@ -40,6 +40,7 @@ export const init = () => {
             e.preventDefault();
             showMobilityForm(mobilityButton);
         }
+
     });
 };
 

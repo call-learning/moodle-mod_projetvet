@@ -19,13 +19,14 @@ namespace mod_projetvet\reportbuilder\local\systemreports;
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
 use core_reportbuilder\local\report\action;
-use core_reportbuilder\local\report\column;
 use core_reportbuilder\system_report;
 use lang_string;
 use context_module;
 use context_course;
 use moodle_url;
 use pix_icon;
+use mod_projetvet\local\persistent\group_member;
+use mod_projetvet\reportbuilder\local\entities\teacher;
 
 /**
  * Assignments teachers list system report for projetvet
@@ -36,11 +37,6 @@ use pix_icon;
  */
 class assignments_teachers extends system_report {
     /**
-     * The name of the temporary table used to store teacher data
-     */
-    const TEACHER_TEMP_TABLE_NAME = 'temp_reportbuilder_teachers';
-
-    /**
      * Initialise report
      */
     protected function initialise(): void {
@@ -48,7 +44,6 @@ class assignments_teachers extends system_report {
 
         $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
         $projetvetid = $this->get_parameter('projetvetid', 0, PARAM_INT);
-        $showcheckboxes = $this->get_parameter('showcheckboxes', false, PARAM_BOOL);
         $filterwithcapacity = $this->get_parameter('filterwithcapacity', 0, PARAM_BOOL);
 
         // Get course module and context.
@@ -62,6 +57,12 @@ class assignments_teachers extends system_report {
         $this->set_main_table('user', $entityuseralias);
         $this->add_entity($entityuser);
 
+        // Teacher capacity entity. Assign the report's user table alias so the entity's
+        // sub-queries correlate against the report's main user table.
+        $entityteacher = new teacher($projetvetid);
+        $entityteacher->set_table_alias('user', $entityuseralias);
+        $this->add_entity($entityteacher);
+
         // Base fields needed.
         $this->add_base_fields("{$entityuseralias}.id, {$entityuseralias}.firstname, {$entityuseralias}.lastname");
 
@@ -69,32 +70,32 @@ class assignments_teachers extends system_report {
         $teacherids = \mod_projetvet\local\api\groups::get_all_teachers($cmid);
 
         if (!empty($teacherids)) {
-            // Filter teachers with capacity if requested.
-            if ($filterwithcapacity) {
-                $teacherswithcapacity = [];
-                foreach ($teacherids as $teacherid) {
-                    $capacity = \mod_projetvet\local\api\groups::get_teacher_available_capacity($teacherid, $projetvetid);
-                    if ($capacity > 0) {
-                        $teacherswithcapacity[] = $teacherid;
-                    }
-                }
-                $teacherids = $teacherswithcapacity;
-            }
-
-            // Initialize temp table with teacher data.
-            $this->init_temp_table($teacherids, $projetvetid);
-
             [$insql, $inparams] = $DB->get_in_or_equal($teacherids, SQL_PARAMS_NAMED, database::generate_param_name());
             $this->add_base_condition_sql("{$entityuseralias}.id $insql", $inparams);
+
+            // Only show teachers who still have capacity when requested.
+            if ($filterwithcapacity) {
+                $capacitypvparam = database::generate_param_name();
+                $groupspvparam = database::generate_param_name();
+                $mtparam = database::generate_param_name();
+                $subspvparam = database::generate_param_name();
+                $this->add_base_condition_sql(
+                    '(' . $entityteacher->get_gap_sql($capacitypvparam, $groupspvparam, $mtparam, $subspvparam) . ') > 0',
+                    [
+                        $capacitypvparam => $projetvetid,
+                        $groupspvparam => $projetvetid,
+                        $mtparam => group_member::TYPE_STUDENT,
+                        $subspvparam => $projetvetid,
+                    ]
+                );
+            }
         } else {
             $this->add_base_condition_sql("1 = 0");
         }
 
         $this->add_columns();
         $this->add_filters();
-        if (!$showcheckboxes) {
-            $this->add_actions();
-        }
+        $this->add_actions();
 
         $this->set_downloadable(false);
         $this->set_default_per_page(30);
@@ -123,102 +124,32 @@ class assignments_teachers extends system_report {
      * Add columns to the report
      */
     protected function add_columns(): void {
-        global $DB;
-
         $entityuser = $this->get_entity('user');
         $entityuseralias = $entityuser->get_table_alias('user');
-        $cmid = $this->get_parameter('cmid', 0, PARAM_INT);
-        $projetvetid = $this->get_parameter('projetvetid', 0, PARAM_INT);
-        $showcheckboxes = $this->get_parameter('showcheckboxes', false, PARAM_BOOL);
-        $cm = get_coursemodule_from_id('projetvet', $cmid);
+        $entityteacher = $this->get_entity('teacher');
 
-        // Get alias for temp table.
-        $temptablealias = 'teacherdata';
+        // Fullname with picture. Sort by the actual lastname field, rather than by the
+        // configured display order of the user's full name.
+        $fullnamecolumn = $entityuser->get_column('fullnamewithpicturelink');
+        $fullnamecolumn->add_field("{$entityuseralias}.lastname")
+            ->add_field("{$entityuseralias}.firstname")
+            ->set_is_sortable(true, ["{$entityuseralias}.lastname", "{$entityuseralias}.firstname"]);
+        $this->add_column($fullnamecolumn);
 
-        // Add join to temp table.
-        $this->add_join(
-            "LEFT JOIN {" . self::TEACHER_TEMP_TABLE_NAME . "} {$temptablealias} " .
-            "ON {$temptablealias}.userid = {$entityuseralias}.id"
-        );
+        // Rating, target capacity, current student count and gap columns from the teacher entity.
+        $this->add_column($entityteacher->get_column('rating'));
+        $this->add_column($entityteacher->get_column('status'));
+        $this->add_column($entityteacher->get_column('target'));
+        $this->add_column($entityteacher->get_column('current'));
+        $this->add_column($entityteacher->get_column('gap'));
 
-        // Checkbox column (only shown when parameter is set).
-        if ($showcheckboxes) {
-            $selectcolumn = (new column(
-                'select',
-                new lang_string('select', 'core'),
-                $entityuser->get_entity_name()
-            ))
-                ->add_joins($entityuser->get_joins())
-                ->add_field("{$entityuseralias}.id", 'userid_select')
-                ->set_type(column::TYPE_TEXT)
-                ->set_is_sortable(false)
-                ->add_attributes(['class' => 'w-30'])
-                ->add_callback(static function ($value, $row): string {
-                    global $OUTPUT;
-                    return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [
-                        'teacherid' => $row->userid_select,
-                    ]);
-                });
+        // A1 acceptance column (with the inconsistency warning badge).
+        $this->add_column($entityteacher->get_column('acceptsa1'));
 
-            $this->add_column($selectcolumn);
-        }
+        // Open substitutions column (with the return of the principal tutor badge).
+        $this->add_column($entityteacher->get_column('substitutions'));
 
-        // Fullname with picture.
-        $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
-
-        // Rating column - now sortable using temp table data.
-        $ratingcolumn = (new column(
-            'rating',
-            new lang_string('teacher_rating', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->set_type(column::TYPE_TEXT)
-            ->add_field("{$temptablealias}.rating")
-            ->set_is_sortable(true);
-
-        $this->add_column($ratingcolumn);
-
-        // Target capacity (Cible) - now sortable using temp table data.
-        $targetcolumn = (new column(
-            'target',
-            new lang_string('teacher_target', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->set_type(column::TYPE_INTEGER)
-            ->add_field("{$temptablealias}.target_capacity")
-            ->set_is_sortable(true);
-
-        $this->add_column($targetcolumn);
-
-        // Current student count (Nombre actuel) - now sortable using temp table data.
-        $currentcolumn = (new column(
-            'current',
-            new lang_string('teacher_current', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->set_type(column::TYPE_INTEGER)
-            ->add_field("{$temptablealias}.current_students")
-            ->set_is_sortable(true);
-
-        $this->add_column($currentcolumn);
-
-        // Gap (Ecart) = Target - Current - now sortable using temp table data.
-        $gapcolumn = (new column(
-            'gap',
-            new lang_string('teacher_gap', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->set_type(column::TYPE_INTEGER)
-            ->add_field("{$temptablealias}.gap")
-            ->set_is_sortable(true);
-
-        $this->add_column($gapcolumn);
-
-        // Default sorting by lastname.
+        // Default sorting by the actual lastname field.
         $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
     }
 
@@ -227,9 +158,11 @@ class assignments_teachers extends system_report {
      */
     protected function add_filters(): void {
         $entityuser = $this->get_entity('user');
+        $entityteacher = $this->get_entity('teacher');
 
         // Fullname filter.
         $this->add_filter($entityuser->get_filter('fullname'));
+        $this->add_filter($entityteacher->get_filter('status'));
     }
 
     /**
@@ -253,18 +186,13 @@ class assignments_teachers extends system_report {
             new lang_string('assignstudents', 'mod_projetvet'),
         )));
 
-        // Assign secondary teacher action.
+        // Manage the substitute tutors of the tutor's students.
         $this->add_action((new action(
-            new moodle_url('#', []),
-            new pix_icon('i/users', ''),
-            [
-                'data-action' => 'assign-secondary-teacher',
-                'data-teacherid' => ':id',
-                'data-projetvetid' => $projetvetid,
-                'data-cmid' => $cmid,
-            ],
+            new moodle_url('/mod/projetvet/substitutions.php', ['id' => $cmid, 'tutorid' => ':id']),
+            new pix_icon('i/switchrole', ''),
+            ['data-action' => 'manage-substitutions'],
             false,
-            new lang_string('assignsecondaryteacher', 'mod_projetvet'),
+            new lang_string('substitution_manage', 'mod_projetvet'),
         )));
 
         // Update teacher rating action.
@@ -289,67 +217,6 @@ class assignments_teachers extends system_report {
      * @return string
      */
     public function get_row_class(\stdClass $row): string {
-        $showcheckboxes = $this->get_parameter('showcheckboxes', false, PARAM_BOOL);
-        if ($showcheckboxes) {
-            return '';
-        } else {
-            return 'clickable-row';
-        }
-    }
-
-    /**
-     * Create and fill a temporary table with teacher data
-     *
-     * @param array $teacherids Array of teacher user IDs
-     * @param int $projetvetid The projetvet instance ID
-     */
-    private function init_temp_table(array $teacherids, int $projetvetid): void {
-        global $DB;
-        $dbman = $DB->get_manager();
-        $table = new \xmldb_table(self::TEACHER_TEMP_TABLE_NAME);
-
-        // If the table already exists, drop it first to ensure fresh data.
-        if ($dbman->table_exists(self::TEACHER_TEMP_TABLE_NAME)) {
-            $dbman->drop_table($table);
-        }
-
-        // Define the table structure.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('rating', XMLDB_TYPE_CHAR, '50', null, null, null, null);
-        $table->add_field('target_capacity', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_field('current_students', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_field('gap', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
-
-        // Create the temporary table.
-        $dbman->create_temp_table($table);
-
-        // Fill the temporary table with teacher data.
-        foreach ($teacherids as $teacherid) {
-            // Get rating for this teacher.
-            $ratingobj = \mod_projetvet\local\persistent\teacher_rating::get_or_create_rating($teacherid, $projetvetid);
-
-            // Get capacity.
-            $targetcapacity = $ratingobj->get_capacity();
-
-            // Get current primary student count.
-            $currentstudents = \mod_projetvet\local\api\groups::get_primary_student_count($teacherid, $projetvetid, true);
-
-            // Calculate gap.
-            $gap = $targetcapacity - $currentstudents;
-
-            // Insert into temp table.
-            $record = (object)[
-                'userid' => $teacherid,
-                'rating' => $ratingobj->get_rating_string(),
-                'target_capacity' => $targetcapacity,
-                'current_students' => $currentstudents,
-                'gap' => $gap,
-            ];
-
-            $DB->insert_record(self::TEACHER_TEMP_TABLE_NAME, $record);
-        }
+        return 'clickable-row';
     }
 }

@@ -24,6 +24,12 @@ namespace mod_projetvet;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class utils {
+    /** Shortname of the custom profile field holding the student year (e.g. "A1"). */
+    const PROMOTION_FIELD = 'promotion';
+
+    /** Promotion value identifying a first-year (A1) student. */
+    const PROMOTION_A1 = 'A1';
+
     /**
      * Process a filter and return its value.
      *
@@ -56,6 +62,52 @@ class utils {
             default:
                 return '';
         }
+    }
+
+    /**
+     * Check whether a user is a ProjetVet tutor.
+     *
+     * A tutor is the primary owner of at least one projetvet group, or the substitute of
+     * an open substitution.
+     *
+     * @param int $userid The user id to check.
+     * @return bool True if the user is a tutor (globally, in any project).
+     */
+    public static function is_tutor(int $userid): bool {
+        global $DB;
+
+        // Primary tutor: owner of at least one group.
+        if ($DB->record_exists('projetvet_groups', ['ownerid' => $userid])) {
+            return true;
+        }
+
+        // Substitute tutor of at least one student.
+        return $DB->record_exists(\mod_projetvet\local\persistent\substitution::TABLE, [
+            'substitutetutorid' => $userid,
+            'status' => \mod_projetvet\local\persistent\substitution::STATUS_OPEN,
+        ]);
+    }
+
+    /**
+     * Check whether a user is a ProjetVet tutor for a specific project.
+     *
+     * A tutor is the primary owner of at least one group in the given project, or the
+     * substitute of an open substitution in the given project.
+     *
+     * @param int $userid The user id to check.
+     * @param int $projetvetid The projetvet instance id.
+     * @return bool True if the user is a tutor in the given project.
+     */
+    public static function is_tutor_for_project(int $userid, int $projetvetid): bool {
+        global $DB;
+
+        // Primary tutor: owner of at least one group in the project.
+        if ($DB->record_exists('projetvet_groups', ['ownerid' => $userid, 'projetvetid' => $projetvetid])) {
+            return true;
+        }
+
+        // Substitute tutor of at least one student in the project.
+        return !empty(\mod_projetvet\local\api\substitutions::get_open_substitutions_for_substitute($userid, $projetvetid));
     }
 
     /**
@@ -113,6 +165,19 @@ class utils {
         }
 
         return '';
+    }
+
+    /**
+     * Check whether a student is in the A1 year.
+     *
+     * The student year is read from the "promotion" custom profile field, as
+     * configured by the institution (e.g. "A1", "A2").
+     *
+     * @param int $userid The user ID
+     * @return bool True when the student's promotion is A1
+     */
+    public static function is_a1_student(int $userid): bool {
+        return self::get_user_profile_field($userid, self::PROMOTION_FIELD) === self::PROMOTION_A1;
     }
 
     /**
@@ -336,6 +401,55 @@ class utils {
     }
 
     /**
+     * Get the ECTS value agreed with the tutor for an entry.
+     *
+     * If no validated value has been persisted, falls back to the automatic
+     * workload-based estimate from the planned 'hours' field.
+     *
+     * @param int $entryid The entry ID.
+     * @return int The agreed ECTS value, or 0 if it cannot be determined.
+     */
+    public static function get_agreed_ects(int $entryid): int {
+        if ($entryid <= 0) {
+            return 0;
+        }
+
+        $entry = \mod_projetvet\local\api\entries::get_entry($entryid);
+        $credits = null;
+        $hours = null;
+        $rangvalue = 0;
+
+        foreach ($entry->categories as $category) {
+            foreach ($category->fields as $field) {
+                if ($field->idnumber === 'credits' && $field->value !== '' && $field->value !== null) {
+                    $credits = (int) $field->value;
+                } else if ($field->idnumber === 'hours' && $field->value !== '' && $field->value !== null) {
+                    $hours = (float) $field->value;
+                } else if ($field->idnumber === 'rang' && $field->value !== '' && $field->value !== null) {
+                    $rangvalue = (int) $field->value;
+                }
+            }
+        }
+
+        if ($credits !== null) {
+            return $credits;
+        }
+
+        if ($hours === null || $hours <= 0) {
+            return 0;
+        }
+
+        if ($rangvalue === 2) {
+            return 1;
+        }
+
+        $hoursperects = (int) get_config('mod_projetvet', 'hours_per_ects') ?: 30;
+        $maxects = (int) get_config('mod_projetvet', 'max_ects') ?: 10;
+        $ects = (int) ceil($hours / $hoursperects);
+        return $ects > $maxects ? $maxects : $ects;
+    }
+
+    /**
      * Get suggested ECTS credits based on hours and rang.
      *
      * @param int $projetvetid The projetvet instance ID
@@ -421,34 +535,9 @@ class utils {
             }
         }
 
-        // Calculate "before" value from the 'hours' field if entry exists.
-        $beforeects = 0;
-        if ($entryid > 0 && $stringidentifier !== '') {
-            $entry = \mod_projetvet\local\api\entries::get_entry($entryid);
-            // Loop through categories and fields to find the 'hours' field.
-            foreach ($entry->categories as $category) {
-                foreach ($category->fields as $field) {
-                    if ($field->idnumber === 'hours' && !empty($field->value)) {
-                        $hoursbefore = (float) $field->value;
-                        // Calculate ECTS for hours field using same rang logic.
-                        if ($rangvalue === 2) {
-                            $beforeects = 1;
-                        } else if ($rangvalue === 1) {
-                            $beforeects = (int) ceil($hoursbefore / $hoursperects);
-                            if ($beforeects > $maxects) {
-                                $beforeects = $maxects;
-                            }
-                        } else {
-                            $beforeects = (int) ceil($hoursbefore / $hoursperects);
-                            if ($beforeects > $maxects) {
-                                $beforeects = $maxects;
-                            }
-                        }
-                        break 2;
-                    }
-                }
-            }
-        }
+        // Use the tutor-validated ECTS value as the pre-activity reference.
+        // Fall back to the automatic estimate only when no value was persisted.
+        $beforeects = self::get_agreed_ects($entryid);
 
         // Format the message if a string identifier is provided.
         $message = '';

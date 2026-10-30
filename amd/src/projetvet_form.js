@@ -24,6 +24,7 @@
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import Notification from 'core/notification';
+import {saveCancelPromise} from 'core/notification';
 import Repository from 'mod_projetvet/repository';
 import Templates from 'core/templates';
 import Pending from 'core/pending';
@@ -32,8 +33,14 @@ import Pending from 'core/pending';
  * Initialize ECTS suggestion listeners
  */
 const initEctsSuggestion = () => {
-    // Find all number inputs with data-action="suggestedects".
-    const inputs = document.querySelectorAll('input[type="number"][data-action="suggestedects"]');
+    // Find all number inputs with data-projetvet-action="suggestedects".
+    // NOTE: We deliberately do NOT use the generic [data-action] attribute on form-control inputs,
+    // because core_form/modalform's disableButtons() does
+    //   querySelectorAll('input[type="submit"], [data-action]')
+    // and sets disabled=true on every match right before form.serialize(). Disabled inputs are
+    // skipped by jQuery.serialize(), so the field would be omitted from the submission and
+    // server-side validation would always report "You must supply a value here."
+    const inputs = document.querySelectorAll('input[type="number"][data-projetvet-action="suggestedects"]');
 
     inputs.forEach(input => {
         const suggestionDiv = document.getElementById(input.id + '_suggestion');
@@ -47,8 +54,8 @@ const initEctsSuggestion = () => {
         const studentidInput = document.querySelector('input[name="studentid"]');
         const entryidInput = document.querySelector('input[name="entryid"]');
 
-        // Get the string identifier from data-string attribute.
-        const stringIdentifier = input.getAttribute('data-string') || '';
+        // Get the string identifier from data-projetvet-string attribute.
+        const stringIdentifier = input.getAttribute('data-projetvet-string') || '';
 
         // Update suggestion when user types.
         const updateSuggestion = async() => {
@@ -142,7 +149,6 @@ const initEctsSuggestion = () => {
         const updateSuggestion = async() => {
             const pending = new Pending('mod_projetvet/projetvet_form_get_ects');
             const hours = hoursInput ? parseFloat(hoursInput.value) : 0;
-            const finalects = finalInput ? parseFloat(finalInput.value) : 0;
 
             if (isNaN(hours) || hours <= 0) {
                 suggestionDiv.innerHTML = '';
@@ -170,7 +176,7 @@ const initEctsSuggestion = () => {
                     hours: hours,
                     stringidentifier: stringIdentifier,
                     rangvalue: rangvalue,
-                    finalects: finalects,
+                    finalects: 0,
                 });
 
                 // Handle error.
@@ -188,8 +194,9 @@ const initEctsSuggestion = () => {
 
                 suggestionDiv.innerHTML = html;
 
-                // Set finalInput to suggestedects if it doesn't have a value yet.
-                if (finalInput && !finalInput.value) {
+                // Seed finalInput with the estimate only when nothing was
+                // pre-filled from the tutor-agreed credits value.
+                if (finalInput && !finalInput.value.trim()) {
                     finalInput.value = result.suggestedects;
                 }
             } catch (error) {
@@ -215,15 +222,16 @@ const initEctsSuggestion = () => {
         }
     });
 
-    // Find all HTML elements with data-action="validateects".
-    const validateElements = document.querySelectorAll('[data-action="validateects"]');
+    // Find all number inputs with data-projetvet-action="validateects".
+    // Same reason as above for not using the generic data-action attribute on form controls.
+    const validateElements = document.querySelectorAll('[data-projetvet-action="validateects"]');
 
     validateElements.forEach(element => {
         const suggestionDiv = document.getElementById(element.id + '_suggestion');
         if (!suggestionDiv) {
             return;
         }
-        const stringIdentifier = element.getAttribute('data-string') || '';
+        const stringIdentifier = element.getAttribute('data-projetvet-string') || '';
 
         // Update validation message when final ECTS input changes.
         const updateValidation = async() => {
@@ -251,7 +259,136 @@ const initEctsSuggestion = () => {
     });
 };
 
+/**
+ * Send a contact message to the student from a modal form.
+ *
+ * The message is delivered by the server through the standard Moodle
+ * messaging subsystem (via the mod_projetvet_send_message webservice and an
+ * adhoc task), so no student email address is exposed in the client.
+ *
+ * @param {object} args The modal form args (cmid, projetvetid, studentid, ...).
+ * @param {string} emailAction The emailaction string key (contactactivity|contactf2f).
+ * @return {Promise} A promise resolved when the send request finishes.
+ */
+const sendContactMessage = async(args, emailAction) => {
+    const cmid = parseInt(args.cmid, 10);
+    const projetvetid = parseInt(args.projetvetid, 10);
+    const studentid = parseInt(args.studentid, 10);
+
+    if (!cmid || !projetvetid) {
+        Notification.exception(new Error('Missing cmid or projetvetid for contact message'));
+        return;
+    }
+
+    if (!studentid) {
+        Notification.addNotification({
+            type: 'warning',
+            message: await getString('nomessagerecipients', 'mod_projetvet'),
+        });
+        return;
+    }
+
+    // Ask the user to confirm before sending. The promise resolves when the
+    // user confirms and rejects when the user cancels, so no further action is
+    // taken in the latter case.
+    try {
+        await saveCancelPromise(
+            await getString('confirmcontactstudent', 'mod_projetvet'),
+            await getString('confirmcontactstudent_body', 'mod_projetvet'),
+            await getString('sendcontact', 'mod_projetvet')
+        );
+    } catch (error) {
+        // The user cancelled the confirmation: do nothing.
+        return;
+    }
+
+    // Send the message through the webservice.
+    const pending = new Pending('mod_projetvet/projetvet_form_send_message');
+    try {
+        await Repository.sendMessage({
+            cmid: cmid,
+            projetvetid: projetvetid,
+            studentids: [studentid],
+            subjectkey: emailAction,
+            bodykey: emailAction,
+        });
+
+        Notification.addNotification({
+            type: 'success',
+            message: await getString('messagesent', 'mod_projetvet', {count: 1}),
+        });
+    } catch (error) {
+        Notification.exception(error);
+    } finally {
+        pending.resolve();
+    }
+};
+
 export const init = async() => {
+
+    // Pending promise tracking an in-flight form submission.
+    // The core ModalForm does not register a pending promise around its AJAX
+    // submission, so register one when a submission starts and resolve it when
+    // the submission ends, so that automated tests can wait for it to finish.
+    let formSubmitPending = null;
+
+    // Pending promise tracking an in-flight modal-form open (the form-body
+    // AJAX). The core ModalForm resolves its init promise before the form body
+    // has been rendered, so register our own promise when the modal starts to
+    // open and resolve it once the body (and therefore the form fields) has
+    // been rendered. This lets automated tests reliably wait for the form to
+    // be interactable.
+    let formOpenPending = null;
+
+    /**
+     * Resolve the in-flight form open pending promise.
+     */
+    const finishFormOpenTracking = () => {
+        if (formOpenPending) {
+            formOpenPending.resolve();
+            formOpenPending = null;
+        }
+    };
+
+    /**
+     * Track the open of a modal form, signalling when its form body has been
+     * rendered and the form fields are available.
+     *
+     * @param {object} modalForm The modal form instance
+     */
+    const trackFormOpen = (modalForm) => {
+        formOpenPending = new Pending('mod_projetvet/projetvet_form_open');
+        modalForm.addEventListener(modalForm.events.LOADED, () => {
+            modalForm.modal.getRoot().on('modal:bodyRendered', finishFormOpenTracking);
+        });
+        modalForm.addEventListener(modalForm.events.ERROR, finishFormOpenTracking);
+    };
+
+    /**
+     * Resolve the in-flight form submission pending promise.
+     */
+    const finishFormSubmitTracking = () => {
+        if (formSubmitPending) {
+            formSubmitPending.resolve();
+            formSubmitPending = null;
+        }
+    };
+
+    /**
+     * Track the AJAX submission of a modal form.
+     *
+     * @param {object} modalForm The modal form instance
+     */
+    const trackFormSubmission = (modalForm) => {
+        modalForm.addEventListener(modalForm.events.SUBMIT_BUTTON_PRESSED, () => {
+            formSubmitPending = new Pending('mod_projetvet/projetvet_form_submit');
+        });
+
+        modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, finishFormSubmitTracking);
+        modalForm.addEventListener(modalForm.events.CLIENT_VALIDATION_ERROR, finishFormSubmitTracking);
+        modalForm.addEventListener(modalForm.events.SERVER_VALIDATION_ERROR, finishFormSubmitTracking);
+        modalForm.addEventListener(modalForm.events.ERROR, finishFormSubmitTracking);
+    };
 
     // Check if there's a stored submitpopup message to display after page reload.
     const storedPopup = sessionStorage.getItem('projetvet_submitpopup');
@@ -267,6 +404,9 @@ export const init = async() => {
     }
 
     const submitEventHandler = async(event) => {
+        // Finish the submission tracking before the page reloads.
+        finishFormSubmitTracking();
+
         // Check if there's a submitpopup message to display.
         const submitpopup = event.detail?.submitpopup || null;
 
@@ -304,8 +444,8 @@ export const init = async() => {
             });
         });
 
-        // Intercept form submission to show dialog only if switch is not checked.
-
+        trackFormOpen(modalForm);
+        trackFormSubmission(modalForm);
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
     });
@@ -351,6 +491,8 @@ export const init = async() => {
             });
         });
 
+        trackFormOpen(modalForm);
+        trackFormSubmission(modalForm);
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, submitEventHandler);
         modalForm.show();
     });
@@ -370,6 +512,8 @@ export const init = async() => {
                 ...button.dataset,
             },
         });
+
+        trackFormSubmission(modalForm);
 
         // After form submission, reload the subset entries list via AJAX.
         modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, async() => {
@@ -438,17 +582,17 @@ export const init = async() => {
         const emailAction = button.dataset.emailaction;
         const form = button.closest('form');
 
-        // Handle email action.
+        // Handle email action: send a contact message through the Moodle
+        // messaging system (server-side), never a mailto: link.
         if (emailAction && form) {
-            const studentEmailInput = form.querySelector('input[name="studentemail"]');
-            if (studentEmailInput && studentEmailInput.value) {
-                const email = studentEmailInput.value;
-                const subjectString = await getString(emailAction + '_subject', 'mod_projetvet');
-                const bodyString = await getString(emailAction, 'mod_projetvet');
-                const subject = encodeURIComponent(subjectString);
-                const body = encodeURIComponent(bodyString);
-                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-            }
+            const cmidField = form.querySelector('input[name="cmid"]');
+            const projetvetidField = form.querySelector('input[name="projetvetid"]');
+            const studentidField = form.querySelector('input[name="studentid"]');
+            await sendContactMessage({
+                cmid: cmidField ? cmidField.value : '',
+                projetvetid: projetvetidField ? projetvetidField.value : '',
+                studentid: studentidField ? studentidField.value : '',
+            }, emailAction);
             return;
         }
 

@@ -222,6 +222,30 @@ class behat_mod_projetvet extends behat_base {
     }
 
     /**
+     * Checks all the "practiced competencies" confirmation checkboxes in the
+     * completion report, satisfying the minimum-tags requirement.
+     *
+     * @Given /^I confirm the practiced competencies$/
+     * @throws ExpectationException
+     */
+    public function i_confirm_the_practiced_competencies() {
+        $page = $this->getSession()->getPage();
+        $checkboxes = $page->findAll('css', 'input.tagconfirm-checkbox');
+        if (empty($checkboxes)) {
+            throw new ExpectationException(
+                'No practiced-competencies checkboxes found.',
+                $this->getSession()
+            );
+        }
+        foreach ($checkboxes as $checkbox) {
+            if (!$checkbox->isChecked()) {
+                $checkbox->check();
+            }
+        }
+        $this->wait_for_pending_js();
+    }
+
+    /**
      * Submits the projetvet form
      *
      * @Given /^I submit the projetvet form$/
@@ -561,6 +585,7 @@ class behat_mod_projetvet extends behat_base {
      * | View              | Activity name | The activity view page        |
      * | Tutor assignments | Activity name | The assignments page (assignments.php)    |
      * | Dashboard         | Activity name | The dashboard page (dashboard.php)        |
+     * | Substitutions     | Activity name > tutor username | The substitute tutors page of a principal tutor |
      *
      * @param string $type identifies which type of page this is, e.g. 'Tutor assignments'.
      * @param string $identifier identifies the particular page, e.g. 'ProjetVet 1'.
@@ -587,6 +612,13 @@ class behat_mod_projetvet extends behat_base {
                     ['id' => $this->get_cm_by_projetvet_name($identifier)->id]
                 );
 
+            case 'substitutions':
+                [$activityname, $username] = array_map('trim', explode('>', $identifier, 2));
+                return new moodle_url('/mod/projetvet/substitutions.php', [
+                    'id' => $this->get_cm_by_projetvet_name($activityname)->id,
+                    'tutorid' => $this->get_user_by_identifier($username)->id,
+                ]);
+
             default:
                 throw new Exception('Unrecognised projetvet page type "' . $type . '."');
         }
@@ -602,5 +634,174 @@ class behat_mod_projetvet extends behat_base {
         global $DB;
         $projetvet = $DB->get_record('projetvet', ['name' => $name], '*', MUST_EXIST);
         return get_coursemodule_from_instance('projetvet', $projetvet->id, $projetvet->course, false, MUST_EXIST);
+    }
+
+    /**
+     * Opens the student info sheet (view.php with a studentid) for a student in an activity.
+     * // phpcs:disable moodle.Files.LineLength.TooLong
+     * @Given /^I open the student info sheet for "(?P<studentusername_string>(?:[^"]|\\")*)" in "(?P<activityname_string>(?:[^"]|\\")*)"$/
+     * // phpcs:enable moodle.Files.LineLength.TooLong
+     * @param string $studentusername The student's username.
+     * @param string $activityname The projetvet activity name.
+     * @throws Exception
+     */
+    public function i_open_student_info_sheet($studentusername, $activityname) {
+        global $DB;
+
+        $student = $DB->get_record('user', ['username' => $studentusername], 'id', MUST_EXIST);
+        $cm = $this->get_cm_by_projetvet_name($activityname);
+
+        $url = new moodle_url('/mod/projetvet/view.php', ['id' => $cm->id, 'studentid' => $student->id]);
+        $this->getSession()->visit($url->out());
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Navigates directly to the tutor practical info page (URL-based, for access-control checks
+     * where no navigation link is available for the current user).
+     *
+     * @Given /^I am on the tutor practical info page$/
+     */
+    public function i_am_on_the_tutor_practical_info_page() {
+        $this->getSession()->visit((new moodle_url('/mod/projetvet/tutor_info.php'))->out());
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Asserts that a form field's current value contains the given text.
+     *
+     * @Then /^the field "(?P<label_string>(?:[^"]|\\")*)" should contain "(?P<value_string>(?:[^"]|\\")*)"$/
+     * @param string $label The field label.
+     * @param string $value The expected substring.
+     * @throws ExpectationException
+     */
+    public function the_field_should_contain($label, $value) {
+        $field = $this->getSession()->getPage()->findField($label);
+
+        if (!$field) {
+            throw new ExpectationException("Field '$label' was not found.", $this->getSession());
+        }
+
+        $current = $field->getValue();
+        if ($current === null || strpos($current, $value) === false) {
+            throw new ExpectationException(
+                "Field '$label' does not contain '$value'. Current value: '$current'",
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Asserts that the activity-entry-form button for a given formset exists on the page.
+     *
+     * @Then /^the "activity entry form" button for formset "(?P<formsetidnumber_string>(?:[^"]|\\")*)" should exist$/
+     * @param string $formsetidnumber The formset idnumber (e.g. teacherinfo).
+     * @throws ExpectationException
+     */
+    public function the_activity_entry_form_button_for_formset_should_exist($formsetidnumber) {
+        $button = $this->find('css', '[data-action="activity-entry-form"][data-formsetidnumber="' . $formsetidnumber . '"]');
+
+        if (!$button) {
+            throw new ExpectationException(
+                'The activity entry form button for formset "' . $formsetidnumber . '" was not found.',
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Asserts that a highlighted info row (tr.row-highlight) exists on the page.
+     *
+     * @Then /^a highlighted info row should exist$/
+     * @throws ExpectationException
+     */
+    public function a_highlighted_info_row_should_exist() {
+        $row = $this->find('css', 'tr.row-highlight');
+
+        if (!$row) {
+            throw new ExpectationException('A highlighted info row (tr.row-highlight) was not found.', $this->getSession());
+        }
+    }
+
+    /**
+     * Asserts that a form field has been marked invalid by the server-side validation.
+     *
+     * This is language-independent: it locates the field by its name attribute and checks
+     * the "is-invalid" CSS class that formslib applies when a validation error is returned
+     * for it, rather than matching the human-readable error message (which varies by language).
+     *
+     * @Then /^the field "(?P<fieldname_string>(?:[^"]|\\")*)" should be marked as invalid$/
+     * @param string $fieldname The field name attribute (e.g. "field_actions_summary").
+     * @throws ExpectationException
+     */
+    public function the_field_should_be_marked_as_invalid($fieldname) {
+        $class = $this->get_form_field_class($fieldname);
+        if (strpos($class, 'is-invalid') === false) {
+            throw new ExpectationException(
+                'Field "' . $fieldname . '" was not marked invalid. Class: "' . $class . '".',
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Returns the CSS class of a form field, located by its name attribute.
+     *
+     * @param string $fieldname The field name attribute.
+     * @return string the field's class attribute.
+     * @throws ExpectationException
+     */
+    protected function get_form_field_class($fieldname) {
+        $this->wait_for_pending_js();
+        $page = $this->getSession()->getPage();
+
+        $field = $page->find('css', '[name="' . $fieldname . '"]');
+        if (!$field) {
+            throw new ExpectationException(
+                'Field with name "' . $fieldname . '" not found on the page.',
+                $this->getSession()
+            );
+        }
+        return (string) $field->getAttribute('class');
+    }
+
+    /**
+     * Checks the text of a table row, inside a region (e.g. a report of the assignments page).
+     *
+     * The row is the first table row of the region containing the row text.
+     * // phpcs:disable moodle.Files.LineLength.TooLong
+     * @Then /^I should (not )?see "([^"]*)" in the "([^"]*)" row of the "([^"]*)" "([^"]*)"$/
+     * // phpcs:enable moodle.Files.LineLength.TooLong
+     * @param string $not "not " to check the text is absent, '' otherwise
+     * @param string $text The text to look for
+     * @param string $rowtext A text identifying the row
+     * @param string $region The region locator
+     * @param string $selectortype The region selector type
+     * @throws ExpectationException
+     */
+    public function i_should_see_in_the_row_of_region($not, $text, $rowtext, $region, $selectortype) {
+        $container = $this->get_selected_node($selectortype, $region);
+        $row = null;
+        foreach ($container->findAll('css', 'tr') as $candidate) {
+            if (strpos($candidate->getText(), $rowtext) !== false) {
+                $row = $candidate;
+                break;
+            }
+        }
+        if (!$row) {
+            throw new ExpectationException(
+                'No row containing "' . $rowtext . '" was found in "' . $region . '"',
+                $this->getSession()
+            );
+        }
+
+        $found = strpos($row->getText(), $text) !== false;
+        if ($found === ($not !== '')) {
+            throw new ExpectationException(
+                'The "' . $rowtext . '" row ' . ($not !== '' ? 'contains' : 'does not contain') . ' "' . $text . '". Found: '
+                    . $row->getText(),
+                $this->getSession()
+            );
+        }
     }
 }

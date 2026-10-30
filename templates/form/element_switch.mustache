@@ -23,45 +23,42 @@
     {
         "element": {
             "id": "id_submitted",
+            "wrapperid": "fitem_id_submitted",
+            "iderror": "id_error_submitted",
             "name": "submitted",
+            "type": "switch",
             "value": "1",
             "checked": true,
+            "frozen": false,
+            "dataattributes": [
+                {"name": "action", "value": "toggle"}
+            ],
             "text": "Send to teacher"
         },
         "label": "Submit",
         "required": false,
-        "error": ""
+        "advanced": false,
+        "helpbutton": "",
+        "error": null
     }
 }}
-<div id="fitem_{{element.id}}" class="form-group row fitem {{#advanced}}advanced{{/advanced}} {{#error}}has-danger{{/error}}">
-    <div class="col-md-3 col-form-label d-flex pb-0 pr-md-0">
-        <label for="{{element.id}}" class="d-inline word-break {{#required}}required{{/required}}">
-            {{label}}
-            {{#required}}
-                <abbr class="text-danger" title="{{#str}}required{{/str}}">*</abbr>
-            {{/required}}
-        </label>
-        {{{helpbutton}}}
-    </div>
-    <div class="col-md-9 form-inline align-items-start felement" data-fieldtype="switch">
-        <div class="custom-control custom-switch">
+{{< core_form/element-template }}
+    {{$element}}
+        <div class="form-check form-switch" data-fieldtype="switch">
             {{! Hidden field to ensure 0 is sent when checkbox is unchecked }}
             <input type="hidden" name="{{element.name}}" value="0">
             <input type="checkbox"
-                   class="custom-control-input"
+                   role="switch"
+                   class="form-check-input"
                    id="{{element.id}}"
                    name="{{element.name}}"
                    value="{{element.value}}"
+                   {{#element.frozen}}disabled{{/element.frozen}}
                    {{#element.checked}}checked{{/element.checked}}
                    {{#element.dataattributes}}data-{{name}}="{{value}}" {{/element.dataattributes}}>
-            <label class="custom-control-label" for="{{element.id}}">
+            <label class="form-check-label" for="{{element.id}}">
                 {{element.text}}
             </label>
         </div>
-        {{#error}}
-            <div class="form-control-feedback invalid-feedback" id="{{element.id}}_error">
-                {{{error}}}
-            </div>
-        {{/error}}
-    </div>
-</div>
+    {{/element}}
+{{/ core_form/element-template }}

@@ -53,6 +53,18 @@ class behat_mod_projetvet_generator extends behat_generator_base {
                 'required' => ['user', 'group'],
                 'switchids' => [],
             ],
+            'tutor settings' => [
+                'singular' => 'tutor setting',
+                'datagenerator' => 'tutor_settings',
+                'required' => ['user', 'projetvetidnumber'],
+                'switchids' => [],
+            ],
+            'substitutions' => [
+                'singular' => 'substitution',
+                'datagenerator' => 'substitution',
+                'required' => ['student', 'substitute', 'projetvetidnumber'],
+                'switchids' => [],
+            ],
         ];
     }
 
@@ -129,16 +141,6 @@ class behat_mod_projetvet_generator extends behat_generator_base {
      * @return int
      */
     protected function get_teacher_id(string $username): int {
-        return $this->get_user_id($username);
-    }
-
-    /**
-     * Gets the secondary teacher user id from its username.
-     *
-     * @param string $username
-     * @return int
-     */
-    protected function get_secondaryteacher_id(string $username): int {
         return $this->get_user_id($username);
     }
 

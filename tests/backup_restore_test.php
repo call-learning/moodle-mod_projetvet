@@ -37,11 +37,11 @@ require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
  * @copyright 2025 Bas Brands <bas@sonsbeekmedia.nl>
  * @license https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_projetvet_activity_structure_step::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_projetvet_activity_structure_step::class)]
 final class backup_restore_test extends advanced_testcase {
     /**
      * Test backup and restore of a projetvet activity.
-     * @covers \backup_projetvet_activity_structure_step
-     * @covers \restore_projetvet_activity_structure_step
      */
     public function test_backup_restore(): void {
         global $DB;
@@ -102,9 +102,6 @@ final class backup_restore_test extends advanced_testcase {
 
     /**
      * Test backup and restore with user data.
-     *
-     * @covers ::backup_projetvet_activity_structure_step
-     * @covers ::restore_projetvet_activity_structure_step
      */
     public function test_backup_restore_with_userdata(): void {
         global $DB;
@@ -175,6 +172,46 @@ final class backup_restore_test extends advanced_testcase {
         if (!empty($formsets)) {
             $this->assertGreaterThanOrEqual(1, $formentrycount, 'Form entries should be restored if created');
         }
+    }
+
+    /**
+     * Test backup and restore of the substitute tutors with user data.
+     */
+    public function test_backup_restore_substitutions(): void {
+        global $DB;
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        $generator = $this->getDataGenerator();
+        $course = $generator->create_course();
+        $projetvet = $generator->create_module('projetvet', ['course' => $course->id]);
+        $primary = $generator->create_and_enrol($course, 'editingteacher');
+        $substitute = $generator->create_and_enrol($course, 'editingteacher');
+        $student = $generator->create_and_enrol($course, 'student');
+        \mod_projetvet\local\api\groups::assign_students_to_teacher($primary->id, [$student->id], $projetvet->id);
+        \mod_projetvet\local\api\substitutions::create_substitutions(
+            $projetvet->cmid,
+            $projetvet->id,
+            [$student->id],
+            $substitute->id,
+            time() - DAYSECS,
+            time() + WEEKSECS,
+            'Sick leave'
+        );
+
+        $backupid = $this->backup_course($course, true);
+        $newcourseid = restore_dbops::create_new_course('Restored substitutions', 'RESTORED_SUBS', $course->category);
+        $this->restore_course($backupid, $newcourseid);
+
+        $newprojetvet = $DB->get_record('projetvet', ['course' => $newcourseid], '*', MUST_EXIST);
+        $restored = $DB->get_records('projetvet_substitutions', ['projetvetid' => $newprojetvet->id]);
+        $this->assertCount(1, $restored);
+        $restored = reset($restored);
+        $this->assertEquals($student->id, $restored->studentid);
+        $this->assertEquals($primary->id, $restored->primarytutorid);
+        $this->assertEquals($substitute->id, $restored->substitutetutorid);
+        $this->assertEquals('Sick leave', $restored->reason);
+        $this->assertEquals(\mod_projetvet\local\persistent\substitution::STATUS_OPEN, $restored->status);
     }
 
     /**

@@ -154,8 +154,13 @@ class assignments_students extends system_report {
 
         $this->add_column($selectcolumn);
 
-        // Fullname with picture.
-        $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
+        // Fullname with picture. Sort by the actual lastname field, rather than by the
+        // configured display order of the user's full name.
+        $fullnamecolumn = $entityuser->get_column('fullnamewithpicturelink');
+        $fullnamecolumn->add_field("{$entityuseralias}.lastname")
+            ->add_field("{$entityuseralias}.firstname")
+            ->set_is_sortable(true, ["{$entityuseralias}.lastname", "{$entityuseralias}.firstname"]);
+        $this->add_column($fullnamecolumn);
 
         // Promotion (custom profile field) - column 2.
         $promotioncolumn = (new column(
@@ -209,30 +214,7 @@ class assignments_students extends system_report {
 
         $this->add_column($teachercolumn);
 
-        // Secondary tutor(s) - column 5.
-        $secondarytutorcolumn = (new column(
-            'secondary_tutor',
-            new lang_string('secondary_tutor', 'mod_projetvet'),
-            $entityuser->get_entity_name()
-        ))
-            ->add_joins($entityuser->get_joins())
-            ->add_field("{$entityuseralias}.id", 'userid_secondary')
-            ->set_type(column::TYPE_TEXT)
-            ->set_is_sortable(false)
-            ->add_callback(static function ($value, $row) use ($cm): string {
-                $secondarytutors = \mod_projetvet\local\api\groups::get_student_secondary_tutors(
-                    $row->userid_secondary,
-                    $cm->instance
-                );
-                if (empty($secondarytutors)) {
-                    return '-';
-                }
-                $names = array_map('fullname', $secondarytutors);
-                return implode(', ', $names);
-            });
-
-        $this->add_column($secondarytutorcolumn);
-
+        // Default sorting by the actual lastname field.
         $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
     }
 
