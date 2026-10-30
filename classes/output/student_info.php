@@ -18,6 +18,7 @@ namespace mod_projetvet\output;
 
 use mod_projetvet\local\persistent\form_set;
 use mod_projetvet\local\persistent\form_entry;
+use mod_projetvet\local\api\archive;
 use mod_projetvet\local\api\entries;
 use mod_projetvet\local\api\substitutions;
 use mod_projetvet\local\persistent\substitution;
@@ -280,6 +281,11 @@ class student_info implements renderable, templatable {
                     }
                 }
             }
+        }
+
+        // A validated project already validated with the previous system can be an international mobility.
+        if (!$mobilityrealized) {
+            $mobilityrealized = archive::has_validated_mobility($this->moduleinstance->id, $this->studentid);
         }
 
         // Set the mobility row value based on whether mobility was realized.

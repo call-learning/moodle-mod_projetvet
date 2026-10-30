@@ -286,6 +286,16 @@ function xmldb_projetvet_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026100200, 'projetvet');
     }
 
+    if ($oldversion < 2026101400) {
+        // Fix #882: Install the form sets used to archive projects already validated
+        // with the previous system (the archive and its archived project rows),
+        // including the lookup data of the archived project category field.
+        \mod_projetvet\setup::import_form_sets(['archive', 'archive_project']);
+
+        // Projetvet savepoint reached.
+        upgrade_mod_savepoint(true, 2026101400, 'projetvet');
+    }
+
     if ($oldversion < 2026102300) {
         // Fix #866: Define table projetvet_substitutions to be created.
         $table = new xmldb_table('projetvet_substitutions');
@@ -327,7 +337,6 @@ function xmldb_projetvet_upgrade($oldversion) {
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2026102300, 'projetvet');
     }
-
     if ($oldversion < 2026102500) {
         // Fix #866: Secondary tutors are replaced by the per-student substitute tutors.
         // Delete the remaining secondary tutor memberships so they no longer give access
@@ -337,6 +346,8 @@ function xmldb_projetvet_upgrade($oldversion) {
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2026102500, 'projetvet');
     }
+
+
 
     return true;
 }
