@@ -169,9 +169,7 @@ class archive {
         if (self::student_can_open($context, $projetvetid, $studentid, $userid)) {
             return true;
         }
-        global $CFG;
-        require_once($CFG->dirroot . '/mod/projetvet/lib.php');
-        if (!projetvet_user_can_view_student($userid, $studentid, $context)) {
+        if (!has_capability('mod/projetvet:viewallactivities', $context, $userid)) {
             return false;
         }
         $status = self::get_status($projetvetid, $studentid);
