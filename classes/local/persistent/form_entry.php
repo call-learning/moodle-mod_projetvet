@@ -125,8 +125,7 @@ class form_entry extends persistent {
      * @return bool
      */
     public function can_delete(?int $userid = null): bool {
-        global $CFG, $USER;
-        require_once($CFG->dirroot . '/mod/projetvet/lib.php');
+        global $USER;
 
         $userid = $userid ?? (int) $USER->id;
 
@@ -144,9 +143,10 @@ class form_entry extends persistent {
         $context = $this->get_context();
         $studentid = (int) $this->get('studentid');
 
-        $isteacher = has_capability('mod/projetvet:approve', $context, $userid)
+        // Teachers and administrators who can view all students' activities delete at any status.
+        $canmanage = has_capability('mod/projetvet:approve', $context, $userid)
             || has_capability('mod/projetvet:admin', $context, $userid);
-        if ($isteacher && projetvet_user_can_view_student($userid, $studentid, $context)) {
+        if ($canmanage && has_capability('mod/projetvet:viewallactivities', $context, $userid)) {
             return true;
         }
 
