@@ -337,6 +337,7 @@ function xmldb_projetvet_upgrade($oldversion) {
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2026102300, 'projetvet');
     }
+
     if ($oldversion < 2026102500) {
         // Fix #866: Secondary tutors are replaced by the per-student substitute tutors.
         // Delete the remaining secondary tutor memberships so they no longer give access
@@ -346,8 +347,6 @@ function xmldb_projetvet_upgrade($oldversion) {
         // Projetvet savepoint reached.
         upgrade_mod_savepoint(true, 2026102500, 'projetvet');
     }
-
-
 
     return true;
 }
