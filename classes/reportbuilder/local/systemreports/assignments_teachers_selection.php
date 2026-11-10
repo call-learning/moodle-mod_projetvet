@@ -144,10 +144,22 @@ class assignments_teachers_selection extends system_report {
                     $disabled = false;
                     $reason = '';
 
-                    // When the batch contains A1 students, the tutors to which the A1
-                    // assignment rule does not allow assigning the batch are rendered
-                    // as non-selectable, with the blocking reason made explicit.
-                    if ($a1studentcount > 0 && $studentcount > 0) {
+                    // Tutors unavailable for new assignments are rendered as non-selectable,
+                    // with the blocking reason made explicit.
+                    $isopen = \mod_projetvet\local\api\groups::is_teacher_open_for_new_assignments(
+                        $teacherid,
+                        $projetvetid
+                    );
+                    if ($studentcount > 0 && !$isopen) {
+                        $disabled = true;
+                        $reason = get_string(
+                            'assignmentblocked_status',
+                            'mod_projetvet',
+                            \mod_projetvet\local\persistent\teacher_rating::get_status_string_for(
+                                \mod_projetvet\local\api\groups::get_teacher_status($teacherid, $projetvetid)
+                            )
+                        );
+                    } else if ($a1studentcount > 0 && $studentcount > 0) {
                         $eligibility = \mod_projetvet\local\api\groups::check_a1_assignment_eligibility(
                             $teacherid,
                             $projetvetid,

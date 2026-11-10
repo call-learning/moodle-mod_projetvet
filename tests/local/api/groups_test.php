@@ -154,6 +154,27 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
+     * Test that the core assignment method enforces tutor availability status.
+     */
+    public function test_assign_students_to_group_rejects_closed_tutor(): void {
+        $data = $this->create_test_data();
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        groups::set_teacher_status(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::STATUS_ACTIVE_CLOSED
+        );
+
+        $this->expectException(\moodle_exception::class);
+        groups::assign_students_to_group($group->get('id'), [$data['student1']->id], $data['projetvet']->id);
+    }
+
+    /**
      * Test get_student_groups
      */
     public function test_get_student_groups(): void {

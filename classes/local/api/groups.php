@@ -304,6 +304,22 @@ class groups {
             return ['allowed' => true, 'reason' => ''];
         }
 
+        $status = self::get_teacher_status($teacherid, $projetvetid);
+        $statusreasons = [
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_ACTIVE_CLOSED =>
+                'assignmentblocked_status_active_closed',
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_TEMPORARILY_UNAVAILABLE =>
+                'assignmentblocked_status_temporarily_unavailable',
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_INACTIVE =>
+                'assignmentblocked_status_inactive',
+        ];
+        if (isset($statusreasons[$status])) {
+            return [
+                'allowed' => false,
+                'reason' => get_string($statusreasons[$status], 'mod_projetvet'),
+            ];
+        }
+
         $newa1studentids = array_filter($newstudentids, '\mod_projetvet\utils::is_a1_student');
         if (!empty($newa1studentids)) {
             $eligibility = self::check_a1_assignment_eligibility($teacherid, $projetvetid, count($newstudentids));
@@ -313,7 +329,7 @@ class groups {
         } else if (self::get_teacher_available_capacity($teacherid, $projetvetid) < count($newstudentids)) {
             return [
                 'allowed' => false,
-                'reason' => get_string('a1assignmentblocked_capacity', 'mod_projetvet'),
+                'reason' => get_string('assignmentblocked_capacity', 'mod_projetvet'),
             ];
         }
 
