@@ -81,12 +81,12 @@ Feature: Tutor assignments interface for managing groups
     And I should see "Teacher One" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     And I should see "Teacher Two" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     And I should see "Teacher Three" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
-    # Check Teacher One (average rating, 5 students, target 8)
-    And I should see "Average" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    # Check Teacher One (Capacity B, 5 students, target 8)
+    And I should see "Capacity B" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     And I should see "8" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     And I should see "5" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
-    # Check Teacher Two (expert rating, 5 students, target 12)
-    And I should see "Expert" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
+    # Check Teacher Two (Capacity A, 5 students, target 12)
+    And I should see "Capacity A" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     And I should see "12" in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
 
   Scenario: View students report with teacher assignments
@@ -117,20 +117,23 @@ Feature: Tutor assignments interface for managing groups
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should exist
     # Teacher table should have the required columns
-    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Rating"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Capacity"
     And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Target"
     And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Current"
     And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Gap"
 
-  Scenario: Update teacher rating changes target capacity
+  Scenario: Update teacher capacity changes target capacity
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "update-teacher-rating" buttonaction in the "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report"
     Then I should see "Update capacity"
-    And I should see "Teacher Rating and Capacity"
-    When I set the field "Rating" to "novice"
+    And I should see "Teacher Capacity"
+    And the "Capacity" select box should contain "Capacity A (12 Students)"
+    And the "Capacity" select box should contain "Capacity B (8 Students)"
+    And the "Capacity" select box should contain "Capacity C (5 Students)"
+    When I set the field "Capacity" to "novice"
     And I press "Save changes"
-    Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Novice"
+    Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Capacity C"
 
   Scenario: Open assign students dialog from teacher report
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
@@ -179,7 +182,7 @@ Feature: Tutor assignments interface for managing groups
     And I click on "Delete existing groups before import" "checkbox"
     And I press "Save changes"
     Then "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Teacher Three"
-    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Novice"
+    And "Tutor assignments teachers report" "mod_projetvet > Tutor assignments teachers report" should contain "Capacity C"
     When I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     Then "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Student Eleven"
     And "Tutor assignments students report" "mod_projetvet > Tutor assignments students report" should contain "Teacher Three"
