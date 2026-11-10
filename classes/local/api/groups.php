@@ -286,6 +286,61 @@ class groups {
     }
 
     /**
+     * Check the A1 and capacity rules for a new primary-tutor assignment.
+     *
+     * @param int $teacherid The target tutor user ID.
+     * @param int $projetvetid The ProjetVet instance ID.
+     * @param int[] $studentids Student IDs requested by the operation.
+     * @return array{allowed: bool, reason: string}
+     */
+    public static function check_student_assignment_eligibility(
+        int $teacherid,
+        int $projetvetid,
+        array $studentids
+    ): array {
+        $existingstudentids = array_map('intval', self::get_students_for_tutor($teacherid, $projetvetid));
+        $newstudentids = array_values(array_diff(array_unique(array_map('intval', $studentids)), $existingstudentids));
+        if (empty($newstudentids)) {
+            return ['allowed' => true, 'reason' => ''];
+        }
+
+        $newa1studentids = array_filter($newstudentids, '\mod_projetvet\utils::is_a1_student');
+        if (!empty($newa1studentids)) {
+            $eligibility = self::check_a1_assignment_eligibility($teacherid, $projetvetid, count($newstudentids));
+            if (!$eligibility['allowed']) {
+                return $eligibility;
+            }
+        } else if (self::get_teacher_available_capacity($teacherid, $projetvetid) < count($newstudentids)) {
+            return [
+                'allowed' => false,
+                'reason' => get_string('a1assignmentblocked_capacity', 'mod_projetvet'),
+            ];
+        }
+
+        return ['allowed' => true, 'reason' => ''];
+    }
+
+    /**
+     * Reject an ineligible primary-tutor assignment.
+     *
+     * @param int $teacherid The target tutor user ID.
+     * @param int $projetvetid The ProjetVet instance ID.
+     * @param int[] $studentids Student IDs requested by the operation.
+     * @return void
+     * @throws \moodle_exception If the assignment is not allowed.
+     */
+    private static function assert_student_assignment_eligibility(
+        int $teacherid,
+        int $projetvetid,
+        array $studentids
+    ): void {
+        $eligibility = self::check_student_assignment_eligibility($teacherid, $projetvetid, $studentids);
+        if (!$eligibility['allowed']) {
+            throw new \moodle_exception('a1assignmentblocked', 'mod_projetvet', '', $eligibility['reason']);
+        }
+    }
+
+    /**
      * Get the user IDs of the A1 students in a batch that are not yet members of the
      * tutor's groups in the given projetvet instance.
      *
@@ -523,6 +578,11 @@ class groups {
     public static function sync_group_students(int $groupid, array $studentuserids): int {
         $addedcount = 0;
         $group = new projetvet_group($groupid);
+        self::assert_student_assignment_eligibility(
+            (int) $group->get('ownerid'),
+            (int) $group->get('projetvetid'),
+            $studentuserids
+        );
         $currentstudents = $group->get_members(group_member::TYPE_STUDENT);
 
         // Remove students that are not in the provided array.
@@ -590,6 +650,8 @@ class groups {
      */
     public static function assign_students_to_group(int $groupid, array $studentids, int $projetvetid): int {
         $assignedcount = 0;
+        $group = new projetvet_group($groupid);
+        self::assert_student_assignment_eligibility((int) $group->get('ownerid'), $projetvetid, $studentids);
 
         foreach ($studentids as $studentid) {
             // Remove student from any existing groups in this projetvet instance.

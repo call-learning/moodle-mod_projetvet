@@ -130,6 +130,30 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
+     * Test that the core assignment method enforces the capacity rule.
+     */
+    public function test_assign_students_to_group_rejects_when_at_capacity(): void {
+        $data = $this->create_test_data();
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+
+        $rating = teacher_rating::get_or_create_rating($data['teacher']->id, $data['projetvet']->id);
+        $rating->set('rating', teacher_rating::RATING_NOVICE);
+        $rating->create();
+        for ($i = 0; $i < 5; $i++) {
+            $student = $this->getDataGenerator()->create_user(['username' => 'fullstudent' . $i]);
+            $group->add_member($student->id, group_member::TYPE_STUDENT);
+        }
+
+        $this->expectException(\moodle_exception::class);
+        groups::assign_students_to_group($group->get('id'), [$data['student1']->id], $data['projetvet']->id);
+    }
+
+    /**
      * Test get_student_groups
      */
     public function test_get_student_groups(): void {
