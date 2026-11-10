@@ -199,6 +199,7 @@ final class send_message_test extends \advanced_testcase {
             $this->getDataGenerator()->enrol_user($recipient->id, $this->data['course']->id, 'student');
         }
 
+        $assignmentlink = 'https://example.test/projetvet?studentid=' . $this->data['student1']->id;
         $task = new send_message();
         $task->set_custom_data((object) [
             'cmid' => $this->data['cmid'],
@@ -215,7 +216,7 @@ final class send_message_test extends \advanced_testcase {
                 'studentfirstname' => 'Student',
                 'studentlastname' => 'Example',
                 'newtutorfirstname' => 'Tutor',
-                'link' => 'https://example.test/projetvet',
+                'link' => $assignmentlink,
             ],
         ]);
         $task->execute();
@@ -226,6 +227,7 @@ final class send_message_test extends \advanced_testcase {
             $notification = reset($notifications);
             $this->assertStringContainsString('Student Example', $notification->subject);
             $this->assertStringNotContainsString('reason', $notification->fullmessage);
+            $this->assertSame($assignmentlink, $notification->contexturl);
         }
     }
 
@@ -267,5 +269,124 @@ final class send_message_test extends \advanced_testcase {
 
         // No message should be sent.
         $this->assertCount(0, $this->get_contact_notifications($this->data['student1']->id));
+    }
+
+    /**
+     * Test an invalid custom data (no subject and no body at all) is a no-op.
+     */
+    public function test_execute_without_content_is_noop(): void {
+        $this->setAdminUser();
+        $task = new send_message();
+        $task->set_custom_data((object) [
+            'cmid' => $this->data['cmid'],
+            'userfromid' => $this->data['teacher']->id,
+            'recipientids' => [$this->data['student1']->id],
+        ]);
+        $task->execute();
+
+        // No message should be sent.
+        $this->assertCount(0, $this->get_contact_notifications($this->data['student1']->id));
+    }
+
+    /**
+     * Test a supplied link and context URL are kept, not replaced by the module URL.
+     */
+    public function test_execute_preserves_explicit_link_and_contexturl(): void {
+        $this->setAdminUser();
+        $this->grant_approve_capability($this->data['student1']->id);
+
+        $link = new \moodle_url('/mod/projetvet/view.php', [
+            'id' => $this->data['cmid'],
+            'studentid' => $this->data['student1']->id,
+        ]);
+        $task = new send_message();
+        $task->set_custom_data((object) [
+            'cmid' => $this->data['cmid'],
+            'userfromid' => 0,
+            'recipientids' => [$this->data['student1']->id],
+            'subjectkey' => 'studentsubmittedactivity_subject',
+            'bodykey' => 'studentsubmittedactivity',
+            'bodydata' => [
+                'studentname' => 'Student One',
+                'link' => $link->out(false),
+            ],
+            'smallkey' => 'notification_smallmessage',
+            'smalldata' => ['studentname' => 'Student One', 'link' => $link->out(false)],
+            'contexturl' => $link->out(false),
+        ]);
+        $task->execute();
+
+        $notifications = $this->get_contact_notifications($this->data['student1']->id);
+        $this->assertCount(1, $notifications);
+        $notification = reset($notifications);
+        // The noreply sender is used when the sender id is 0.
+        $this->assertEquals(\core_user::NOREPLY_USER, $notification->useridfrom);
+        // The student-specific link survives in the body and as the context URL.
+        $this->assertSame($link->out(false), $notification->contexturl);
+        $this->assertStringContainsString('studentid=' . $this->data['student1']->id, $notification->fullmessagehtml);
+        $this->assertStringContainsString('Student One', $notification->smallmessage);
+    }
+
+    /**
+     * Test the localized strings are rendered in the language of each recipient.
+     */
+    public function test_execute_renders_strings_in_recipient_language(): void {
+        global $CFG;
+
+        // Register a second (french) language pack for the test run only. The
+        // plugin ships its own french strings in lang/fr, so only the site-level
+        // pack registration in the lang root is needed; the langconfig makes the
+        // string manager walk the french language for the plugin strings.
+        $frlangdir = $CFG->dataroot . '/lang/fr';
+        $createdlangdir = !file_exists($frlangdir);
+        if ($createdlangdir) {
+            mkdir($frlangdir, 0777, true);
+            file_put_contents(
+                $frlangdir . '/langconfig.php',
+                "<?php\n"
+                . "defined('MOODLE_INTERNAL') || die();\n"
+                . "\n"
+                . "\$string['thislanguage'] = 'French';\n"
+                . "\$string['parentlanguage'] = 'en';\n"
+            );
+        }
+        // Reset the string manager and the user property caches so the new pack
+        // is part of the installed languages when the recipients are created.
+        get_string_manager()->reset_caches();
+        \core_user::reset_caches();
+
+        $this->setAdminUser();
+        $french = $this->getDataGenerator()->create_user(
+            ['username' => 'frenchstudent', 'lang' => 'fr']
+        );
+        $this->getDataGenerator()->enrol_user($french->id, $this->data['course']->id, 'student');
+        $this->grant_approve_capability($this->data['student1']->id);
+        $this->grant_approve_capability($french->id);
+
+        $task = new send_message();
+        $task->set_custom_data((object) [
+            'cmid' => $this->data['cmid'],
+            'userfromid' => $this->data['teacher']->id,
+            'recipientids' => [$this->data['student1']->id, $french->id],
+            'subjectkey' => 'contactactivity_subject',
+            'bodykey' => 'contactactivity',
+        ]);
+        $task->execute();
+
+        if ($createdlangdir) {
+            unlink($frlangdir . '/langconfig.php');
+            rmdir($frlangdir);
+            get_string_manager()->reset_caches();
+            \core_user::reset_caches();
+        }
+
+        $englishnotifications = $this->get_contact_notifications($this->data['student1']->id);
+        $frenchnotifications = $this->get_contact_notifications($french->id);
+        $english = reset($englishnotifications);
+        $frenchnotification = reset($frenchnotifications);
+        $this->assertStringContainsString('Discussion about a ProjetVet project', $english->subject);
+        $this->assertStringContainsString('Hello,', $english->fullmessage);
+        $this->assertStringContainsString('Discussion sur un projet ProjetVet', $frenchnotification->subject);
+        $this->assertStringContainsString('Bonjour,', $frenchnotification->fullmessage);
     }
 }

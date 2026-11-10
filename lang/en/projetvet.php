@@ -32,6 +32,8 @@ $string['a1accepts_yes'] = 'Yes';
 $string['a1assignmentblocked_capacity'] = 'this tutor has no available capacity';
 $string['a1assignmentblocked_refusesa1'] = 'this tutor does not accept A1 students';
 $string['a1inconsistency_warning'] = 'Inconsistency: {$a} A1 student(s) are already assigned to this tutor while it no longer accepts A1 students.';
+$string['acceptance_comments'] = 'Comments';
+$string['acceptance_comments_help'] = 'Add comments about the acceptance decision.';
 $string['acceptedelegibility'] = '<p>Your tutor teacher has validated the eligibility of your personal project on the <strong>ProjetVet</strong> platform.</p><p>You can now <strong>start the activity</strong>, in accordance with the elements discussed and validated (objectives, targeted competencies, estimated workload and potential ECTS credits). The final number of ECTS credits will be reassessed at the end of the activity, based on the <strong>actual time invested</strong>, and will be subject to final validation by your tutor.</p><p>We remind you of the importance of <strong>keeping supporting documents</strong> related to this activity (certificate, report, materials, etc.), which will be necessary when writing the report.</p><p>You can view the project details and track its progress directly on the <strong>ProjetVet</strong> platform:</p><p><i><a href="{$a->link}">Access my project on ProjetVet</a></i></p><p>Best regards,<br><strong>The ProjetVet team</strong></p>';
 $string['acceptedelegibility_subject'] = 'Validation of your personal project eligibility';
 $string['actionrequired'] = 'Action required';

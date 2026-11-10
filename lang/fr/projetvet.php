@@ -32,6 +32,8 @@ $string['a1accepts_yes'] = 'Oui';
 $string['a1assignmentblocked_capacity'] = 'ce tuteur n\'a plus de capacité disponible';
 $string['a1assignmentblocked_refusesa1'] = 'ce tuteur n\'accepte pas les étudiants A1';
 $string['a1inconsistency_warning'] = 'Incohérence : {$a} étudiant(s) A1 sont déjà affectés à ce tuteur alors qu\'il n\'accepte plus les étudiants A1.';
+$string['acceptance_comments'] = 'Commentaires';
+$string['acceptance_comments_help'] = 'Ajoutez des commentaires sur la décision d’acceptation.';
 $string['acceptedelegibility'] = '<p>Votre enseignante ou enseignant tuteur a validé l\'éligibilité de votre projet personnel sur la plateforme <strong>ProjetVet</strong>.</p><p>Vous pouvez désormais <strong>débuter l\'activité</strong>, conformément aux éléments discutés et validés (objectifs, compétences visées, volume horaire prévisionnel et crédits ECTS potentiels). Le nombre de crédits ECTS définitif sera réévalué à l\'issue de l\'activité, sur la base du <strong>temps réellement investi</strong>, et fera l\'objet d\'une validation finale par votre tuteur.</p><p>Nous vous rappelons l\'importance de <strong>conserver les éléments justificatifs</strong> liés à cette activité (attestation, rapport, supports, etc.), qui seront nécessaires lors de la rédaction du bilan.</p><p>Vous pouvez consulter le détail du projet et suivre son avancement directement sur la plateforme <strong>ProjetVet</strong> :</p><p><i><a href="{$a->link}">Accéder à mon projet sur ProjetVet</a></i></p><p>Cordialement,<br><strong>L\'équipe ProjetVet</strong></p>';
 $string['acceptedelegibility_subject'] = 'Validation de l\'éligibilité de votre projet personnel';
 $string['actionrequired'] = 'Action requise';
