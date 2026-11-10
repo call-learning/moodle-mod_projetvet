@@ -272,4 +272,61 @@ final class group_importer_test extends \advanced_testcase {
         $this->assertContains((int) $this->student1->id, $studentids);
         $this->assertContains((int) $this->student2->id, $studentids);
     }
+
+    /**
+     * Test the import refuses a non-A1 batch that exceeds the tutor capacity, and that
+     * the whole file is rolled back (nothing is written) when the batch is rejected.
+     */
+    public function test_import_refuses_capacity_overrun(): void {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $cm = get_coursemodule_from_instance('projetvet', $this->projetvet->id, $this->course->id, false, MUST_EXIST);
+
+        // Novice capacity is 5 and all 5 places are already filled.
+        groups::set_teacher_rating($this->teacher1->id, $this->projetvet->id, teacher_rating::RATING_NOVICE);
+        $fillerids = [];
+        for ($i = 0; $i < 5; $i++) {
+            $filler = $generator->create_and_enrol($this->course, 'student');
+            $fillerids[] = $filler->id;
+        }
+        groups::assign_students_to_teacher($this->teacher1->id, $fillerids, $this->projetvet->id);
+
+        $filepath = make_request_directory() . '/groups_import_capacity_rejected.csv';
+        $csvcontent = implode(',', ['teacher', 'teacherrating', 'secondaryteacher', 'student1'])
+            . "\n" .
+            implode(
+                ',',
+                [
+                    $this->teacher1->username, 'novice', '',
+                    $this->student1->username,
+                ]
+            ) . "\n";
+        file_put_contents($filepath, $csvcontent);
+
+        $importer = new group_importer($this->course->id, $cm->id, $this->projetvet->id);
+
+        $exception = null;
+        try {
+            $importer->import($filepath, 'comma', 'UTF-8');
+        } catch (\moodle_exception $e) {
+            $exception = $e;
+        }
+
+        // The import is refused by the central assignment eligibility check.
+        $this->assertNotNull($exception);
+        $this->assertSame('assignmentblocked', $exception->errorcode);
+
+        // All-or-nothing: the new student was not added, the existing memberships and the
+        // pre-existing rating are left untouched.
+        $this->assertSame(0, $DB->count_records('projetvet_group_members', ['userid' => $this->student1->id]));
+        $students = group_member::get_records([
+            'groupid' => array_keys(projetvet_group::get_by_owner($this->teacher1->id, $this->projetvet->id))[0],
+            'membertype' => group_member::TYPE_STUDENT,
+        ]);
+        $this->assertCount(5, $students);
+        $rating = teacher_rating::get_user_rating($this->teacher1->id, $this->projetvet->id);
+        $this->assertNotNull($rating);
+        $this->assertEquals(teacher_rating::RATING_NOVICE, $rating->get('rating'));
+    }
 }

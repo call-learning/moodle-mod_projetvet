@@ -149,9 +149,11 @@ Feature: Tutor assignments interface for managing groups
     And I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
     And I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I click on "Show only students without teachers" "checkbox"
     And I click on "assign-teacher" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     Then I should see "Assign teacher"
-    And the teacher "Teacher Two" assignment radio should be disabled
+    And the "Teacher Two" "radio" should be disabled
+    And the "Teacher One" "radio" should be enabled
 
   Scenario: Filter students without teachers
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
@@ -193,7 +195,7 @@ Feature: Tutor assignments interface for managing groups
     And I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     And I click on "assign-teacher" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
     Then I should see "Assign teacher"
-    When I click on ".teacher-select-radio" "css_element"
+    When I click on "Teacher One" "radio"
     And I press "Save"
     Then I should see "Send notifications?"
     And I should see "Do not send"

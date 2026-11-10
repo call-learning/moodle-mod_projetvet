@@ -365,4 +365,54 @@ final class assign_teacher_test extends \advanced_testcase {
         $tutor = groups::get_student_primary_tutor($this->data['student1']->id, $this->data['projetvetid']);
         $this->assertNotNull($tutor);
     }
+
+    /**
+     * Test a rejected mixed batch is all-or-nothing: the existing assignment survives.
+     */
+    public function test_assign_teacher_rejected_batch_is_all_or_nothing(): void {
+        $this->setAdminUser();
+
+        // Fill all 5 novice places: student1 first, then four fillers.
+        groups::set_teacher_rating(
+            $this->data['teacher']->id,
+            $this->data['projetvetid'],
+            \mod_projetvet\local\persistent\teacher_rating::RATING_NOVICE
+        );
+        assign_teacher::execute(
+            $this->data['cmid'],
+            $this->data['projetvetid'],
+            [$this->data['student1']->id],
+            $this->data['teacher']->id
+        );
+        $fillerids = [];
+        for ($i = 0; $i < 4; $i++) {
+            $filler = $this->getDataGenerator()->create_and_enrol($this->data['course'], 'student');
+            $fillerids[] = $filler->id;
+        }
+        assign_teacher::execute(
+            $this->data['cmid'],
+            $this->data['projetvetid'],
+            $fillerids,
+            $this->data['teacher']->id
+        );
+
+        // The tutor is at capacity: a batch mixing an existing and a new student is rejected.
+        try {
+            assign_teacher::execute(
+                $this->data['cmid'],
+                $this->data['projetvetid'],
+                [$this->data['student1']->id, $this->data['student2']->id],
+                $this->data['teacher']->id
+            );
+            $this->fail('Expected assignmentblocked exception not thrown.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('assignmentblocked', $e->errorcode);
+        }
+
+        // The existing assignment survives, the new student was not added.
+        $tutor = groups::get_student_primary_tutor($this->data['student1']->id, $this->data['projetvetid']);
+        $this->assertNotNull($tutor);
+        $this->assertEquals($this->data['teacher']->id, $tutor->id);
+        $this->assertNull(groups::get_student_primary_tutor($this->data['student2']->id, $this->data['projetvetid']));
+    }
 }

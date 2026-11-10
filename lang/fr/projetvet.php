@@ -405,6 +405,7 @@ $string['newactivity'] = 'Nouvelle activité';
 $string['newfacetoface'] = 'Nouvel entretien';
 $string['no_tutor_found'] = 'Aucun tuteur trouvé';
 $string['noactivities'] = 'Aucune activité pour le moment. Cliquez sur le bouton ci-dessus pour créer votre première activité.';
+$string['nochanges'] = 'Aucune modification n\'a été apportée.';
 $string['nocompetenciesselected'] = 'Aucune compétence n\'a été sélectionnée à l\'étape précédente.';
 $string['nodecimals'] = 'Seuls les nombres entiers sont acceptés';
 $string['noentriesyet'] = 'Aucune entrée pour le moment';

@@ -20,6 +20,7 @@ use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
 use core_reportbuilder\local\report\column;
 use core_reportbuilder\system_report;
+use core_user\fields;
 use lang_string;
 use context_module;
 use mod_projetvet\reportbuilder\local\entities\teacher;
@@ -127,6 +128,7 @@ class assignments_teachers_selection extends system_report {
         ))
             ->add_joins($entityuser->get_joins())
             ->add_field("{$entityuseralias}.id", 'userid_select')
+            ->add_fields(user::get_name_fields_select($entityuseralias))
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(false)
             ->add_attributes(['class' => 'w-30'])
@@ -153,6 +155,12 @@ class assignments_teachers_selection extends system_report {
                         if (!$eligibility['allowed']) {
                             $disabled = true;
                         }
+                    }
+
+                    // The row only contains this column's own fields, so make sure every
+                    // name property expected by fullname() is populated.
+                    foreach (fields::get_name_fields() as $namefield) {
+                        $row->{$namefield} = $row->{$namefield} ?? '';
                     }
 
                     return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [

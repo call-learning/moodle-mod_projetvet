@@ -401,6 +401,7 @@ $string['newactivity'] = 'New activity';
 $string['newfacetoface'] = 'New Face-to-Face Session';
 $string['no_tutor_found'] = 'No tutor found';
 $string['noactivities'] = 'No activities yet. Click the button above to create your first activity.';
+$string['nochanges'] = 'No changes were made.';
 $string['nocompetenciesselected'] = 'No competencies were selected in the previous step.';
 $string['nodecimals'] = 'Only whole numbers are accepted';
 $string['noentriesyet'] = 'No entries yet';

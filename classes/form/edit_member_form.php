@@ -106,7 +106,7 @@ class edit_member_form extends dynamic_form {
             if ($addedcount > 0) {
                 $message = get_string('membersadded', 'mod_projetvet', $addedcount);
             } else {
-                $message = get_string('nochanges', 'core');
+                $message = get_string('nochanges', 'mod_projetvet');
             }
         }
 

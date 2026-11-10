@@ -972,4 +972,332 @@ final class groups_test extends \advanced_testcase {
         $newa1 = groups::get_new_a1_student_ids($data['teacher']->id, $data['projetvet']->id, [$newstudent->id]);
         $this->assertSame([], $newa1);
     }
+
+    /**
+     * Test that an empty batch is always eligible, even for a closed tutor.
+     */
+    public function test_check_student_assignment_eligibility_empty_batch_allowed(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_status(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::STATUS_ACTIVE_CLOSED
+        );
+
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            []
+        );
+
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+    }
+
+    /**
+     * Test that a batch containing only already-assigned students is eligible,
+     * even for a tutor closed to new assignments.
+     */
+    public function test_check_student_assignment_eligibility_all_existing_batch_allowed(): void {
+        $data = $this->create_test_data();
+
+        // Assign student1 while the tutor is still open, then close the tutor.
+        groups::assign_students_to_teacher($data['teacher']->id, [$data['student1']->id], $data['projetvet']->id);
+        groups::set_teacher_status(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::STATUS_ACTIVE_CLOSED
+        );
+
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id]
+        );
+
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+    }
+
+    /**
+     * Test that a mixed batch is only checked for its new students.
+     */
+    public function test_check_student_assignment_eligibility_mixed_batch_counts_only_new_students(): void {
+        $data = $this->create_test_data();
+
+        // Novice capacity is 5, fill 4 of the 5 places (student1 is a member).
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_NOVICE);
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student3']->id, group_member::TYPE_STUDENT);
+        $filler = $this->getDataGenerator()->create_user(['username' => 'filler1']);
+        $group->add_member($filler->id, group_member::TYPE_STUDENT);
+
+        // One place is free, so a mixed batch with a single new student is allowed.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'newstudent1']);
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id, $newstudent->id]
+        );
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+
+        // Once the last place is taken, the same mixed batch is rejected.
+        $group->add_member($newstudent->id, group_member::TYPE_STUDENT);
+        $other = $this->getDataGenerator()->create_user(['username' => 'newstudent2']);
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id, $other->id]
+        );
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertSame(get_string('assignmentblocked_capacity', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test that duplicate student IDs in the batch are not counted multiple times.
+     */
+    public function test_check_student_assignment_eligibility_duplicate_ids_not_inflated(): void {
+        $data = $this->create_test_data();
+
+        // Novice capacity is 5, fill 4 of the 5 places.
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_NOVICE);
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student3']->id, group_member::TYPE_STUDENT);
+        $filler = $this->getDataGenerator()->create_user(['username' => 'filler1']);
+        $group->add_member($filler->id, group_member::TYPE_STUDENT);
+
+        // The same new student is listed three times: without de-duplication the
+        // requested count (3) would exceed the single free place.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'newstudent1']);
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$newstudent->id, $newstudent->id, $newstudent->id]
+        );
+
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+    }
+
+    /**
+     * Test that a blocking tutor status takes precedence over the capacity reason.
+     */
+    public function test_check_student_assignment_eligibility_status_rejection_precedence(): void {
+        $data = $this->create_test_data();
+
+        // Plenty of capacity, but the tutor is closed.
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_EXPERT);
+        groups::set_teacher_status(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::STATUS_ACTIVE_CLOSED
+        );
+
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id]
+        );
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertSame(get_string('assignmentblocked_status_active_closed', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test that an A1 student in the batch triggers the A1 refusal reason
+     * instead of the capacity reason.
+     */
+    public function test_check_student_assignment_eligibility_a1_precedence_over_capacity_reason(): void {
+        $data = $this->create_test_data();
+
+        // The tutor refuses A1 students, but the capacity is not the limiting factor.
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_EXPERT);
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::ACCEPTS_A1_NO
+        );
+        $this->set_profile_field($data['student1'], 'promotion', 'A1');
+
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id, $data['student2']->id]
+        );
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertSame(get_string('a1assignmentblocked_refusesa1', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test that a non-A1 batch enforces capacity when the tutor does not accept A1 students.
+     */
+    public function test_check_student_assignment_eligibility_non_a1_enforces_capacity_with_a1_refused(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_NOVICE);
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::ACCEPTS_A1_NO
+        );
+        // Fill all 5 novice places, none of them with an A1 student.
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student3']->id, group_member::TYPE_STUDENT);
+        for ($i = 0; $i < 2; $i++) {
+            $filler = $this->getDataGenerator()->create_user(['username' => 'filler' . $i]);
+            $group->add_member($filler->id, group_member::TYPE_STUDENT);
+        }
+
+        // A non-A1 student (no promotion field) is rejected on capacity, not on A1.
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'nona1student']);
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$newstudent->id]
+        );
+
+        $this->assertFalse($eligibility['allowed']);
+        $this->assertSame(get_string('assignmentblocked_capacity', 'mod_projetvet'), $eligibility['reason']);
+    }
+
+    /**
+     * Test that a non-A1 batch is not refused on the basis of the A1 field alone.
+     */
+    public function test_check_student_assignment_eligibility_non_a1_allowed_despite_a1_refused(): void {
+        $data = $this->create_test_data();
+
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_NOVICE);
+        groups::set_teacher_a1_acceptance(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            teacher_rating::ACCEPTS_A1_NO
+        );
+
+        // A non-A1 student (no promotion field) within capacity is eligible.
+        $eligibility = groups::check_student_assignment_eligibility(
+            $data['teacher']->id,
+            $data['projetvet']->id,
+            [$data['student1']->id]
+        );
+
+        $this->assertTrue($eligibility['allowed']);
+        $this->assertSame('', $eligibility['reason']);
+    }
+
+    /**
+     * Test that a rejected mixed batch leaves the existing memberships unchanged.
+     */
+    public function test_rejected_mixed_batch_leaves_memberships_unchanged(): void {
+        $data = $this->create_test_data();
+
+        // Novice capacity is 5 and all 5 places are filled (student1 is a member).
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_NOVICE);
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student3']->id, group_member::TYPE_STUDENT);
+        for ($i = 0; $i < 2; $i++) {
+            $filler = $this->getDataGenerator()->create_user(['username' => 'filler' . $i]);
+            $group->add_member($filler->id, group_member::TYPE_STUDENT);
+        }
+
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'newstudent1']);
+        try {
+            groups::assign_students_to_group(
+                $group->get('id'),
+                [$data['student1']->id, $newstudent->id],
+                $data['projetvet']->id
+            );
+            $this->fail('Expected assignmentblocked exception not thrown.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('assignmentblocked', $e->errorcode);
+        }
+
+        // The existing student keeps the group, the new student was not added.
+        $members = group_member::get_records([
+            'groupid' => $group->get('id'),
+            'membertype' => group_member::TYPE_STUDENT,
+        ]);
+        $memberids = array_map(static function ($member): int {
+            return $member->get('userid');
+        }, $members);
+        $this->assertCount(5, $members);
+        $this->assertContains((int) $data['student1']->id, $memberids);
+        $this->assertNotContains((int) $newstudent->id, $memberids);
+    }
+
+    /**
+     * Test that a rejected batch through the manual sync path leaves memberships unchanged.
+     */
+    public function test_rejected_sync_batch_leaves_memberships_unchanged(): void {
+        $data = $this->create_test_data();
+
+        // Novice capacity is 5 and all 5 places are filled (student1 is a member).
+        groups::set_teacher_rating($data['teacher']->id, $data['projetvet']->id, teacher_rating::RATING_NOVICE);
+        $group = new projetvet_group(0, (object)[
+            'projetvetid' => $data['projetvet']->id,
+            'ownerid' => $data['teacher']->id,
+            'name' => 'Test Group',
+        ]);
+        $group->create();
+        $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student2']->id, group_member::TYPE_STUDENT);
+        $group->add_member($data['student3']->id, group_member::TYPE_STUDENT);
+        for ($i = 0; $i < 2; $i++) {
+            $filler = $this->getDataGenerator()->create_user(['username' => 'filler' . $i]);
+            $group->add_member($filler->id, group_member::TYPE_STUDENT);
+        }
+
+        $newstudent = $this->getDataGenerator()->create_user(['username' => 'newstudent1']);
+        try {
+            groups::sync_group_students(
+                $group->get('id'),
+                [$data['student1']->id, $newstudent->id]
+            );
+            $this->fail('Expected assignmentblocked exception not thrown.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('assignmentblocked', $e->errorcode);
+        }
+
+        // The existing student keeps the group, the new student was not added.
+        $members = group_member::get_records([
+            'groupid' => $group->get('id'),
+            'membertype' => group_member::TYPE_STUDENT,
+        ]);
+        $memberids = array_map(static function ($member): int {
+            return $member->get('userid');
+        }, $members);
+        $this->assertCount(5, $members);
+        $this->assertContains((int) $data['student1']->id, $memberids);
+        $this->assertNotContains((int) $newstudent->id, $memberids);
+    }
 }
