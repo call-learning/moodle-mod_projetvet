@@ -78,9 +78,13 @@ class entries extends system_report {
         if ($titlefield) {
             $paramtitlefield = database::generate_param_name();
             $this->add_join(
-                "LEFT JOIN {projetvet_form_data} entrytitle
-                        ON entrytitle.entryid = {$entityentryalias}.id
-                       AND entrytitle.fieldid = :{$paramtitlefield}",
+                "LEFT JOIN (
+                    SELECT entryid, MAX(id) AS id
+                      FROM {projetvet_form_data}
+                     WHERE fieldid = :{$paramtitlefield}
+                  GROUP BY entryid
+                ) entrytitleid ON entrytitleid.entryid = {$entityentryalias}.id
+                LEFT JOIN {projetvet_form_data} entrytitle ON entrytitle.id = entrytitleid.id",
                 [$paramtitlefield => $titlefield->id]
             );
             $this->add_base_fields('entrytitle.charvalue AS entrytitle');
@@ -260,19 +264,32 @@ class entries extends system_report {
         // Determine which data column to use based on field type.
         $datacolumn = $this->get_data_column_for_field_type($field->type);
 
-        // Add LEFT JOIN for this field's data.
-        $this->add_join("LEFT JOIN {projetvet_form_data} {$dataalias}
-            ON {$dataalias}.entryid = {$entityentryalias}.id
-            AND {$dataalias}.fieldid = {$field->id}");
+        // Select one data record per entry and field. Older installations may contain duplicate
+        // rows because the schema historically did not enforce uniqueness on this pair.
+        $dataidsalias = 'dataids_' . $field->id;
+        $this->add_join("LEFT JOIN (
+                SELECT entryid, MAX(id) AS id
+                  FROM {projetvet_form_data}
+                 WHERE fieldid = {$field->id}
+              GROUP BY entryid
+            ) {$dataidsalias} ON {$dataidsalias}.entryid = {$entityentryalias}.id
+            LEFT JOIN {projetvet_form_data} {$dataalias}
+              ON {$dataalias}.id = {$dataidsalias}.id");
 
         $valuesql = "{$dataalias}.{$datacolumn}";
         $fieldidsql = "{$dataalias}.fieldid";
         if ($archivefield && $archivefield->type === $field->type) {
             // Archived project rows take their value from the matching archived project field.
             $archivedataalias = 'archivedata_' . $field->id;
-            $this->add_join("LEFT JOIN {projetvet_form_data} {$archivedataalias}
-                ON {$archivedataalias}.entryid = {$entityentryalias}.id
-                AND {$archivedataalias}.fieldid = {$archivefield->id}");
+            $archivedataidsalias = 'archivedataids_' . $field->id;
+            $this->add_join("LEFT JOIN (
+                    SELECT entryid, MAX(id) AS id
+                      FROM {projetvet_form_data}
+                     WHERE fieldid = {$archivefield->id}
+                  GROUP BY entryid
+                ) {$archivedataidsalias} ON {$archivedataidsalias}.entryid = {$entityentryalias}.id
+                LEFT JOIN {projetvet_form_data} {$archivedataalias}
+                  ON {$archivedataalias}.id = {$archivedataidsalias}.id");
             $valuesql = "COALESCE({$valuesql}, {$archivedataalias}.{$datacolumn})";
             $fieldidsql = "COALESCE({$fieldidsql}, {$archivedataalias}.fieldid)";
         }

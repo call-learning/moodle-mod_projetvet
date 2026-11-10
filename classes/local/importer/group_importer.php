@@ -282,7 +282,9 @@ class group_importer {
             $group->create();
         }
 
-        // Add students.
+        // Add students and remove any stale assignment from another group. A student must have
+        // only one primary group within a ProjetVet instance.
+        $studentids = [];
         foreach ($studentindices as $idx) {
             if (empty($row[$idx])) {
                 continue;
@@ -295,12 +297,11 @@ class group_importer {
                 continue;
             }
 
-            // Add student as member.
-            $this->add_or_update_member(
-                $group->get('id'),
-                $student->id,
-                group_member::TYPE_STUDENT
-            );
+            $studentids[] = (int) $student->id;
+        }
+
+        if (!empty($studentids)) {
+            groups::assign_students_to_group($group->get('id'), $studentids, $this->projetvetid);
         }
     }
 

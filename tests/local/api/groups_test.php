@@ -108,6 +108,28 @@ final class groups_test extends \advanced_testcase {
     }
 
     /**
+     * Test that a student in two legacy groups is counted only once.
+     */
+    public function test_get_primary_student_count_deduplicates_students_across_groups(): void {
+        $data = $this->create_test_data();
+
+        foreach (['First group', 'Second group'] as $name) {
+            $group = new projetvet_group(0, (object)[
+                'projetvetid' => $data['projetvet']->id,
+                'ownerid' => $data['teacher']->id,
+                'name' => $name,
+            ]);
+            $group->create();
+            $group->add_member($data['student1']->id, group_member::TYPE_STUDENT);
+        }
+
+        $this->assertSame(
+            1,
+            groups::get_primary_student_count($data['teacher']->id, $data['projetvet']->id)
+        );
+    }
+
+    /**
      * Test get_student_groups
      */
     public function test_get_student_groups(): void {

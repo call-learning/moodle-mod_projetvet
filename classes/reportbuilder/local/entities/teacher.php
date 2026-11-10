@@ -330,7 +330,7 @@ class teacher extends base {
     public function get_open_substitutions_sql(string $pvparam, string $statusparam): string {
         $useralias = $this->get_table_alias('user');
 
-        return '(SELECT COUNT(1) FROM {' . substitution::TABLE . '} '
+        return '(SELECT COUNT(DISTINCT studentid) FROM {' . substitution::TABLE . '} '
             . "WHERE primarytutorid = {$useralias}.id AND projetvetid = :{$pvparam} AND status = :{$statusparam})";
     }
 
@@ -435,7 +435,7 @@ class teacher extends base {
     public function get_current_students_sql(string $pvparam, string $mtparam, string $substitutionspvparam): string {
         $useralias = $this->get_table_alias('user');
 
-        return "((SELECT COUNT(1) FROM {" . group_member::TABLE . "} gm "
+        return "((SELECT COUNT(DISTINCT gm.userid) FROM {" . group_member::TABLE . "} gm "
             . "JOIN {projetvet_groups} g ON g.id = gm.groupid "
             . "WHERE g.ownerid = {$useralias}.id AND g.projetvetid = :{$pvparam} "
             . "AND gm.membertype = :{$mtparam}) + " . $this->get_substituting_students_sql($substitutionspvparam) . ")";
@@ -452,7 +452,7 @@ class teacher extends base {
     public function get_substituting_students_sql(string $pvparam): string {
         $useralias = $this->get_table_alias('user');
 
-        return '(SELECT COUNT(1) FROM {' . substitution::TABLE . '} '
+        return '(SELECT COUNT(DISTINCT studentid) FROM {' . substitution::TABLE . '} '
             . "WHERE substitutetutorid = {$useralias}.id AND projetvetid = :{$pvparam} "
             . 'AND status = ' . substitution::STATUS_OPEN . ')';
     }
@@ -527,7 +527,7 @@ class teacher extends base {
     ): string {
         $useralias = $this->get_table_alias('user');
 
-        return "(SELECT COUNT(1) FROM {" . group_member::TABLE . "} gm "
+        return "(SELECT COUNT(DISTINCT gm.userid) FROM {" . group_member::TABLE . "} gm "
             . "JOIN {projetvet_groups} g ON g.id = gm.groupid "
             . "JOIN {user_info_data} uid ON uid.userid = gm.userid "
             . "JOIN {user_info_field} uif ON uif.id = uid.fieldid AND uif.shortname = :{$fieldnameparam} "

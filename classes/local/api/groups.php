@@ -47,13 +47,15 @@ class groups {
             return 0;
         }
 
-        $studentcount = 0;
+        $studentids = [];
 
         foreach ($groups as $group) {
-            $studentcount += $group->get_student_count();
+            foreach ($group->get_members(group_member::TYPE_STUDENT) as $member) {
+                $studentids[(int) $member->get('userid')] = true;
+            }
         }
 
-        return $studentcount;
+        return count($studentids);
     }
 
     /**
@@ -82,7 +84,7 @@ class groups {
     public static function get_user_memberships(int $userid, ?int $projetvetid = null, ?string $membertype = null): array {
         global $DB;
 
-        $sql = "SELECT gm.*
+        $sql = "SELECT DISTINCT gm.*
                   FROM {projetvet_group_members} gm";
 
         if ($projetvetid) {
@@ -390,7 +392,7 @@ class groups {
         }
 
         $users = $DB->get_records_sql(
-            "SELECT u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic,
+            "SELECT DISTINCT u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic,
                     u.middlename, u.alternatename
               FROM {user} u
               {$studentsjoin->joins}
@@ -447,7 +449,7 @@ class groups {
         }
 
         $users = $DB->get_records_sql(
-            "SELECT u.id
+            "SELECT DISTINCT u.id
               FROM {user} u
               {$teachersjoin->joins}
              WHERE {$teachersjoin->wheres}

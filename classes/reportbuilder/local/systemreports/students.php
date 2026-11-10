@@ -53,12 +53,17 @@ class students extends system_report {
         $this->set_main_table('user', $entityuseralias);
         $this->add_entity($entityuser);
 
-        // Join the cohort entity to the user through cohort membership.
+        // Join one cohort per user. A user can belong to several cohorts, but the report has
+        // one row per student. Joining cohort_members directly would therefore duplicate rows.
         $entitycohort = new cohort();
         $cohortalias = $entitycohort->get_table_alias('cohort');
         $cohortmemberalias = database::generate_alias('cohortmember');
         $this->add_entity($entitycohort
-            ->add_join("LEFT JOIN {cohort_members} {$cohortmemberalias}
+            ->add_join("LEFT JOIN (
+                            SELECT userid, MIN(cohortid) AS cohortid
+                              FROM {cohort_members}
+                          GROUP BY userid
+                        ) {$cohortmemberalias}
                             ON {$cohortmemberalias}.userid = {$entityuseralias}.id")
             ->add_join("LEFT JOIN {cohort} {$cohortalias}
                             ON {$cohortalias}.id = {$cohortmemberalias}.cohortid"));
@@ -70,14 +75,20 @@ class students extends system_report {
         // Restrict the base user table to the students the current user may view.
         // Admins can see every student in the course; tutors only their own students.
         if (has_capability('mod/projetvet:admin', $context)) {
-            // Scope to all enrolled students via a JOIN (no in-memory id list).
-            $studentsjoin = \mod_projetvet\local\api\groups::get_all_students_join($cmid, "{$entityuseralias}.id");
+            // Use the array API here because the join API can return one row per enrolment or
+            // role assignment. The report must always have one row per student.
+            $studentids = array_column(\mod_projetvet\local\api\groups::get_all_students($cmid), 'uniqueid');
 
-            if ($studentsjoin->cannotmatchanyrows) {
+            if (empty($studentids)) {
                 // No students can match, add an impossible condition.
                 $this->add_base_condition_sql("1 = 0");
             } else {
-                $this->add_student_scope_join($studentsjoin);
+                [$insql, $params] = $DB->get_in_or_equal(
+                    $studentids,
+                    SQL_PARAMS_NAMED,
+                    database::generate_param_name()
+                );
+                $this->add_base_condition_sql("{$entityuseralias}.id {$insql}", $params);
             }
         } else {
             // Their own students and the students they follow as a substitute.

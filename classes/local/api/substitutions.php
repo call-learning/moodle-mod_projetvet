@@ -427,26 +427,47 @@ class substitutions {
             throw new moodle_exception('substitutionnotallowed', 'mod_projetvet', '', self::format_problems($check));
         }
 
-        $transaction = $DB->start_delegated_transaction();
-        $created = [];
-        foreach (array_unique(array_map('intval', $studentids)) as $studentid) {
-            $primarytutor = groups::get_student_primary_tutor($studentid, $projetvetid);
-            $substitution = new substitution(0, (object) [
-                'projetvetid' => $projetvetid,
-                'studentid' => $studentid,
-                'primarytutorid' => $primarytutor->id,
-                'substitutetutorid' => $substitutetutorid,
-                'startdate' => $startdate,
-                'enddate' => $enddate,
-                'reason' => $reason,
-                'notifyprimary' => $notifyprimary,
-                'createdby' => $USER->id,
-            ]);
-            $created[$studentid] = $substitution->create();
+        // Serialise creation per instance so two concurrent requests cannot both pass the
+        // conflict check and create an open substitution for the same student.
+        $lockfactory = \core\lock\lock_config::get_lock_factory('mod_projetvet_substitution_create');
+        $lock = $lockfactory->get_lock('projetvetid:' . $projetvetid, 10, MINSECS);
+        if (!$lock) {
+            throw new moodle_exception('locktimeout', 'error');
         }
-        $transaction->allow_commit();
 
-        return $created;
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Repeat the conflict check after acquiring the lock. The first check is needed for
+            // useful validation messages; this check handles a request that waited for another
+            // request to finish creating substitutions.
+            $check = self::check_batch($cmid, $projetvetid, $studentids, $substitutetutorid, $allowovercapacity);
+            if (self::has_problems($check)) {
+                throw new moodle_exception('substitutionnotallowed', 'mod_projetvet', '', self::format_problems($check));
+            }
+
+            $created = [];
+            foreach (array_unique(array_map('intval', $studentids)) as $studentid) {
+                $primarytutor = groups::get_student_primary_tutor($studentid, $projetvetid);
+                $substitution = new substitution(0, (object) [
+                    'projetvetid' => $projetvetid,
+                    'studentid' => $studentid,
+                    'primarytutorid' => $primarytutor->id,
+                    'substitutetutorid' => $substitutetutorid,
+                    'startdate' => $startdate,
+                    'enddate' => $enddate,
+                    'reason' => $reason,
+                    'notifyprimary' => $notifyprimary,
+                    'createdby' => $USER->id,
+                ]);
+                $created[$studentid] = $substitution->create();
+            }
+            $transaction->allow_commit();
+
+            return $created;
+        } finally {
+            $lock->release();
+        }
     }
 
     /**
