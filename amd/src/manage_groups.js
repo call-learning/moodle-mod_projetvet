@@ -145,6 +145,34 @@ export const init = () => {
     });
 };
 
+/**
+ * Show an assignment error as a normal page notification instead of the developer
+ * exception dialog, which may expose a backtrace when debugging is enabled.
+ *
+ * @param {Object} exception Moodle AJAX exception.
+ * @param {Object|null} modal Optional modal to close before showing the error.
+ */
+const showErrorNotification = async(exception, modal = null) => {
+    if (modal) {
+        modal.hide();
+    }
+    const message = exception.message || exception.errorcode || '';
+    const closeLabel = await Str.get_string('ok', 'core');
+    await Notification.alert('', message, closeLabel);
+};
+
+/**
+ * Show a dynamic-form processing error as a normal page notification.
+ *
+ * @param {object} modalForm Modal form instance.
+ * @return {Function} Error event handler.
+ */
+const showModalFormError = (modalForm) => (event) => {
+    event.preventDefault();
+    modalForm.modal.hide();
+    showErrorNotification(event.detail || {});
+};
+
 
 /**
  * Show modal form for managing group members
@@ -176,6 +204,8 @@ const showAssignStudentsModal = (cmid, teacherid, projetvetid) => {
             })
             .catch(Notification.exception);
     });
+
+    modalForm.addEventListener(modalForm.events.ERROR, showModalFormError(modalForm));
 
     modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (event) => {
         if (event.detail.message) {
@@ -219,6 +249,8 @@ const showTeacherSettingsModal = (cmid, teacherid, projetvetid) => {
             })
             .catch(Notification.exception);
     });
+
+    modalForm.addEventListener(modalForm.events.ERROR, showModalFormError(modalForm));
 
     modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (event) => {
         if (event.detail.message) {
@@ -293,7 +325,7 @@ const showAssignTeacherModal = (cmid, studentids, projetvetid) => {
 
             return modal.show();
         })
-        .catch(Notification.exception);
+        .catch(showErrorNotification);
 };
 
 /**
@@ -340,7 +372,7 @@ const handleAssignTeacherSave = (event, modal, cmid, studentids, projetvetid) =>
             }
             return response;
         })
-        .catch(Notification.exception);
+        .catch((exception) => showErrorNotification(exception, modal));
 };
 
 /**
@@ -499,6 +531,8 @@ const showUploadGroupsModal = (cmid, courseid, projetvetid) => {
         // Reload the page to refresh the reports.
         window.location.reload();
     });
+
+    modalForm.addEventListener(modalForm.events.ERROR, showModalFormError(modalForm));
 
     modalForm.show();
 };

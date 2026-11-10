@@ -142,7 +142,6 @@ class assignments_teachers_selection extends system_report {
 
                     $teacherid = (int) $row->userid_select;
                     $disabled = false;
-                    $reason = '';
 
                     // Tutors unavailable for new assignments are rendered as non-selectable,
                     // with the blocking reason made explicit.
@@ -152,13 +151,6 @@ class assignments_teachers_selection extends system_report {
                     );
                     if ($studentcount > 0 && !$isopen) {
                         $disabled = true;
-                        $reason = get_string(
-                            'assignmentblocked_status',
-                            'mod_projetvet',
-                            \mod_projetvet\local\persistent\teacher_rating::get_status_string_for(
-                                \mod_projetvet\local\api\groups::get_teacher_status($teacherid, $projetvetid)
-                            )
-                        );
                     } else if ($a1studentcount > 0 && $studentcount > 0) {
                         $eligibility = \mod_projetvet\local\api\groups::check_a1_assignment_eligibility(
                             $teacherid,
@@ -167,15 +159,14 @@ class assignments_teachers_selection extends system_report {
                         );
                         if (!$eligibility['allowed']) {
                             $disabled = true;
-                            $reason = get_string('a1assignmentblocked', 'mod_projetvet', $eligibility['reason']);
                         }
                     }
 
                     return $OUTPUT->render_from_template('mod_projetvet/reportbuilder/teacher_radio', [
                         'teacherid' => $row->userid_select,
+                        'teachername' => fullname($row),
                         'checked' => ($selectedteacherid > 0 && (int)$row->userid_select === $selectedteacherid),
                         'disabled' => $disabled,
-                        'reason' => $reason,
                     ]);
                 }
             );
@@ -200,8 +191,8 @@ class assignments_teachers_selection extends system_report {
         // A1 acceptance column (with the inconsistency warning badge).
         $this->add_column($entityteacher->get_column('acceptsa1'));
 
-        // Default sorting by the actual lastname field.
-        $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
+        // Open tutors first, then leave the report's normal name sorting available to the user.
+        $this->set_initial_sort_column('teacher:status', SORT_ASC);
     }
 
     /**
@@ -212,5 +203,16 @@ class assignments_teachers_selection extends system_report {
 
         // Fullname filter.
         $this->add_filter($entityuser->get_filter('fullname'));
+    }
+
+    /**
+     * Gray out tutors who are not open to new assignments.
+     *
+     * @param \stdClass $row Report row.
+     * @return string CSS classes.
+     */
+    public function get_row_class(\stdClass $row): string {
+        return (int) ($row->status ?? 0) ===
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_ACTIVE_OPEN ? '' : 'text-muted';
     }
 }

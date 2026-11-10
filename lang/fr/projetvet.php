@@ -86,6 +86,7 @@ $string['assignment_temporary_start_student_body'] = 'Bonjour {$a->studentfirstn
 $string['assignment_temporary_start_student_subject'] = 'Remplacement temporaire de votre tuteur';
 $string['assignment_temporary_start_temporary_body'] = 'Bonjour {$a->newtutorfirstname},<br><br>Le suivi de {$a->studentfirstname} {$a->studentlastname} vous est temporairement confié à compter du {$a->date}, en remplacement de {$a->primarytutorfirstname} {$a->primarytutorlastname}.<br><br>Vous pouvez retrouver sa fiche dans ProjetVet : <a href="{$a->link}">{$a->link}</a>.<br><br>Bien cordialement,<br>Direction des études et de la vie étudiante';
 $string['assignment_temporary_start_temporary_subject'] = 'Tutorat temporaire – {$a->studentfirstname} {$a->studentlastname}';
+$string['assignmentblocked'] = 'Nouvelle affectation de tuteur refusée : {$a}.';
 $string['assignmentblocked_capacity'] = 'ce tuteur n\'a plus de capacité disponible';
 $string['assignmentblocked_status'] = 'Nouvelle affectation refusée : le statut du tuteur est {$a}.';
 $string['assignmentblocked_status_active_closed'] = 'ce tuteur est fermé aux nouvelles affectations';

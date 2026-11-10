@@ -86,6 +86,7 @@ $string['assignment_temporary_start_student_body'] = 'Hello {$a->studentfirstnam
 $string['assignment_temporary_start_student_subject'] = 'Temporary replacement of your tutor';
 $string['assignment_temporary_start_temporary_body'] = 'Hello {$a->newtutorfirstname},<br><br>The follow-up of {$a->studentfirstname} {$a->studentlastname} is temporarily assigned to you from {$a->date}, replacing {$a->primarytutorfirstname} {$a->primarytutorlastname}.<br><br>You can find their record in ProjetVet: <a href="{$a->link}">{$a->link}</a>.<br><br>Kind regards,<br>Directorate of studies and student life';
 $string['assignment_temporary_start_temporary_subject'] = 'Temporary tutoring – {$a->studentfirstname} {$a->studentlastname}';
+$string['assignmentblocked'] = 'New tutor assignment rejected: {$a}.';
 $string['assignmentblocked_capacity'] = 'this tutor has no available capacity';
 $string['assignmentblocked_status'] = 'New assignment rejected: tutor status is {$a}.';
 $string['assignmentblocked_status_active_closed'] = 'this tutor is closed to new assignments';

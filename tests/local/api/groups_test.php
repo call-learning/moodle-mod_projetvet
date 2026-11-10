@@ -150,6 +150,10 @@ final class groups_test extends \advanced_testcase {
         }
 
         $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('assignmentblocked', 'mod_projetvet', get_string(
+            'assignmentblocked_capacity',
+            'mod_projetvet'
+        )));
         groups::assign_students_to_group($group->get('id'), [$data['student1']->id], $data['projetvet']->id);
     }
 
@@ -171,6 +175,10 @@ final class groups_test extends \advanced_testcase {
         );
 
         $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('assignmentblocked', 'mod_projetvet', get_string(
+            'assignmentblocked_status_active_closed',
+            'mod_projetvet'
+        )));
         groups::assign_students_to_group($group->get('id'), [$data['student1']->id], $data['projetvet']->id);
     }
 

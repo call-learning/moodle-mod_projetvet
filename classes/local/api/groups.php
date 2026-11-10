@@ -352,7 +352,7 @@ class groups {
     ): void {
         $eligibility = self::check_student_assignment_eligibility($teacherid, $projetvetid, $studentids);
         if (!$eligibility['allowed']) {
-            throw new \moodle_exception('a1assignmentblocked', 'mod_projetvet', '', $eligibility['reason']);
+            throw new \moodle_exception('assignmentblocked', 'mod_projetvet', '', $eligibility['reason']);
         }
     }
 
