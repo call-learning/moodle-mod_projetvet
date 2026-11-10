@@ -305,9 +305,9 @@ final class assign_teacher_test extends \advanced_testcase {
                 [$this->data['student1']->id],
                 $this->data['teacher']->id
             );
-            $this->fail('Expected a1assignmentblocked exception not thrown.');
+            $this->fail('Expected assignmentblocked exception not thrown.');
         } catch (\moodle_exception $e) {
-            $this->assertSame('a1assignmentblocked', $e->errorcode);
+            $this->assertSame('assignmentblocked', $e->errorcode);
         }
 
         // No membership was created.

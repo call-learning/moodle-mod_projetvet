@@ -23,8 +23,8 @@ require_once($CFG->libdir . '/csvlib.class.php');
 use csv_import_reader;
 use moodle_exception;
 use mod_projetvet\local\api\groups;
-use mod_projetvet\local\persistent\projetvet_group;
 use mod_projetvet\local\persistent\group_member;
+use mod_projetvet\local\persistent\projetvet_group;
 use mod_projetvet\local\persistent\teacher_rating;
 
 /**
@@ -120,10 +120,10 @@ class group_importer {
                 }
             }
 
-            // Validation pass (read-only): resolve every referenced user and check the A1
-            // assignment rule for every new A1 student assignment, against the current
-            // database state. If anything fails, abort before writing a single row so the
-            // file is imported fully or not at all.
+            // Validation pass (read-only): resolve every referenced user and check the
+            // primary-assignment eligibility for each tutor's complete batch, against
+            // the current database state. If anything fails, abort before writing a
+            // single row so the file is imported fully or not at all.
             $this->validate_rows($rows, $teacheridx, $ratingidx, $studentindices);
 
             // Write pass, inside a transaction so that any failure rolls back the whole import.
@@ -146,9 +146,9 @@ class group_importer {
     /**
      * Read-only validation of the import rows.
      *
-     * Resolves every referenced user and checks the A1 assignment rule for every new A1
-     * student assignment. Throws as soon as a row cannot be applied, so that the import is
-     * aborted before any data is written.
+     * Resolves every referenced user and checks the complete primary-assignment eligibility rule
+     * for each tutor. Throws before any data is written when a tutor cannot receive the complete
+     * batch of students from the file.
      *
      * @param array $rows The CSV data rows.
      * @param int $teacheridx Index of the teacher column.
@@ -164,7 +164,7 @@ class group_importer {
     ): void {
         global $DB;
 
-        $a1rejectioncount = 0;
+        $studentidsbyteacher = [];
 
         foreach ($rows as $row) {
             $teacherusername = trim($row[$teacheridx]);
@@ -173,16 +173,6 @@ class group_importer {
             if (!$teacher) {
                 debugging("Teacher not found: $teacherusername", DEBUG_DEVELOPER);
                 continue;
-            }
-
-            // The group the row writes to is the teacher's existing group, or the one that
-            // would be created by the write pass.
-            $existinggroups = projetvet_group::get_by_owner($teacher->id, $this->projetvetid);
-            $groupisnew = empty($existinggroups);
-            if ($groupisnew) {
-                $groupid = null;
-            } else {
-                $groupid = reset($existinggroups)->get('id');
             }
 
             foreach ($studentindices as $idx) {
@@ -198,33 +188,19 @@ class group_importer {
                     continue;
                 }
 
-                // The A1 assignment rule applies to new A1 student assignments only:
-                // students already in the tutor's groups keep their assignment whatever the
-                // value of the field, and non-A1 students are not affected by it. When the
-                // group is new, no student is already assigned to it.
-                if ($groupid !== null) {
-                    $existingmembers = group_member::get_records([
-                        'groupid' => $groupid,
-                        'userid' => $student->id,
-                        'membertype' => group_member::TYPE_STUDENT,
-                    ]);
-                } else {
-                    $existingmembers = [];
-                }
-
-                if (empty($existingmembers) && \mod_projetvet\utils::is_a1_student((int) $student->id)) {
-                    $eligibility = groups::check_a1_assignment_eligibility($teacher->id, $this->projetvetid, 1);
-                    if (!$eligibility['allowed']) {
-                        // A refusal is an expected, legitimate outcome of the import, not a
-                        // programming error: the file is not imported at all.
-                        $a1rejectioncount++;
-                    }
-                }
+                $studentidsbyteacher[$teacher->id][] = (int) $student->id;
             }
         }
 
-        if ($a1rejectioncount > 0) {
-            throw new moodle_exception('a1importrejected', 'mod_projetvet', '', $a1rejectioncount);
+        foreach ($studentidsbyteacher as $teacherid => $studentids) {
+            $eligibility = groups::check_student_assignment_eligibility(
+                (int) $teacherid,
+                $this->projetvetid,
+                $studentids
+            );
+            if (!$eligibility['allowed']) {
+                throw new moodle_exception('assignmentblocked', 'mod_projetvet', '', $eligibility['reason']);
+            }
         }
     }
 

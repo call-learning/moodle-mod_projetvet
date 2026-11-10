@@ -214,9 +214,9 @@ final class group_importer_test extends \advanced_testcase {
             $exception = $e;
         }
 
-        // The import is refused with the number of rejected A1 assignments.
+        // The import is refused by the central assignment eligibility check.
         $this->assertNotNull($exception);
-        $this->assertSame('a1importrejected', $exception->errorcode);
+        $this->assertSame('assignmentblocked', $exception->errorcode);
 
         // All-or-nothing: no group and no members were written to the database. The pre-existing
         // rating (set in setup) is left untouched by the rolled-back import.

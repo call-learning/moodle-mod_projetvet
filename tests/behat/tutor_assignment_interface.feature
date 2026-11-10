@@ -139,6 +139,17 @@ Feature: Tutor assignments interface for managing groups
     Then I should see "Assign students"
     And I should see "Select student"
 
+  Scenario: Closed tutor cannot be selected for a student assignment
+    Given the following "mod_projetvet > tutor settings" exist:
+      | user    | projetvetidnumber | status |
+      | teacher2 | projetvet1        | closed |
+    And I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
+    When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page
+    And I click on "showcount" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    And I click on "assign-teacher" buttonaction in the "Tutor assignments students report" "mod_projetvet > Tutor assignments students report"
+    Then I should see "Assign teacher"
+    And the teacher "Teacher Two" assignment radio should be disabled
+
   Scenario: Filter students without teachers
     Given I am on the "ProjetVet 1" "projetvet activity" page logged in as admin
     When I am on the "ProjetVet 1" "mod_projetvet > Tutor assignments" page

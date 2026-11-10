@@ -90,31 +90,6 @@ class assign_teacher extends external_api {
             $previousprimaryids[$studentid] = $previous ? (int) $previous->id : 0;
         }
 
-        // The A1 assignment rule only applies when the batch creates at least one new A1
-        // student membership for this teacher. When it applies, the whole batch is rejected
-        // rather than partially assigned, so the manager always gets an explicit answer.
-        $newa1studentids = groups::get_new_a1_student_ids(
-            $params['teacherid'],
-            $params['projetvetid'],
-            $studentids
-        );
-        if (!empty($newa1studentids)) {
-            $existingstudentids = array_map(
-                'intval',
-                groups::get_students_for_tutor($params['teacherid'], $params['projetvetid'])
-            );
-            $newstudentcount = count(array_diff($studentids, $existingstudentids));
-
-            $eligibility = groups::check_a1_assignment_eligibility(
-                $params['teacherid'],
-                $params['projetvetid'],
-                $newstudentcount
-            );
-            if (!$eligibility['allowed']) {
-                throw new \moodle_exception('a1assignmentblocked', 'mod_projetvet', '', $eligibility['reason']);
-            }
-        }
-
         $assignedcount = groups::assign_students_to_teacher(
             $params['teacherid'],
             $studentids,

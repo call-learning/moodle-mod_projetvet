@@ -248,18 +248,15 @@ class groups {
      * Check whether a new A1 student assignment is allowed for a tutor.
      *
      * A new A1 student assignment is only allowed when all of the following hold:
+     * - the tutor is open to new assignments (availability status),
      * - the tutor accepts new A1 students ("Accepte les étudiants A1" = "Oui"),
-     * - the tutor still has enough available capacity for the new student count,
-     * - the tutor is open to new assignments (availability status).
+     * - the tutor still has enough available capacity for the new student count.
      *
-     * The availability status check is currently a no-op: no tutor availability
-     * status exists yet, so every tutor is considered open to new assignments.
-     * When the status concept is implemented, that check belongs here.
-     *
-     * This method is the single enforcement point of the A1 assignment rule.
-     * Manual assignment, import and automatic proposal flows must call it before
-     * creating new A1 student memberships. Existing assignments are never affected
-     * by this rule: switching the value to "Non" keeps the existing A1 assignments.
+     * This method implements the A1 part of the primary-assignment rule. The single
+     * enforcement point is {@see self::check_student_assignment_eligibility()}, which
+     * routes every batch containing new A1 students through this method before a
+     * membership is created. Existing assignments are never affected by this rule:
+     * switching the value to "Non" keeps the existing A1 assignments.
      *
      * @param int $teacherid The tutor's user ID
      * @param int $projetvetid The projetvet instance ID
@@ -267,6 +264,11 @@ class groups {
      * @return array{allowed: bool, reason: string} The reason is a localized message, or '' when allowed.
      */
     public static function check_a1_assignment_eligibility(int $teacherid, int $projetvetid, int $newstudentcount = 1): array {
+        $statusreason = self::get_assignment_status_reason(self::get_teacher_status($teacherid, $projetvetid));
+        if ($statusreason !== null) {
+            return ['allowed' => false, 'reason' => $statusreason];
+        }
+
         $acceptsa1 = \mod_projetvet\local\persistent\teacher_rating::get_a1_acceptance_for($teacherid, $projetvetid);
         if ($acceptsa1 !== \mod_projetvet\local\persistent\teacher_rating::ACCEPTS_A1_YES) {
             return [
@@ -304,19 +306,11 @@ class groups {
             return ['allowed' => true, 'reason' => ''];
         }
 
-        $status = self::get_teacher_status($teacherid, $projetvetid);
-        $statusreasons = [
-            \mod_projetvet\local\persistent\teacher_rating::STATUS_ACTIVE_CLOSED =>
-                'assignmentblocked_status_active_closed',
-            \mod_projetvet\local\persistent\teacher_rating::STATUS_TEMPORARILY_UNAVAILABLE =>
-                'assignmentblocked_status_temporarily_unavailable',
-            \mod_projetvet\local\persistent\teacher_rating::STATUS_INACTIVE =>
-                'assignmentblocked_status_inactive',
-        ];
-        if (isset($statusreasons[$status])) {
+        $statusreason = self::get_assignment_status_reason(self::get_teacher_status($teacherid, $projetvetid));
+        if ($statusreason !== null) {
             return [
                 'allowed' => false,
-                'reason' => get_string($statusreasons[$status], 'mod_projetvet'),
+                'reason' => $statusreason,
             ];
         }
 
@@ -334,6 +328,24 @@ class groups {
         }
 
         return ['allowed' => true, 'reason' => ''];
+    }
+
+    /**
+     * Get the refusal reason for a tutor status that blocks new primary assignments.
+     *
+     * @param int $status Tutor availability status.
+     * @return string|null Localized reason, or null when the status allows assignments.
+     */
+    private static function get_assignment_status_reason(int $status): ?string {
+        $strings = [
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_ACTIVE_CLOSED =>
+                'assignmentblocked_status_active_closed',
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_TEMPORARILY_UNAVAILABLE =>
+                'assignmentblocked_status_temporarily_unavailable',
+            \mod_projetvet\local\persistent\teacher_rating::STATUS_INACTIVE =>
+                'assignmentblocked_status_inactive',
+        ];
+        return isset($strings[$status]) ? get_string($strings[$status], 'mod_projetvet') : null;
     }
 
     /**

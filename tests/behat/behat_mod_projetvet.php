@@ -40,6 +40,36 @@ use Behat\Mink\Exception\ExpectationException;
  */
 class behat_mod_projetvet extends behat_base {
     /**
+     * Assert that the assignment radio for a teacher is disabled.
+     *
+     * @Then /^the teacher "([^"]*)" assignment radio should be disabled$/
+     * @param string $teachername Teacher name shown in the selection report.
+     */
+    public function the_teacher_assignment_radio_should_be_disabled(string $teachername): void {
+        $labels = $this->find_all('css', '.teacher-select-radio + label');
+        foreach ($labels as $label) {
+            if (trim($label->getText()) !== $teachername) {
+                continue;
+            }
+
+            $for = $label->getAttribute('for');
+            $radio = $this->find('css', '#' . $for);
+            if ($radio->getAttribute('disabled') === null) {
+                throw new ExpectationException(
+                    'The assignment radio for "' . $teachername . '" is not disabled.',
+                    $this->getSession()
+                );
+            }
+            return;
+        }
+
+        throw new ExpectationException(
+            'The assignment radio for "' . $teachername . '" was not found.',
+            $this->getSession()
+        );
+    }
+
+    /**
      * Return a list of exact named selectors for recurring ProjetVet areas.
      *
      * @return behat_component_named_selector[]
