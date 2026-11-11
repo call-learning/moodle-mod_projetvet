@@ -532,7 +532,7 @@ class groups {
         }
 
         $users = $DB->get_records_sql(
-            "SELECT DISTINCT u.id
+            "SELECT DISTINCT u.id, u.lastname, u.firstname
               FROM {user} u
               {$teachersjoin->joins}
              WHERE {$teachersjoin->wheres}
