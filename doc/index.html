@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProjetVet — module documentation</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: #24303e;
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+  h1 { font-size: 1.7rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2.25rem; border-bottom: 1px solid #d5dde6; padding-bottom: 0.25rem; }
+  p.lede { font-size: 1.05rem; margin-top: 0; }
+  .doclist { list-style: none; padding: 0; margin: 1rem 0; }
+  .doclist li { margin-bottom: 0.9rem; }
+  .doclist a { font-weight: 600; text-decoration: none; color: #0b62a4; }
+  .doclist a:hover { text-decoration: underline; }
+  .doclist p { margin: 0.1rem 0 0; color: #44546a; }
+  .note {
+    background: #f2f6fa;
+    border-left: 4px solid #0b62a4;
+    padding: 0.6rem 1rem;
+    margin: 1.25rem 0;
+  }
+  footer { margin-top: 3rem; font-size: 0.9rem; color: #61758a; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ProjetVet documentation</h1>
+  <p class="lede">
+    Human-readable documentation for the implemented features of the
+    <code>mod_projetvet</code> Moodle activity — written for the people who use
+    or maintain the module (managers, tutors, students, site administrators),
+    to explain <strong>how the module works and what to expect</strong> from
+    each feature.
+  </p>
+  <div class="note">
+    Each document is a Markdown file (<code>.md</code>). Browsers display it as
+    plain text — it is written to be readable as is. <code>README.md</code> is
+    the source of truth for this folder (it also contains the mapping to the
+    formal OpenSpec specifications); this page is its HTML entry point.
+  </div>
+</header>
+
+<section>
+  <h2>The module in one page</h2>
+  <p>
+    ProjetVet manages the follow-up of student projects by tutors. Three roles
+    matter:
+  </p>
+  <ul>
+    <li>
+      <strong>Students</strong> work through the stages of a project
+      (eligibility, activity, report…). At the report stage
+      (“Bilan du projet”) they must complete a set of mandatory fields,
+      including at least two confirmed competencies. They can archive the
+      projects already validated under the previous CPP system, and delete
+      their own projects.
+    </li>
+    <li>
+      <strong>Tutors (tuteurs)</strong> follow one or more students per
+      activity. Each tutor has, per activity, an
+      <em>availability status</em>, a <em>capacity level</em> (12/8/5 students)
+      and an <em>A1 acceptance</em> flag — all checked together, in one place,
+      before any new assignment. Tutors can broadcast a message to the students
+      they follow, and their temporary substitute follow-up is clearly
+      distinguished from their principal follow-up.
+    </li>
+    <li>
+      <strong>Managers (gestionnaires)</strong> assign and re-assign students
+      to tutors (manually, in bulk, or via CSV import), can optionally notify
+      the people concerned when an assignment changes, appoint temporary
+      substitute tutors per student, and review the students' archive of
+      previously validated (CPP) projects.
+    </li>
+  </ul>
+  <p>
+    All user-facing notifications go through a single queued delivery path that
+    respects each recipient's language and Moodle messaging preferences.
+  </p>
+</section>
+
+<section>
+  <h2>Student workflow</h2>
+  <ul class="doclist">
+    <li>
+      <a href="activity-form-fields.md">Activity form fields</a>
+      <p>The mandatory fields of the “Bilan du projet” (report) stage, the
+      minimum number of confirmed competencies, and how the field
+      configuration is upgraded on existing sites.</p>
+    </li>
+    <li>
+      <a href="eligibility-ects.md">Eligibility ECTS</a>
+      <p>How the ECTS value agreed during eligibility validation is preserved
+      and used in later stages (report stage, final validation).</p>
+    </li>
+    <li>
+      <a href="legacy-cpp-project-archive.md">Archive of previously validated (CPP) projects</a>
+      <p>The one-time, tutor-reviewed archive of legacy CPP projects already
+      validated, their statuses, preserved data and the no-silent-duplication
+      import rules.</p>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Tutor model and assignment rules</h2>
+  <ul class="doclist">
+    <li>
+      <a href="tutor-availability-status.md">Tutor availability status</a>
+      <p>The per-activity status of a tutor (active &amp; open, active &amp;
+      closed, temporarily unavailable, inactive) and what changing it does —
+      and does not do.</p>
+    </li>
+    <li>
+      <a href="tutor-capacity-levels.md">Tutor capacity levels</a>
+      <p>The “Capacity A / B / C” vocabulary, the 12/8/5 student limits behind
+      each level, and compatibility with legacy “Expert / Moyen / Novice”
+      data.</p>
+    </li>
+    <li>
+      <a href="tutor-a1-acceptance.md">Tutor A1 acceptance</a>
+      <p>The “Accepte les étudiants A1” flag, how it gates new A1
+      assignments, and how existing A1 assignments are protected.</p>
+    </li>
+    <li>
+      <a href="tutor-assignment-eligibility.md">Tutor assignment eligibility</a>
+      <p>The single server-side rule applied to every new primary assignment
+      (status + A1 acceptance + capacity), the all-or-nothing batch behaviour,
+      and how ineligible tutors are shown in the assignment interface.</p>
+    </li>
+    <li>
+      <a href="per-student-substitute-tutors.md">Per-student temporary substitute tutors</a>
+      <p>Temporary per-student substitutions: the principal tutor stays the
+      referent, eligibility and capacity rules, close / extend /
+      make-definitive, history, and notifications during a substitution.</p>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Communication and maintenance</h2>
+  <ul class="doclist">
+    <li>
+      <a href="tutor-assignment-notifications.md">Tutor assignment notifications</a>
+      <p>The four notification scenarios sent at a manager's explicit request
+      when a tutoring assignment changes, their recipients, and their message
+      content.</p>
+    </li>
+    <li>
+      <a href="tutor-dashboard-broadcast.md">Tutor broadcast message</a>
+      <p>How a tutor sends an announcement to the students they follow, from
+      the activity view page.</p>
+    </li>
+    <li>
+      <a href="notification-delivery.md">Notification delivery</a>
+      <p>The shared asynchronous delivery path behind all ProjetVet
+      notifications (queue, Moodle messaging, per-recipient language and
+      links).</p>
+    </li>
+    <li>
+      <a href="project-deletion.md">Project deletion</a>
+      <p>Who can delete entries (students, tutors, administrators), what
+      deletion removes (data, files, subset entries), and what can never be
+      deleted (archives).</p>
+    </li>
+  </ul>
+</section>
+
+<footer>
+  <p>
+    Formal specifications live in <code>openspec/specs/</code>; the full change
+    history (proposals, designs, task checklists) in
+    <code>openspec/archive/</code> and <code>openspec/changes/archive/</code>.
+  </p>
+</footer>
+
+</body>
+</html>
