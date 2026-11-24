@@ -91,12 +91,38 @@ class projetvet_form extends dynamic_form {
         $context = $this->get_context_for_dynamic_submission();
         $structure = entries::get_form_structure($formsetidnumber, $currententrystatus, $context);
 
+        // A read-only (view-mode) submission carries only the hidden fields: every
+        // data control is frozen and never submitted, so its values skip validation
+        // entirely. Reject such a submission when the current user is expected to
+        // submit field values at the entry's current status, so a hand-crafted
+        // payload cannot bypass required-field validation.
+        if (!empty($data->readonly)) {
+            foreach ($structure as $category) {
+                if (
+                    $category->entrystatus == $currententrystatus
+                    && $category->capability === 'submit'
+                    && has_capability('mod/projetvet:submit', $context)
+                ) {
+                    throw new moodle_exception('invalidaccess');
+                }
+            }
+        }
+
         foreach ($structure as $category) {
             // Check if user can edit this category using the hydrated property.
             if ($category->canedit) {
                 // Only collect fields from categories the user can edit.
                 foreach ($category->fields as $field) {
                     $fieldname = 'field_' . $field->idnumber;
+                    // Skip frozen fields: in read-only (view) mode their form control
+                    // is disabled and therefore never submitted, so the exported value
+                    // is empty. Collecting it would overwrite the stored value (e.g. a
+                    // tagselect multi-select would be wiped to an empty array) on a
+                    // status-only submission such as the tutor accept step.
+                    $element = $this->_form->elementExists($fieldname) ? $this->_form->getElement($fieldname) : null;
+                    if ($element !== null && $element->isFrozen()) {
+                        continue;
+                    }
                     if (isset($data->$fieldname)) {
                         $fields[$field->id] = $data->$fieldname;
                     }
@@ -376,6 +402,14 @@ class projetvet_form extends dynamic_form {
         $mform->setType('parententryid', PARAM_INT);
         $mform->addElement('hidden', 'formsetidnumber', $formsetidnumber);
         $mform->setType('formsetidnumber', PARAM_ALPHANUMEXT);
+        // The readonly flag comes from the page arguments, so it must round-trip
+        // through the form payload: in the modal (AJAX) flow the form is
+        // re-instantiated in the webservice from the submitted data only, where
+        // frozen (disabled) controls are never submitted. Without this hidden
+        // field the view-mode flag would be lost on the validation pass and
+        // validation rules would re-appear on fields that can never submit a value.
+        $mform->addElement('hidden', 'readonly', $readonly);
+        $mform->setType('readonly', PARAM_INT);
         $mform->addElement('hidden', 'entrystatus');
         $mform->setType('entrystatus', PARAM_INT);
         $mform->addElement('hidden', 'button_entrystatus');
@@ -440,6 +474,12 @@ class projetvet_form extends dynamic_form {
                 $caneditfield = entries::can_edit_field($category, $context);
 
                 $configdata = (array) $field->configdata;
+                // In read-only mode, keep student fields frozen while allowing tutor-facing
+                // data fields (for example ECTS and acceptance comments) to be edited.
+                $editableinreadonly = $readonly && $caneditfield
+                    && in_array($field->capability, ['approve', 'viewteacher'], true)
+                    && $field->type !== 'html';
+                $canvalidatefield = $caneditfield && (!$readonly || $editableinreadonly);
 
                 switch ($field->type) {
                     case 'text':
@@ -556,7 +596,7 @@ class projetvet_form extends dynamic_form {
                         // Only enforce the minimum on fields the user can still edit.
                         // Frozen (read-only) fields do not submit their value, so
                         // validating them would always fail on later submissions.
-                        if ($mintags > 0 && $caneditfield) {
+                        if ($mintags > 0 && $canvalidatefield) {
                             $this->minimumtagselectfields[$fieldname] = $mintags;
                         }
                         $mform->addElement('tagselect', $fieldname, $field->name, [], [
@@ -598,7 +638,7 @@ class projetvet_form extends dynamic_form {
                         ]);
 
                         $mintags = (int) ($configdata['mintags'] ?? 0);
-                        if ($mintags > 0 && $caneditfield) {
+                        if ($mintags > 0 && $canvalidatefield) {
                             $this->minimumtagconfirmfields[$fieldname] = $mintags;
                         }
                         break;
@@ -778,7 +818,7 @@ class projetvet_form extends dynamic_form {
                     $mform->addHelpButton($fieldname, 'field_' . $field->idnumber, 'mod_projetvet');
                 }
 
-                if ($isrequired && $caneditfield && $field->type !== 'button') {
+                if ($isrequired && $canvalidatefield && $field->type !== 'button') {
                     // For report-stage fields (entrystatus 2), defer required validation
                     // to validation() so that draft saves are not blocked. Store the field
                     // type so validation() can apply date-specific emptiness rules.
@@ -801,7 +841,10 @@ class projetvet_form extends dynamic_form {
                         $mform->freeze($fieldname);
                     }
                 }
-                if ($readonly && $field->type !== 'filemanager' && $field->type !== 'hidden') {
+                if (
+                    $readonly && !$editableinreadonly &&
+                    $field->type !== 'filemanager' && $field->type !== 'hidden'
+                ) {
                     if ($mform->elementExists($fieldname)) {
                         $mform->freeze($fieldname);
                     }

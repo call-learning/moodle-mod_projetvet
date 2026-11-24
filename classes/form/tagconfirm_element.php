@@ -102,6 +102,36 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
     }
 
     /**
+     * Handle the updateValue form event.
+     *
+     * A frozen element is disabled and therefore never submitted. PEAR does not
+     * fall back to the default value for a submitted multiple select, which would
+     * make a frozen tagconfirm lose its prefilled value on the re-render of a
+     * submitted form (e.g. after a failed validation). When frozen, keep the
+     * prefilled value and ignore any submitted value, which a disabled control
+     * can never send.
+     *
+     * @param string $event Event name.
+     * @param mixed $arg Event argument.
+     * @param \HTML_QuickForm &$caller The calling form.
+     * @return bool
+     */
+    #[\Override]
+    public function onQuickFormEvent($event, $arg, &$caller) {
+        if ('updateValue' === $event && $this->isFrozen()) {
+            $value = $this->_findValue($caller->_constantValues);
+            if (null === $value) {
+                $value = $this->_findValue($caller->_defaultValues);
+            }
+            if (null !== $value) {
+                $this->setValue($value);
+            }
+            return true;
+        }
+        return parent::onQuickFormEvent($event, $arg, $caller);
+    }
+
+    /**
      * Accepts a renderer.
      *
      * @param object $renderer An HTML_QuickForm_Renderer object
