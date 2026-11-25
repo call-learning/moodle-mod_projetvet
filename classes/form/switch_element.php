@@ -35,7 +35,7 @@ require_once($CFG->libdir . '/form/checkbox.php');
  */
 class switch_element extends HTML_QuickForm_static {
     /** @var string Help button */
-    public $_helpbutton = ''; // @codingStandardsIgnoreLine
+    public $_helpbutton = ''; // phpcs:ignore PSR2.Classes.PropertyDeclaration.Underscore
 
     /**
      * Constructor

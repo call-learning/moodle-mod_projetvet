@@ -33,7 +33,7 @@ require_once($CFG->libdir . '/form/static.php');
  */
 class subset_element extends HTML_QuickForm_static {
     /** @var string Help button */
-    public $_helpbutton = ''; // @codingStandardsIgnoreLine
+    public $_helpbutton = ''; // phpcs:ignore PSR2.Classes.PropertyDeclaration.Underscore
 
     /** @var string The subset formset idnumber */
     protected $subsetformsetidnumber = '';

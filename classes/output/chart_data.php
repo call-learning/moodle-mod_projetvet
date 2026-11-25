@@ -126,9 +126,11 @@ class chart_data {
                 if ($ectsdata) {
                     $ects = (int)$ectsdata->get('intvalue');
 
-                    if ($rankvalue == 1) { // Rank A.
+                    if ($rankvalue == 1) {
+                        // Rank A.
                         $rankatotal += $ects;
-                    } else if ($rankvalue == 2) { // Rank B.
+                    } else if ($rankvalue == 2) {
+                        // Rank B.
                         $rankbtotal += $ects;
                     }
                 }

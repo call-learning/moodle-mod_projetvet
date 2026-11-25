@@ -259,7 +259,7 @@ class tagconfirm_element extends MoodleQuickForm_selectgroups {
      * @param bool $notused
      * @return array
      */
-    public function exportValue(&$submitvalues, $notused = false) { // @codingStandardsIgnoreLine
+    public function exportvalue(&$submitvalues, $notused = false) {
         $valuearray = [];
         $elementname = $this->getName();
 
